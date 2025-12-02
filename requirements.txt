@@ -1,0 +1,1 @@
+web3>=6.15.0pandas>=2.2.0numpy>=1.26.0rustworkx>=0.14.0requests>=2.31.0python-dotenv>=1.0.1redis>=5.0.1fastapi>=0.109.0uvicorn>=0.27.0eth-abi>=5.0.0colorama>=0.4.6

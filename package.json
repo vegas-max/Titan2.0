@@ -1,0 +1,17 @@
+{
+  "name": "apex-omega-titan",
+  "version": "4.2.0",
+  "main": "execution/bot.js",
+  "dependencies": {
+    "@flashbots/ethers-provider-bundle": "^1.0.0",
+    "@paraswap/sdk": "^7.3.1",
+    "axios": "^1.6.7",
+    "dotenv": "^16.4.1",
+    "ethers": "6.7.1",
+    "redis": "^4.6.12"
+  },
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
+    "hardhat": "^2.19.5"
+  }
+}
