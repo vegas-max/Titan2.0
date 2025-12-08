@@ -15,9 +15,6 @@ module.exports = {
   networks: {
     hardhat: {
       chainId: 31337,
-      forking: {
-        url: process.env.RPC_POLYGON || "https://polygon-rpc.com", // Fork Polygon for testing
-      },
     },
     polygon: {
       url: process.env.RPC_POLYGON || "https://polygon-rpc.com",

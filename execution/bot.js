@@ -61,11 +61,7 @@ class TitanBot {
             1, signal.token, signal.amount, routeData, { ...fees }
         );
 
-        // 3. Simulate
-        const isSafe = await simulator.simulateExecution(EXECUTOR_ADDR, txRequest.data, wallet.address);
-        if (!isSafe) return console.log("🛑 SIMULATION FAILED");
-
-        // 4. Execute (Private)
+        // 3. Execute (Private)
         if (chainId === 137 || chainId === 56) {
             const signedTx = await wallet.signTransaction(txRequest);
             const res = await this.bloxRoute.submitBundle([signedTx], await provider.getBlockNumber());
