@@ -1,6 +1,5 @@
 import logging
 from web3 import Web3
-from functools import lru_cache
 from core.config import DEX_ROUTERS, CHAINS
 
 # Setup Logging
@@ -35,17 +34,16 @@ CURVE_ABI = '''[
     }
 ]'''
 
+# Curve pools typically have 2-8 coins
+MAX_CURVE_COINS = 8
+
 class DexPricer:
     def __init__(self, w3: Web3, chain_id: int):
         self.w3 = w3
         self.chain_id = chain_id
         self.config = CHAINS.get(chain_id)
-
-    # =========================================================================
-    # NEW METHOD: Add this method to the class
-    # =========================================================================
+        self._pool_coins_cache = {}
     
-    @lru_cache(maxsize=100)
     def _get_pool_coins(self, pool_address: str) -> dict:
         """
         Queries the Curve pool to find all coin addresses and their indices.
@@ -54,6 +52,11 @@ class DexPricer:
         Returns:
             dict: {token_address_lowercase: index}
         """
+        # Check cache first
+        pool_address_lower = pool_address.lower()
+        if pool_address_lower in self._pool_coins_cache:
+            return self._pool_coins_cache[pool_address_lower]
+        
         try:
             pool = self.w3.eth.contract(
                 address=Web3.to_checksum_address(pool_address),
@@ -62,8 +65,7 @@ class DexPricer:
             
             coin_map = {}
             
-            # Curve pools typically have 2-8 coins
-            for i in range(8):
+            for i in range(MAX_CURVE_COINS):
                 try:
                     coin_addr = pool.functions.coins(i).call()
                     coin_map[coin_addr.lower()] = i
@@ -76,16 +78,15 @@ class DexPricer:
                 return {}
             
             logger.info(f"✅ Mapped {len(coin_map)} coins for pool {pool_address[:8]}")
+            
+            # Cache the result
+            self._pool_coins_cache[pool_address_lower] = coin_map
             return coin_map
             
         except Exception as e:
             logger.error(f"Failed to query pool coins: {e}")
             return {}
-    
-    # =========================================================================
-    # NEW METHOD: Add this method to the class
-    # =========================================================================
-    
+
     def get_curve_indices(self, pool_address: str, token_in: str, token_out: str) -> tuple:
         """
         Dynamically resolves the correct Curve indices for a token pair.
@@ -129,11 +130,7 @@ class DexPricer:
         
         logger.debug(f"Resolved: {token_in[:8]} (i={idx_in}) → {token_out[:8]} (j={idx_out})")
         return (idx_in, idx_out)
-    
-    # =========================================================================
-    # MODIFIED METHOD: Replace the existing get_curve_price method
-    # =========================================================================
-    
+
     def get_curve_price(self, pool_address, token_in, token_out, amount):
         """
         Queries Curve pool with DYNAMIC index resolution.
@@ -171,10 +168,6 @@ class DexPricer:
         except Exception as e:
             logger.error(f"Curve price query failed: {e}")
             return 0
-
-    # =========================================================================
-    # EXISTING METHODS: Keep these as-is
-    # =========================================================================
 
     def get_univ3_price(self, token_in, token_out, amount, fee=500):
         """Queries Uniswap V3 Quoter - KEEP AS-IS"""
