@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, develop, 'copilot/**' ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile smart contracts
+        run: npx hardhat compile
+
+      - name: Check code formatting
+        run: |
+          echo "Running code checks..."
+          # Add linting here if configured
+        continue-on-error: true
+
+      - name: Run system audit
+        run: python audit_system.py
+        continue-on-error: true
+
+      - name: Verify build artifacts
+        run: |
+          echo "Verifying build..."
+          test -d artifacts || exit 1
+          test -f artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json || exit 1
+          echo "✅ Build verification passed"
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: build-artifacts
+          path: |
+            artifacts/
+            cache/
+          retention-days: 7

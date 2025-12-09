@@ -1,0 +1,97 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install Node.js dependencies
+        run: npm ci
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Compile smart contracts
+        run: npx hardhat compile
+
+      - name: Run system audit
+        run: python audit_system.py || true
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+      - name: Create release archive
+        run: |
+          mkdir -p release
+          
+          # Create source archive excluding unnecessary files
+          tar -czf release/titan-v${{ steps.get_version.outputs.VERSION }}-source.tar.gz \
+            --exclude=node_modules \
+            --exclude=.yarn \
+            --exclude=.git \
+            --exclude=.env \
+            --exclude=logs \
+            --exclude=data \
+            --exclude=artifacts \
+            --exclude=cache \
+            --exclude=__pycache__ \
+            .
+          
+          # Create compiled contracts archive
+          if [ -d artifacts ]; then
+            tar -czf release/titan-v${{ steps.get_version.outputs.VERSION }}-contracts.tar.gz \
+              artifacts/ \
+              contracts/
+          fi
+
+      - name: Generate release notes
+        id: release_notes
+        run: |
+          if [ -f CHANGELOG.md ]; then
+            # Extract notes for this version from CHANGELOG
+            awk '/^## \['${{ steps.get_version.outputs.VERSION }}'\]/,/^## \[/ {print}' CHANGELOG.md | head -n -1 > release_notes.md
+          else
+            echo "Release v${{ steps.get_version.outputs.VERSION }}" > release_notes.md
+          fi
+
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            release/*.tar.gz
+          body_path: release_notes.md
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload release artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-artifacts
+          path: release/
+          retention-days: 90
