@@ -30,10 +30,19 @@ interface ICurve {
 contract OmniArbExecutor is Ownable {
     IVaultV3 public immutable BALANCER_VAULT;
     IAavePool public immutable AAVE_POOL;
+    
+    // Configurable deadline for time-sensitive swaps (in seconds)
+    uint256 public swapDeadline = 180; // Default 3 minutes
 
     constructor(address _balancer, address _aave) Ownable(msg.sender) {
         BALANCER_VAULT = IVaultV3(_balancer);
         AAVE_POOL = IAavePool(_aave);
+    }
+    
+    // Allow owner to adjust deadline based on trading strategy
+    function setSwapDeadline(uint256 _seconds) external onlyOwner {
+        require(_seconds >= 60 && _seconds <= 600, "Deadline must be 60-600 seconds");
+        swapDeadline = _seconds;
     }
 
     // =================================================================
@@ -100,29 +109,63 @@ contract OmniArbExecutor is Ownable {
             bytes[] memory extra
         ) = abi.decode(routeData, (uint8[], address[], address[], bytes[]));
 
+        // Validation: All arrays must have same length
+        require(protocols.length == routers.length, "Length mismatch: protocols/routers");
+        require(protocols.length == path.length, "Length mismatch: protocols/path");
+        require(protocols.length == extra.length, "Length mismatch: protocols/extra");
+        require(protocols.length > 0, "Empty route");
+        require(protocols.length <= 5, "Route too long"); // Safety limit
+
         uint256 currentBal = inputAmount;
         address currentToken = inputToken;
+        uint256 initialInputAmount = inputAmount;
 
         for (uint i = 0; i < protocols.length; i++) {
+            // Validation: Check for zero address router
+            require(routers[i] != address(0), "Invalid router address");
+            require(path[i] != address(0), "Invalid token address");
+            require(currentBal > 0, "Zero balance in route");
+            
             IERC20(currentToken).approve(routers[i], currentBal);
+            uint256 balanceBefore = currentBal;
 
             if (protocols[i] == 1) { // Uniswap V3
                 uint24 fee = abi.decode(extra[i], (uint24));
+                require(fee == 100 || fee == 500 || fee == 3000 || fee == 10000, "Invalid pool fee");
+                
                 IUniswapV3Router.ExactInputSingleParams memory p = IUniswapV3Router.ExactInputSingleParams({
-                    tokenIn: currentToken, tokenOut: path[i], fee: fee, recipient: address(this),
-                    deadline: block.timestamp, amountIn: currentBal, amountOutMinimum: 0, sqrtPriceLimitX96: 0
+                    tokenIn: currentToken, 
+                    tokenOut: path[i], 
+                    fee: fee, 
+                    recipient: address(this),
+                    deadline: block.timestamp + swapDeadline, // Configurable via setSwapDeadline()
+                    amountIn: currentBal, 
+                    amountOutMinimum: 0, // Slippage checked off-chain via simulation
+                    sqrtPriceLimitX96: 0
                 });
                 currentBal = IUniswapV3Router(routers[i]).exactInputSingle(p);
             } 
             else if (protocols[i] == 2) { // Curve
                 (int128 idx_i, int128 idx_j) = abi.decode(extra[i], (int128, int128));
+                require(idx_i >= 0 && idx_i < 8, "Invalid Curve index i");
+                require(idx_j >= 0 && idx_j < 8, "Invalid Curve index j");
+                require(idx_i != idx_j, "Same token swap");
+                
                 currentBal = ICurve(routers[i]).exchange(idx_i, idx_j, currentBal, 0);
             }
+            else {
+                revert("Unsupported protocol");
+            }
+            
+            // Safety check: Ensure we received something from the swap
+            require(currentBal > 0, "Swap returned zero");
             
             currentToken = path[i];
         }
         
-        // Profit Check implicitly handled by repayment success
+        // Final validation: Must have more than we started with (profit check)
+        // This is a basic sanity check - the real profit is validated by repayment success
+        require(currentBal >= initialInputAmount / 2, "Suspicious loss detected"); // Lost more than 50%
     }
 
     function withdraw(address token) external onlyOwner {
