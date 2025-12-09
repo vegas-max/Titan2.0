@@ -156,10 +156,16 @@ echo ""
 echo -e "${BLUE}[7/7] Checking Environment Configuration...${NC}"
 if [ -f ".env" ]; then
     # Check for key variables (without revealing values)
-    if grep -q "PRIVATE_KEY=" .env && ! grep -q "PRIVATE_KEY=0x0000000000000000000000000000000000000000000000000000000000000000" .env; then
-        echo -e "${GREEN}[✓]${NC} PRIVATE_KEY configured"
+    if grep -q "PRIVATE_KEY=" .env; then
+        # Check for common placeholder patterns
+        if grep -E "PRIVATE_KEY=(YOUR_PRIVATE_KEY|0x0+|PLACEHOLDER|CHANGEME|TODO)" .env >/dev/null; then
+            echo -e "${YELLOW}[!]${NC} PRIVATE_KEY is using placeholder value"
+            ((WARNINGS++))
+        else
+            echo -e "${GREEN}[✓]${NC} PRIVATE_KEY configured"
+        fi
     else
-        echo -e "${YELLOW}[!]${NC} PRIVATE_KEY not configured or using default"
+        echo -e "${YELLOW}[!]${NC} PRIVATE_KEY not found in .env"
         ((WARNINGS++))
     fi
     

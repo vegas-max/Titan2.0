@@ -31,6 +31,9 @@ echo ""
 # Step 2: Install Node.js dependencies
 echo -e "${BLUE}[2/6] Installing Node.js Dependencies...${NC}"
 if [ -f "package.json" ]; then
+    # Note: --legacy-peer-deps is used to resolve ethers.js version conflict
+    # between hardhat-toolbox (requires ^6.14.0) and flashbots-provider (requires 6.7.1)
+    # This is a known compatibility issue and is safe for our use case
     npm install --legacy-peer-deps
     echo -e "${GREEN}[✓]${NC} Node.js dependencies installed"
 else
