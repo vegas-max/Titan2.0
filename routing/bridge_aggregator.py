@@ -9,8 +9,12 @@ functionality like solver verification and timing estimates.
 """
 import requests
 import os
+import logging
 from decimal import Decimal
 from typing import Optional, Dict
+
+# Configure logging
+logger = logging.getLogger(__name__)
 
 
 class BridgeAggregator:
@@ -27,7 +31,7 @@ class BridgeAggregator:
     def __init__(self):
         self.api_key = os.getenv("LIFI_API_KEY")
         if not self.api_key:
-            print("⚠️ Warning: LIFI_API_KEY not set in .env - API calls may be rate limited")
+            logger.warning("LIFI_API_KEY not set in .env - API calls may be rate limited")
 
     def get_best_route(self, src_chain, dst_chain, token, amount, user, prefer_intent_based=True):
         """
@@ -105,17 +109,17 @@ class BridgeAggregator:
                     "tx_data": data.get('transactionRequest', {})
                 }
             elif res.status_code == 404:
-                print(f"⚠️ No route found from chain {src_chain} to {dst_chain}")
+                logger.warning(f"No route found from chain {src_chain} to {dst_chain}")
                 return None
             else:
-                print(f"⚠️ Li.Fi API error: {res.status_code} - {res.text}")
+                logger.error(f"Li.Fi API error: {res.status_code} - {res.text}")
                 return None
                 
         except requests.exceptions.Timeout:
-            print(f"⚠️ Li.Fi API timeout for route {src_chain} -> {dst_chain}")
+            logger.warning(f"Li.Fi API timeout for route {src_chain} -> {dst_chain}")
             return None
         except Exception as e:
-            print(f"⚠️ Bridge aggregator error: {e}")
+            logger.error(f"Bridge aggregator error: {e}")
             return None
     
     def get_route_status(self, tx_hash, from_chain, to_chain):
@@ -150,8 +154,8 @@ class BridgeAggregator:
             if res.status_code == 200:
                 return res.json()
             else:
-                print(f"⚠️ Status check failed: {res.status_code}")
+                logger.error(f"Status check failed: {res.status_code}")
                 return None
         except Exception as e:
-            print(f"⚠️ Status check error: {e}")
+            logger.error(f"Status check error: {e}")
             return None

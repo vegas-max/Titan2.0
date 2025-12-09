@@ -66,16 +66,35 @@ class LiFiWrapper:
             }
         """
         try:
-            # Call Node.js script via subprocess
+            # Validate inputs to prevent code injection
+            if not isinstance(from_chain, int) or not isinstance(to_chain, int):
+                return None
+            if not from_token.startswith('0x') or not to_token.startswith('0x'):
+                return None
+            if not amount.isdigit():
+                return None
+            
+            # Build parameters as JSON for safe passing
+            params = json.dumps({
+                'from_chain': from_chain,
+                'to_chain': to_chain,
+                'from_token': from_token,
+                'to_token': to_token,
+                'amount': amount,
+                'prefer_intent_based': prefer_intent_based
+            })
+            
+            # Call Node.js script via subprocess with JSON parameter passing
             script = f"""
             const {{ LifiExecutionEngine }} = require('./lifi_manager');
+            const params = {params};
             LifiExecutionEngine.getQuote(
-                {from_chain}, 
-                {to_chain}, 
-                '{from_token}', 
-                '{to_token}', 
-                '{amount}',
-                {{ preferIntentBased: {str(prefer_intent_based).lower()} }}
+                params.from_chain, 
+                params.to_chain, 
+                params.from_token, 
+                params.to_token, 
+                params.amount,
+                {{ preferIntentBased: params.prefer_intent_based }}
             ).then(result => console.log(JSON.stringify(result)));
             """
             
@@ -252,8 +271,8 @@ class LiFiWrapper:
         Returns:
             tuple: (is_profitable: bool, net_profit: Decimal)
         """
-        # Calculate gross profit from price difference
-        if src_price == 0:
+        # Validate prices are positive and non-zero
+        if src_price <= 0 or dst_price <= 0:
             return False, Decimal('0')
         
         price_spread_pct = (dst_price - src_price) / src_price

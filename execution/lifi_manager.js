@@ -33,7 +33,7 @@ const config = createConfig({
         }
         
         if (!rpcUrl) {
-          throw new Error(`No RPC URL configured for chain ${chainId}`);
+          throw new Error(`No RPC URL configured for chain ${chainId}. Set the RPC_* environment variable for this chain in your .env file.`);
         }
         
         // Return a Viem-compatible wallet client (wrapped ethers for SDK compatibility)

@@ -34,7 +34,18 @@ class TitanBot {
         this.redis = createClient({ url: REDIS_URL });
         this.bloxRoute = new BloxRouteManager();
         this.activeProviders = {};
-        this.crossChainEnabled = process.env.ENABLE_CROSS_CHAIN === 'true';
+        this.crossChainEnabled = this._parseBooleanEnv(process.env.ENABLE_CROSS_CHAIN);
+    }
+    
+    /**
+     * Parse boolean environment variables safely
+     * @param {string} value - Environment variable value
+     * @returns {boolean} - Parsed boolean value
+     */
+    _parseBooleanEnv(value) {
+        if (!value) return false;
+        const normalized = value.toLowerCase().trim();
+        return normalized === 'true' || normalized === '1' || normalized === 'yes';
     }
 
     async init() {
