@@ -23,6 +23,15 @@ class GasManager {
             const block = await this.provider.getBlock('latest');
             const baseFee = block.baseFeePerGas;
             
+            // Validate base fee is reasonable
+            const baseFeeGwei = parseFloat(ethers.formatUnits(baseFee, 'gwei'));
+            const MAX_BASE_FEE_GWEI = 500; // Absolute ceiling
+            
+            if (baseFeeGwei > MAX_BASE_FEE_GWEI) {
+                console.warn(`⚠️ Base fee ${baseFeeGwei} gwei exceeds maximum ${MAX_BASE_FEE_GWEI} gwei`);
+                throw new Error('Gas price too high');
+            }
+            
             // Calculate priority fee based on strategy
             let priorityFeeGwei;
             switch(strategy) {
@@ -40,21 +49,44 @@ class GasManager {
             const priorityFee = ethers.parseUnits(priorityFeeGwei.toString(), 'gwei');
             
             // Max fee = 2 * baseFee + priorityFee (with buffer for volatility)
-            const maxFeePerGas = (baseFee * 2n) + priorityFee;
+            let maxFeePerGas = (baseFee * 2n) + priorityFee;
+            
+            // Apply absolute ceiling
+            const maxFeePerGasCeiling = ethers.parseUnits(MAX_BASE_FEE_GWEI.toString(), 'gwei');
+            if (maxFeePerGas > maxFeePerGasCeiling) {
+                console.warn(`⚠️ Capping maxFeePerGas from ${ethers.formatUnits(maxFeePerGas, 'gwei')} to ${MAX_BASE_FEE_GWEI} gwei`);
+                maxFeePerGas = maxFeePerGasCeiling;
+            }
+            
+            // Ensure priority fee doesn't exceed max fee
+            const cappedPriorityFee = priorityFee < maxFeePerGas ? priorityFee : maxFeePerGas / 2n;
             
             return {
                 maxFeePerGas: maxFeePerGas,
-                maxPriorityFeePerGas: priorityFee,
+                maxPriorityFeePerGas: cappedPriorityFee,
                 type: 2 // EIP-1559 transaction
             };
         } catch (error) {
             console.error('Error calculating gas fees:', error);
-            // Fallback to legacy gas pricing
-            const gasPrice = await this.provider.getGasPrice();
-            return {
-                gasPrice: gasPrice * 120n / 100n, // 20% buffer
-                type: 0 // Legacy transaction
-            };
+            
+            try {
+                // Fallback to legacy gas pricing with safety checks
+                const gasPrice = await this.provider.getGasPrice();
+                const gasPriceGwei = parseFloat(ethers.formatUnits(gasPrice, 'gwei'));
+                
+                // Check if fallback gas price is reasonable
+                if (gasPriceGwei > 500) {
+                    throw new Error(`Fallback gas price too high: ${gasPriceGwei} gwei`);
+                }
+                
+                return {
+                    gasPrice: gasPrice * 120n / 100n, // 20% buffer
+                    type: 0 // Legacy transaction
+                };
+            } catch (fallbackError) {
+                console.error('Fallback gas pricing also failed:', fallbackError);
+                throw new Error('Cannot determine safe gas price');
+            }
         }
     }
 

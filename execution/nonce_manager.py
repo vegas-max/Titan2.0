@@ -85,6 +85,40 @@ class NonceManager:
             if address in self.nonce_cache and nonce < self.nonce_cache[address]:
                 self.nonce_cache[address] = nonce
     
+    def sync_with_chain(self, w3: Web3, address: str) -> bool:
+        """
+        Synchronize nonce manager with chain state to recover from inconsistencies
+        
+        Args:
+            w3: Web3 instance
+            address: Ethereum address
+            
+        Returns:
+            bool: True if sync successful, False otherwise
+        """
+        try:
+            with self.lock:
+                address = Web3.to_checksum_address(address)
+                
+                # Get confirmed and pending nonces from chain
+                confirmed_nonce = w3.eth.get_transaction_count(address, 'latest')
+                pending_nonce = w3.eth.get_transaction_count(address, 'pending')
+                
+                # Update cache to match chain state
+                self.nonce_cache[address] = pending_nonce
+                
+                # Clear any pending nonces below the confirmed nonce
+                if address in self.pending_nonces:
+                    self.pending_nonces[address] = {
+                        n for n in self.pending_nonces[address] 
+                        if n >= confirmed_nonce
+                    }
+                
+                return True
+        except Exception as e:
+            print(f"Failed to sync nonce for {address}: {e}")
+            return False
+    
     def reset_address(self, w3: Web3, address: str):
         """
         Reset nonce tracking for an address (sync with chain state)
