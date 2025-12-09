@@ -1,114 +1,145 @@
 """
 Bridge Oracle - Cross-chain price oracle and fee estimation
+Provides bridge fee data and route optimization for cross-chain arbitrage
 """
-from routing.bridge_aggregator import BridgeAggregator
-from decimal import Decimal
+import requests
+import os
+from typing import Dict, Optional
+import logging
+
+logger = logging.getLogger("BridgeOracle")
 
 class BridgeOracle:
     """
-    Provides cross-chain pricing data and bridge fee estimates.
-    Acts as an oracle for cross-chain arbitrage opportunities.
+    Provides cross-chain bridge fee estimates and route optimization
     """
     
     def __init__(self):
-        self.aggregator = BridgeAggregator()
-        self.fee_cache = {}  # Cache bridge fees to reduce API calls
-    
-    def get_bridge_cost(self, src_chain, dst_chain, token, amount):
+        self.lifi_api_key = os.getenv("LIFI_API_KEY")
+        self.base_url = "https://li.quest/v1"
+        
+    def estimate_bridge_fee(self, from_chain: int, to_chain: int, 
+                          token: str, amount: int) -> Optional[Dict]:
         """
-        Calculate total cost of bridging assets between chains.
+        Estimate bridge fee for a cross-chain transfer
         
         Args:
-            src_chain (int): Source chain ID
-            dst_chain (int): Destination chain ID
-            token (str): Token address
-            amount (str): Amount to bridge (in wei)
+            from_chain: Source chain ID
+            to_chain: Destination chain ID
+            token: Token address
+            amount: Amount to bridge (in wei)
             
         Returns:
-            dict: {
-                'fee_usd': Decimal,
-                'output_amount': str,
-                'bridge_name': str,
-                'estimated_time': int (seconds)
-            } or None if route unavailable
+            Dict with fee_usd, time_minutes, bridge_name
         """
-        cache_key = f"{src_chain}_{dst_chain}_{token}"
-        
         try:
-            route = self.aggregator.get_best_route(
-                src_chain=src_chain,
-                dst_chain=dst_chain,
-                token=token,
-                amount=amount,
-                user="0x0000000000000000000000000000000000000000"  # Placeholder
-            )
-            
-            if not route:
-                return None
-            
-            fee_usd = Decimal(str(route.get('fee_usd', 0)))
-            
-            return {
-                'fee_usd': fee_usd,
-                'output_amount': route.get('est_output', '0'),
-                'bridge_name': route.get('bridge', 'Unknown'),
-                'estimated_time': self._estimate_bridge_time(route.get('bridge', 'Unknown'))
+            params = {
+                "fromChain": from_chain,
+                "toChain": to_chain,
+                "fromToken": token,
+                "toToken": token,
+                "fromAmount": str(amount)
             }
             
+            headers = {"x-lifi-api-key": self.lifi_api_key} if self.lifi_api_key else {}
+            
+            response = requests.get(
+                f"{self.base_url}/quote",
+                params=params,
+                headers=headers,
+                timeout=10
+            )
+            
+            if response.status_code == 200:
+                data = response.json()
+                
+                # Extract fee information
+                fee_costs = data.get('estimate', {}).get('feeCosts', [])
+                total_fee_usd = sum(float(cost.get('amountUSD', 0)) for cost in fee_costs)
+                
+                # Estimate time
+                time_estimate = data.get('estimate', {}).get('executionDuration', 300)
+                time_minutes = time_estimate / 60
+                
+                # Bridge protocol
+                bridge_name = data.get('tool', 'Unknown')
+                
+                return {
+                    'fee_usd': total_fee_usd,
+                    'time_minutes': time_minutes,
+                    'bridge_name': bridge_name,
+                    'estimated_output': data.get('estimate', {}).get('toAmount', 0)
+                }
+            else:
+                logger.warning(f"Bridge fee estimation failed: {response.status_code}")
+                return None
+                
         except Exception as e:
-            print(f"⚠️ Bridge Oracle Error: {e}")
+            logger.error(f"Error estimating bridge fee: {e}")
             return None
     
-    def _estimate_bridge_time(self, bridge_name):
+    def get_cheapest_bridge(self, from_chain: int, to_chain: int,
+                           token: str, amount: int) -> Optional[str]:
         """
-        Estimate bridge completion time based on bridge type.
+        Find the cheapest bridge for a given route
         
         Args:
-            bridge_name (str): Name of the bridge protocol
+            from_chain: Source chain ID
+            to_chain: Destination chain ID
+            token: Token address
+            amount: Amount to bridge
             
         Returns:
-            int: Estimated time in seconds
+            Bridge name with lowest fees
         """
-        time_estimates = {
-            'stargate': 300,     # 5 minutes
-            'across': 180,       # 3 minutes
-            'hop': 600,          # 10 minutes
-            'synapse': 900,      # 15 minutes
-            'cbridge': 1200,     # 20 minutes
-            'multichain': 600,   # 10 minutes
-            'default': 600       # 10 minutes default
+        estimate = self.estimate_bridge_fee(from_chain, to_chain, token, amount)
+        if estimate:
+            return estimate['bridge_name']
+        return None
+    
+    def is_bridge_profitable(self, from_chain: int, to_chain: int,
+                            token: str, amount: int, 
+                            expected_price_diff: float) -> bool:
+        """
+        Determine if bridging would be profitable given expected price difference
+        
+        Args:
+            from_chain: Source chain ID
+            to_chain: Destination chain ID
+            token: Token address
+            amount: Amount to bridge
+            expected_price_diff: Expected profit in USD
+            
+        Returns:
+            bool: True if profitable after bridge fees
+        """
+        estimate = self.estimate_bridge_fee(from_chain, to_chain, token, amount)
+        
+        if not estimate:
+            return False
+        
+        # Profit must exceed bridge fees
+        return expected_price_diff > estimate['fee_usd']
+    
+    def get_bridge_time_estimate(self, from_chain: int, to_chain: int) -> float:
+        """
+        Get estimated bridge time in minutes
+        
+        Args:
+            from_chain: Source chain ID
+            to_chain: Destination chain ID
+            
+        Returns:
+            float: Estimated time in minutes
+        """
+        # Common bridge time estimates (in minutes)
+        bridge_times = {
+            (1, 137): 7,    # ETH -> Polygon
+            (1, 42161): 10, # ETH -> Arbitrum
+            (1, 10): 7,     # ETH -> Optimism
+            (137, 42161): 15, # Polygon -> Arbitrum
+            (137, 10): 15,  # Polygon -> Optimism
         }
         
-        bridge_lower = bridge_name.lower()
-        for key, time in time_estimates.items():
-            if key in bridge_lower:
-                return time
-        
-        return time_estimates['default']
-    
-    def is_bridge_profitable(self, src_price, dst_price, bridge_fee_usd, amount_usd):
-        """
-        Determine if cross-chain arbitrage is profitable after bridge fees.
-        
-        Args:
-            src_price (Decimal): Token price on source chain
-            dst_price (Decimal): Token price on destination chain
-            bridge_fee_usd (Decimal): Bridge fee in USD
-            amount_usd (Decimal): Trade size in USD
-            
-        Returns:
-            tuple: (is_profitable: bool, expected_profit_usd: Decimal)
-        """
-        # Calculate price differential
-        price_spread = dst_price - src_price
-        
-        # Calculate gross profit
-        gross_profit = (price_spread / src_price) * amount_usd
-        
-        # Subtract bridge fees
-        net_profit = gross_profit - bridge_fee_usd
-        
-        # Profitable if net profit > $5 (minimum threshold)
-        is_profitable = net_profit > Decimal('5.0')
-        
-        return is_profitable, net_profit
+        # Return known time or default to 20 minutes
+        return bridge_times.get((from_chain, to_chain), 20)
