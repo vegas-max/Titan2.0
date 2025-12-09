@@ -1,5 +1,6 @@
 require('dotenv').config();
 const axios = require('axios');
+const { ethers } = require('ethers');
 
 /**
  * ParaSwapManager - DEX Aggregator Integration
@@ -11,11 +12,12 @@ class ParaSwapManager {
      * @param {number} chainId - EIP-155 Chain ID
      * @param {object} provider - Ethers provider (optional, for validation)
      */
-    constructor(chainId, provider = null) {
+    constructor(chainId, provider = null, slippageBps = 100) {
         this.chainId = chainId;
         this.provider = provider;
         this.apiUrl = "https://apiv5.paraswap.io";
         this.partnerAddress = process.env.PARASWAP_PARTNER_ADDRESS || "0x0000000000000000000000000000000000000000";
+        this.slippageBps = slippageBps; // Slippage tolerance in basis points (100 = 1%)
     }
     
     /**
@@ -24,18 +26,23 @@ class ParaSwapManager {
      * @param {string} destToken - Destination token address
      * @param {string} amount - Amount to swap (in wei as string)
      * @param {string} userAddress - User wallet address
+     * @param {number} slippageBps - Optional slippage override in basis points (default: uses constructor value)
      * @returns {Promise<object|null>} Swap data or null if failed
      */
-    async getBestSwap(srcToken, destToken, amount, userAddress) {
+    async getBestSwap(srcToken, destToken, amount, userAddress, slippageBps = null) {
         try {
+            // Fetch token decimals dynamically
+            const srcDecimals = await this.getTokenDecimals(srcToken);
+            const destDecimals = await this.getTokenDecimals(destToken);
+            
             // Step 1: Get Price Quote
             const priceUrl = `${this.apiUrl}/prices`;
             const priceParams = {
                 srcToken: srcToken,
                 destToken: destToken,
                 amount: amount,
-                srcDecimals: 18, // Should be fetched dynamically in production
-                destDecimals: 18,
+                srcDecimals: srcDecimals,
+                destDecimals: destDecimals,
                 side: "SELL",
                 network: this.chainId,
                 partner: this.partnerAddress
@@ -60,7 +67,7 @@ class ParaSwapManager {
                 priceRoute: priceRoute,
                 userAddress: userAddress,
                 partner: this.partnerAddress,
-                slippage: 100 // 1% slippage (in basis points)
+                slippage: slippageBps !== null ? slippageBps : this.slippageBps
             };
             
             const txResponse = await axios.post(txUrl, txParams);

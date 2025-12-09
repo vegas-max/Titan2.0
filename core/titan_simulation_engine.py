@@ -78,14 +78,14 @@ class TitanSimulationEngine:
 
 
 # Standalone function for backward compatibility and convenience
-def get_provider_tvl(token_address, lender_address, chain_id=137):
+def get_provider_tvl(token_address, lender_address=None, chain_id=137):
     """
     Standalone function to check provider liquidity.
     Used by TitanCommander for liquidity validation.
     
     Args:
         token_address (str): ERC20 token address to check
-        lender_address (str): Flash loan provider address (Balancer Vault or Aave Pool)
+        lender_address (str): Unused parameter for backward compatibility
         chain_id (int): Chain ID (default: 137 for Polygon)
         
     Returns:
