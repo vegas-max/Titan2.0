@@ -6,6 +6,10 @@ on:
   pull_request:
     branches: [ main ]
 
+permissions:
+  contents: read  # Required for checking out code
+  actions: read   # Required for workflow artifacts
+  
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
