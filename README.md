@@ -9,6 +9,7 @@
 [![Hardhat](https://img.shields.io/badge/Hardhat-2.19.5-yellow.svg)](https://hardhat.org/)
 [![Node](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org/)
+[![Release](https://img.shields.io/badge/Release-Production%20Ready-brightgreen.svg)](https://github.com/MavenSource/Titan/releases)
 
 *An intelligent, AI-powered DeFi arbitrage system that identifies and executes profitable opportunities across 10+ blockchain networks using flash loans, cross-chain bridges, and advanced machine learning strategies.*
 
@@ -16,8 +17,31 @@
 
 ---
 
+## 🆕 What's New in v4.2.0 - Full System Release
+
+**🎉 Instant Complete Working Builds!**
+
+This release includes comprehensive automation for installation, deployment, and operation:
+
+- ✅ **One-Command Setup**: `./setup.sh` - Complete installation in minutes
+- ✅ **One-Command Start**: `make start` or `./start.sh` - Launch all components
+- ✅ **One-Command Deploy**: `make deploy-polygon` - Deploy to any network
+- ✅ **Quick Start Guide**: [QUICKSTART.md](QUICKSTART.md) - 15-minute setup
+- ✅ **Build Automation**: Makefile with 20+ commands
+- ✅ **Health Checks**: `./health-check.sh` - Comprehensive system validation
+- ✅ **CI/CD Workflows**: GitHub Actions for automated releases
+- ✅ **Complete Documentation**: Installation, configuration, and troubleshooting
+
+**[View Full Release Notes](RELEASE_NOTES.md)** | **[Quick Start Guide](QUICKSTART.md)** | **[Installation Guide](INSTALL.md)**
+
+---
+
+---
+
 ## 📋 Table of Contents
 
+- 🆕 [What's New in v4.2.0](#-whats-new-in-v420---full-system-release)
+- [Quick Start](#-quick-start) - **Start here for fast setup!**
 - [Overview](#-overview)
 - [Key Features](#-key-features)
 - [Architecture](#-architecture)
@@ -38,6 +62,48 @@
 - [Contributing](#-contributing)
 - [Disclaimer](#-disclaimer)
 - [License](#-license)
+
+## 📚 Additional Documentation
+
+- **[QUICKSTART.md](QUICKSTART.md)** - 15-minute setup guide
+- **[INSTALL.md](INSTALL.md)** - Detailed installation for all platforms
+- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
+- **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - Current release details
+- **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - Security features and best practices
+
+---
+
+## ⚡ Quick Start
+
+Get Titan running in 3 commands:
+
+```bash
+# 1. Clone and enter directory
+git clone https://github.com/MavenSource/Titan.git && cd Titan
+
+# 2. Run automated setup
+./setup.sh
+
+# 3. Configure and start
+# Edit .env with your keys, then:
+make start
+```
+
+**See [QUICKSTART.md](QUICKSTART.md) for detailed 15-minute guide.**
+
+### Using Makefile Commands
+
+```bash
+make setup      # Complete installation
+make health     # Check system status
+make compile    # Compile contracts
+make deploy-polygon  # Deploy to Polygon
+make start      # Start all components
+make stop       # Stop system
+make audit      # Run system audit
+```
+
+**See [INSTALL.md](INSTALL.md) for platform-specific installation instructions.**
 
 ---
 
@@ -456,13 +522,39 @@ Each network is configured with:
 
 ## 📦 Installation
 
+### Quick Installation (Recommended)
+
+**Automated setup for Linux/macOS:**
+```bash
+./setup.sh
+```
+
+**Windows:**
+```batch
+start_titan_full.bat
+```
+
+**Using Make:**
+```bash
+make setup
+```
+
+This handles everything: dependencies, compilation, configuration, and verification.
+
+**For detailed platform-specific instructions, see [INSTALL.md](INSTALL.md).**
+
+---
+
+### Manual Installation
+
+If you prefer manual installation:
+
 ### Prerequisites
 
 - **Node.js**: 18.x or higher ([Download](https://nodejs.org/))
 - **Python**: 3.11 or higher ([Download](https://python.org/))
 - **Git**: Latest version ([Download](https://git-scm.com/))
 - **Redis**: 5.0 or higher ([Download](https://redis.io/))
-- **Yarn**: Package manager (automatically installed via Corepack)
 
 ### Step-by-Step Installation
 
@@ -476,9 +568,7 @@ cd Titan
 #### 2. Install Node.js Dependencies
 
 ```bash
-npm install
-# or
-yarn install
+npm install --legacy-peer-deps
 ```
 
 This installs:
