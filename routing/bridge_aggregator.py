@@ -14,6 +14,15 @@ import logging
 # Configure logging
 logger = logging.getLogger(__name__)
 
+# Import intent-based bridge list from config (single source of truth)
+try:
+    from core.config import INTENT_BASED_BRIDGES
+    INTENT_BASED_BRIDGE_NAMES = list(INTENT_BASED_BRIDGES.keys())
+except ImportError:
+    # Fallback if config not available
+    INTENT_BASED_BRIDGE_NAMES = ['across', 'stargate', 'hop']
+    logger.warning("Could not import INTENT_BASED_BRIDGES from config, using fallback list")
+
 
 class BridgeAggregator:
     """
@@ -87,14 +96,8 @@ class BridgeAggregator:
                 gas_costs = estimate.get('gasCosts', [])
                 total_gas_usd = sum(float(cost.get('amountUSD', 0)) for cost in gas_costs)
                 
-                # Determine if intent-based (import from config to avoid duplication)
-                try:
-                    from core.config import INTENT_BASED_BRIDGES
-                    intent_based_bridges = list(INTENT_BASED_BRIDGES.keys())
-                except ImportError:
-                    # Fallback if config not available
-                    intent_based_bridges = ['across', 'stargate', 'hop']
-                is_intent_based = any(bridge in bridge_name.lower() for bridge in intent_based_bridges)
+                # Determine if intent-based
+                is_intent_based = any(bridge in bridge_name.lower() for bridge in INTENT_BASED_BRIDGE_NAMES)
                 
                 # Estimate completion time
                 if is_intent_based:
