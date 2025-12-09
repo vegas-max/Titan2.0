@@ -210,9 +210,6 @@ class GasManager {
         // Add repayment overhead
         totalGas += this.GAS_COSTS.REPAYMENT;
         
-        // Apply safety multiplier
-        const safeGas = Math.floor(totalGas * this.config.gasLimitMultiplier);
-        
         // Add extra buffer for complex routes (3+ hops)
         if (protocols.length >= 3) {
             const complexityBuffer = 50000;
@@ -221,6 +218,9 @@ class GasManager {
         }
         
         console.log(`   Base gas: ${totalGas}`);
+        
+        // Apply safety multiplier
+        const safeGas = Math.floor(totalGas * this.config.gasLimitMultiplier);
         console.log(`   With ${this.config.gasLimitMultiplier}x multiplier: ${safeGas}`);
         
         return BigInt(safeGas);
