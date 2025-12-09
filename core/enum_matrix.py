@@ -9,8 +9,8 @@ class ChainID(IntEnum):
     """
     Enumeration of supported blockchain networks by their EIP-155 Chain ID
     
-    Note: Currently configured chains in CHAINS dict: ETHEREUM, POLYGON, ARBITRUM
-    Other chains listed here are planned for future expansion but not yet configured.
+    All major chains are now configured in CHAINS dict with mainnet-ready addresses (Dec 2024).
+    Chains with placeholder addresses (0x0) indicate protocols not yet deployed on that network.
     """
     ETHEREUM = 1
     POLYGON = 137
@@ -22,6 +22,10 @@ class ChainID(IntEnum):
     FANTOM = 250
     LINEA = 59144
     SCROLL = 534352
+    MANTLE = 5000
+    ZKSYNC = 324
+    CELO = 42220
+    OPBNB = 204
 
 class ProviderManager:
     """

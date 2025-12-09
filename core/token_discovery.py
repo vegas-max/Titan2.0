@@ -37,7 +37,12 @@ class TokenDiscovery:
                 "decimals": 8
             },
             "MATIC": {
-                "address": "0x0000000000000000000000000000000000001010",
+                "address": "0x0000000000000000000000000000000000001010",  # Native MATIC (not ERC20)
+                "decimals": 18,
+                "native": True
+            },
+            "WMATIC": {
+                "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",  # Wrapped MATIC (ERC20)
                 "decimals": 18
             }
         },

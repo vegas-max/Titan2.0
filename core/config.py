@@ -10,9 +10,19 @@ BALANCER_V3_VAULT = "0xbA1333333333a1BA1108E8412f11850A5C319bA9"
 # The system should check for zero addresses before attempting to interact with these protocols.
 
 CHAINS = {
+    1: {  # Ethereum Mainnet
+        "name": "ethereum",
+        "rpc": os.getenv("RPC_ETHEREUM"),
+        "wss": os.getenv("WSS_ETHEREUM"),
+        "aave_pool": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+        "uniswap_router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "curve_router": "0x99a58482BD75cbab83b27EC03CA68fF489b5788f",
+        "native": "ETH"
+    },
     137: {
         "name": "polygon",
         "rpc": os.getenv("RPC_POLYGON"),
+        "wss": os.getenv("WSS_POLYGON"),
         "aave_pool": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
         "uniswap_router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
         "curve_router": "0x445FE580eF8d70FF569aB36e80c647af338db351",  # Curve aave pool on Polygon
@@ -138,6 +148,10 @@ CHAINS = {
 
 # DEX Router Registry - Maps chain IDs to DEX names and their router contract addresses
 DEX_ROUTERS = {
+    1: {  # Ethereum
+        "UNIV2": "0x7a250d5630B4cF539739dF2C5dAcb4c659F2488D",  # Uniswap V2 Router
+        "SUSHI": "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",  # SushiSwap Router
+    },
     137: {  # Polygon
         "QUICKSWAP": "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",  # QuickSwap Router
         "SUSHI": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",  # SushiSwap Router on Polygon
