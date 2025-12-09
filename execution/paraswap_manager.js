@@ -84,6 +84,8 @@ class ParaSwapManager {
                 data: txData.data,
                 value: txData.value || "0",
                 estimatedOutput: priceRoute.destAmount,
+                // Use ParaSwap's gas estimate or conservative fallback for complex multi-protocol routes
+                // 500k covers most scenarios including multi-hop swaps through aggregators
                 gasEstimate: txData.gas || "500000"
             };
             
