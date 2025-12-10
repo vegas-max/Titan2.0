@@ -20,21 +20,145 @@ class DexPricer:
         self.w3 = w3
         self.chain_id = chain_id
         self.config = CHAINS.get(chain_id)
+        self._pool_coins_cache = {}
+    
+    def _get_pool_coins(self, pool_address: str) -> dict:
+        """
+        Queries the Curve pool to find all coin addresses and their indices.
+        Cached to avoid repeated RPC calls.
+        
+        Returns:
+            dict: {token_address_lowercase: index}
+        """
+        # Check cache first
+        pool_address_lower = pool_address.lower()
+        if pool_address_lower in self._pool_coins_cache:
+            return self._pool_coins_cache[pool_address_lower]
+        
+        try:
+            pool = self.w3.eth.contract(
+                address=Web3.to_checksum_address(pool_address),
+                abi=CURVE_ABI
+            )
+            
+            coin_map = {}
+            
+            for i in range(MAX_CURVE_COINS):
+                try:
+                    coin_addr = pool.functions.coins(i).call()
+                    coin_map[coin_addr.lower()] = i
+                    logger.debug(f"Pool {pool_address[:8]}: coins({i}) = {coin_addr}")
+                except Exception as e:
+                    # Pool has no more coins at this index (expected behavior)
+                    logger.debug(f"No coin at index {i} for pool {pool_address[:8]}: {e}")
+                    break
+            
+            if len(coin_map) < 2:
+                logger.warning(f"Pool {pool_address} has insufficient coins: {len(coin_map)}")
+                return {}
+            
+            logger.info(f"✅ Mapped {len(coin_map)} coins for pool {pool_address[:8]}")
+            
+            # Cache the result
+            self._pool_coins_cache[pool_address_lower] = coin_map
+            return coin_map
+            
+        except Exception as e:
+            logger.error(f"Failed to query pool coins: {e}")
+            return {}
+
+    def get_curve_indices(self, pool_address: str, token_in: str, token_out: str) -> tuple:
+        """
+        Dynamically resolves the correct Curve indices for a token pair.
+        
+        Args:
+            pool_address: Curve pool contract address
+            token_in: Address of token being sold
+            token_out: Address of token being bought
+        
+        Returns:
+            tuple: (i, j) or (None, None) if tokens not found
+        """
+        # Normalize addresses
+        token_in = token_in.lower()
+        token_out = token_out.lower()
+        pool_address = pool_address.lower()
+        
+        # Get coin mapping
+        coin_map = self._get_pool_coins(pool_address)
+        
+        if not coin_map:
+            logger.error(f"Could not map coins for pool {pool_address[:8]}")
+            return (None, None)
+        
+        # Find indices
+        idx_in = coin_map.get(token_in)
+        idx_out = coin_map.get(token_out)
+        
+        if idx_in is None:
+            logger.error(f"Token {token_in[:8]} not found in pool")
+            logger.error(f"Available coins: {list(coin_map.keys())}")
+            return (None, None)
+        
+        if idx_out is None:
+            logger.error(f"Token {token_out[:8]} not found in pool")
+            return (None, None)
+        
+        if idx_in == idx_out:
+            logger.error(f"Cannot swap token to itself")
+            return (None, None)
+        
+        logger.debug(f"Resolved: {token_in[:8]} (i={idx_in}) → {token_out[:8]} (j={idx_out})")
+        return (idx_in, idx_out)
+
+    def get_curve_price(self, pool_address, token_in, token_out, amount):
+        """
+        Queries Curve pool with DYNAMIC index resolution.
+        
+        MODIFIED: Now takes token addresses instead of indices
+        
+        Args:
+            pool_address: Curve pool address
+            token_in: Input token address (was 'i')
+            token_out: Output token address (was 'j')
+            amount: Input amount in wei
+        
+        Returns:
+            int: Output amount in wei, or 0 if query fails
+        """
+        try:
+            # Get the correct indices dynamically
+            i, j = self.get_curve_indices(pool_address, token_in, token_out)
+            
+            if i is None or j is None:
+                logger.warning(f"Could not resolve Curve indices")
+                return 0
+            
+            # Query the pool with correct indices
+            pool = self.w3.eth.contract(
+                address=Web3.to_checksum_address(pool_address),
+                abi=CURVE_ABI
+            )
+            
+            output_amount = pool.functions.get_dy(i, j, int(amount)).call()
+            
+            logger.debug(f"Curve quote: {amount} → {output_amount} (i={i}, j={j})")
+            return output_amount
+            
+        except Exception as e:
+            logger.error(f"Curve price query failed: {e}")
+            return 0
 
     def get_univ3_price(self, token_in, token_out, amount, fee=500):
-        """Queries Uniswap V3 Quoter"""
-        # Note: Router in config is SwapRouter, we need Quoter address.
-        # For Titan, we use a known Quoter map or lookup.
-        # Hardcoding Polygon QuoterV2 for example (Move to config in prod)
+        """Queries Uniswap V3 Quoter - KEEP AS-IS"""
         quoter_addr = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e" 
         
         try:
             contract = self.w3.eth.contract(address=quoter_addr, abi=UNIV3_ABI)
-            # params: tokenIn, tokenOut, amount, fee, sqrtPriceLimitX96
             quote = contract.functions.quoteExactInputSingle(
                 (token_in, token_out, int(amount), fee, 0)
             ).call()
-            return quote[0] # amountOut
+            return quote[0]
         except Exception as e:
             return 0
 
@@ -113,7 +237,7 @@ class DexPricer:
             return (None, None)
 
     def get_univ2_price(self, router_key, token_in, token_out, amount):
-        """Queries UniV2 Forks (QuickSwap, Sushi, etc.)"""
+        """Queries UniV2 Forks - KEEP AS-IS"""
         router_addr = DEX_ROUTERS.get(router_key)
         if not router_addr: return 0
         
@@ -125,26 +249,17 @@ class DexPricer:
             return 0
 
     def find_best_price(self, token_in, token_out, amount):
-        """
-        Scans all configured DEXs on this chain for the best return.
-        """
+        """Scans all DEXs - KEEP AS-IS"""
         results = {}
         
-        # 1. Check Uniswap V3
         v3_out = self.get_univ3_price(token_in, token_out, amount)
         results['UNIV3'] = v3_out
 
-        # 2. Check Curve (If router configured)
-        # Note: Curve routing is complex; this checks a specific pool if known
-        # For generic scanning, use get_best_rate from API or dedicated registry
-        
-        # 3. Check Tier 2 DEXs (QuickSwap, Sushi, etc.)
-        if self.chain_id == 137: # Polygon
+        if self.chain_id == 137:
             results['QUICKSWAP'] = self.get_univ2_price('QUICKSWAP', token_in, token_out, amount)
             results['SUSHI'] = self.get_univ2_price('SUSHI', token_in, token_out, amount)
             results['APE'] = self.get_univ2_price('APE', token_in, token_out, amount)
 
-        # Find Winner
         best_dex = max(results, key=results.get)
         best_amount = results[best_dex]
         
