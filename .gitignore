@@ -4,11 +4,8 @@ node_modules/
 .pnp.js
 .pnp.cjs
 .pnp.loader.mjs
-
-# Yarn (project uses npm)
-yarn.lock
 .yarn/
-.yarnrc.yml
+yarn.lock
 
 # Python
 __pycache__/
