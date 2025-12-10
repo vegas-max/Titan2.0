@@ -142,10 +142,24 @@ class LiFiWrapper:
             tuple: (route_exists: bool, has_intent_based: bool, route_count: int)
         """
         try:
+            # Validate inputs to prevent code injection
+            if not isinstance(from_chain, int) or not isinstance(to_chain, int):
+                return False, False, 0
+            if not token.startswith('0x'):
+                return False, False, 0
+            
+            # Build parameters as JSON for safe passing
+            params = json.dumps({
+                'from_chain': from_chain,
+                'to_chain': to_chain,
+                'token': token
+            })
+            
             script = f"""
             const {{ LifiDiscovery }} = require('./lifi_discovery');
             const discovery = new LifiDiscovery();
-            discovery.verifyConnection({from_chain}, {to_chain}, '{token}')
+            const params = {params};
+            discovery.verifyConnection(params.from_chain, params.to_chain, params.token)
                 .then(result => console.log(JSON.stringify(result)));
             """
             
