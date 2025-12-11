@@ -32,7 +32,9 @@ getcontext().prec = 28
 
 # Constants
 ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
-POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo - chains requiring PoA middleware
+# Chains requiring PoA middleware due to Proof-of-Authority consensus
+# Note: Celo uses BFT consensus but still requires PoA middleware for web3.py compatibility
+POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo
 
 def is_zero_address(address: str) -> bool:
     """

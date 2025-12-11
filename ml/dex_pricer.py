@@ -24,6 +24,10 @@ class DexPricer:
         self.chain_id = chain_id
         self.config = CHAINS.get(chain_id)
         self._pool_coins_cache = {}
+        # Use 'latest' for real-time pricing, or None for faster queries during congestion
+        # Can be overridden by setting environment variable PRICE_QUERY_BLOCK_IDENTIFIER
+        import os
+        self.block_identifier = os.getenv('PRICE_QUERY_BLOCK_IDENTIFIER', 'latest')
     
     def _get_pool_coins(self, pool_address: str) -> dict:
         """
@@ -48,8 +52,8 @@ class DexPricer:
             
             for i in range(MAX_CURVE_COINS):
                 try:
-                    # Add timeout to prevent hanging on slow RPC
-                    coin_addr = pool.functions.coins(i).call(block_identifier='latest')
+                    # Use configurable block identifier for performance tuning
+                    coin_addr = pool.functions.coins(i).call(block_identifier=self.block_identifier)
                     coin_map[coin_addr.lower()] = i
                     logger.debug(f"Pool {pool_address[:8]}: coins({i}) = {coin_addr}")
                 except Exception as e:
@@ -137,7 +141,7 @@ class DexPricer:
             contract = self.w3.eth.contract(address=quoter_addr, abi=UNIV3_ABI)
             quote = contract.functions.quoteExactInputSingle(
                 (token_in, token_out, int(amount), fee, 0)
-            ).call(block_identifier='latest')
+            ).call(block_identifier=self.block_identifier)
             return quote[0]
         except ValueError as e:
             # Contract revert - typically means insufficient liquidity
@@ -185,7 +189,7 @@ class DexPricer:
                 return 0
             
             # Execute the price query
-            result = contract.functions.get_dy(i, j, int(amount)).call(block_identifier='latest')
+            result = contract.functions.get_dy(i, j, int(amount)).call(block_identifier=self.block_identifier)
             return result
             
         except ValueError as e:
@@ -222,7 +226,7 @@ class DexPricer:
             amounts = contract.functions.getAmountsOut(
                 int(amount), 
                 [token_in, token_out]
-            ).call(block_identifier='latest')
+            ).call(block_identifier=self.block_identifier)
             return amounts[-1]
         except ValueError as e:
             # Contract revert - typically means insufficient liquidity
