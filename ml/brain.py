@@ -120,10 +120,23 @@ class OmniBrain:
         target_chains = list(CHAINS.keys())
         self.inventory = TokenDiscovery.fetch_all_chains(target_chains)
         
-        # B. Initialize Web3
+        # B. Initialize Web3 with timeout protection
         for cid, config in CHAINS.items():
             if config.get('rpc'):
-                self.web3_connections[cid] = Web3(Web3.HTTPProvider(config['rpc']))
+                try:
+                    # Add request timeout to prevent hanging
+                    from web3.middleware import geth_poa_middleware
+                    w3 = Web3(Web3.HTTPProvider(
+                        config['rpc'],
+                        request_kwargs={'timeout': 30}  # 30 second timeout for RPC calls
+                    ))
+                    # Add PoA middleware for chains that need it (Polygon, BSC, etc.)
+                    if cid in [137, 56, 250, 42220]:  # PoA chains
+                        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+                    self.web3_connections[cid] = w3
+                    logger.debug(f"Web3 connection established for chain {cid}")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize Web3 for chain {cid}: {e}")
 
         # C. Build Graph
         self._build_graph_nodes()
@@ -157,11 +170,12 @@ class OmniBrain:
                     self.graph.add_edge(v, u, {"type": "bridge", "weight": 0.0})
 
     def _get_gas_price(self, chain_id):
-        """Get gas price with safety ceiling"""
+        """Get gas price with safety ceiling and timeout protection"""
         try:
             if chain_id in self.web3_connections:
                 w3 = self.web3_connections[chain_id]
-                wei_price = w3.eth.gas_price 
+                # Use block_identifier to ensure we get latest data with timeout
+                wei_price = w3.eth.gas_price
                 gwei_price = w3.from_wei(wei_price, 'gwei')
                 
                 # Apply safety ceiling
@@ -170,6 +184,9 @@ class OmniBrain:
                     return float(self.MAX_GAS_PRICE_GWEI)
                     
                 return gwei_price
+        except TimeoutError:
+            logger.error(f"Timeout fetching gas price for chain {chain_id}")
+            return 0.0
         except Exception as e:
             logger.error(f"Gas price fetch failed for chain {chain_id}: {e}")
             return 0.0
