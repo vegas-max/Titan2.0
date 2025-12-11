@@ -5,6 +5,7 @@ import redis
 import rustworkx as rx
 import pandas as pd
 from web3 import Web3
+from web3.middleware import geth_poa_middleware
 from datetime import datetime
 from eth_abi import encode
 from decimal import Decimal, getcontext
@@ -28,6 +29,26 @@ logger = logging.getLogger("TitanBrain")
 
 # Precision for financial math
 getcontext().prec = 28
+
+# Constants
+ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
+# Chains requiring PoA middleware due to Proof-of-Authority consensus
+# Note: Celo uses BFT consensus but still requires PoA middleware for web3.py compatibility
+POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo
+
+def is_zero_address(address: str) -> bool:
+    """
+    Check if an address is the zero address (uninitialized/unavailable).
+    
+    Args:
+        address: Ethereum address to check
+        
+    Returns:
+        bool: True if address is zero address, False otherwise
+    """
+    if not address:
+        return True
+    return address.lower() == ZERO_ADDRESS.lower()
 
 class ProfitEngine:
     """
@@ -120,10 +141,22 @@ class OmniBrain:
         target_chains = list(CHAINS.keys())
         self.inventory = TokenDiscovery.fetch_all_chains(target_chains)
         
-        # B. Initialize Web3
+        # B. Initialize Web3 with timeout protection
         for cid, config in CHAINS.items():
             if config.get('rpc'):
-                self.web3_connections[cid] = Web3(Web3.HTTPProvider(config['rpc']))
+                try:
+                    # Add request timeout to prevent hanging
+                    w3 = Web3(Web3.HTTPProvider(
+                        config['rpc'],
+                        request_kwargs={'timeout': 30}  # 30 second timeout for RPC calls
+                    ))
+                    # Add PoA middleware for chains that need it
+                    if cid in POA_CHAINS:
+                        w3.middleware_onion.inject(geth_poa_middleware, layer=0)
+                    self.web3_connections[cid] = w3
+                    logger.debug(f"Web3 connection established for chain {cid}")
+                except Exception as e:
+                    logger.warning(f"Failed to initialize Web3 for chain {cid}: {e}")
 
         # C. Build Graph
         self._build_graph_nodes()
@@ -157,11 +190,12 @@ class OmniBrain:
                     self.graph.add_edge(v, u, {"type": "bridge", "weight": 0.0})
 
     def _get_gas_price(self, chain_id):
-        """Get gas price with safety ceiling"""
+        """Get gas price with safety ceiling and timeout protection"""
         try:
             if chain_id in self.web3_connections:
                 w3 = self.web3_connections[chain_id]
-                wei_price = w3.eth.gas_price 
+                # Use block_identifier to ensure we get latest data with timeout
+                wei_price = w3.eth.gas_price
                 gwei_price = w3.from_wei(wei_price, 'gwei')
                 
                 # Apply safety ceiling
@@ -170,6 +204,9 @@ class OmniBrain:
                     return float(self.MAX_GAS_PRICE_GWEI)
                     
                 return gwei_price
+        except TimeoutError:
+            logger.error(f"Timeout fetching gas price for chain {chain_id}")
+            return 0.0
         except Exception as e:
             logger.error(f"Gas price fetch failed for chain {chain_id}: {e}")
             return 0.0
@@ -334,15 +371,15 @@ class OmniBrain:
                     logger.error(f"Chain config not found for {src_chain}")
                     return
                 
-                # Validate routers
-                uni_router = chain_conf.get('uniswap_router', "0x0000000000000000000000000000000000000000")
-                curve_router = chain_conf.get('curve_router', "0x0000000000000000000000000000000000000000")
+                # Validate routers are not zero addresses
+                uni_router = chain_conf.get('uniswap_router', ZERO_ADDRESS)
+                curve_router = chain_conf.get('curve_router', ZERO_ADDRESS)
                 
-                if uni_router == "0x0000000000000000000000000000000000000000":
-                    logger.warning(f"Uniswap router not configured for chain {src_chain}")
+                if is_zero_address(uni_router):
+                    logger.warning(f"Uniswap router not configured for chain {src_chain}, skipping opportunity")
                     return
-                if curve_router == "0x0000000000000000000000000000000000000000":
-                    logger.warning(f"Curve router not configured for chain {src_chain}")
+                if is_zero_address(curve_router):
+                    logger.warning(f"Curve router not configured for chain {src_chain}, skipping opportunity")
                     return
                 
                 # === FIX #2: CORRECT ROUTE ENCODING ===

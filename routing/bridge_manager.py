@@ -18,6 +18,10 @@ class BridgeManager:
         """Get best bridge route"""
         return self.aggregator.get_best_route(src_chain, dst_chain, token, amount, user)
     
+    def get_route(self, src_chain, dst_chain, token, amount, user):
+        """Alias for get_best_route - used by Brain for backward compatibility"""
+        return self.get_best_route(src_chain, dst_chain, token, amount, user)
+    
     def estimate_fee(self, from_chain, to_chain, token, amount):
         """Estimate bridge fee"""
         return self.oracle.estimate_bridge_fee(from_chain, to_chain, token, amount)

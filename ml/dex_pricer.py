@@ -15,12 +15,19 @@ UNIV3_ABI = '[{"inputs":[{"components":[{"internalType":"address","name":"tokenI
 # Curve (get_dy and coins)
 CURVE_ABI = '[{"stateMutability":"view","type":"function","name":"get_dy","inputs":[{"name":"i","type":"int128"},{"name":"j","type":"int128"},{"name":"dx","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"coins","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}]}]'
 
+# Maximum number of coins to check in a Curve pool (most pools have 2-4 coins)
+MAX_CURVE_COINS = 8
+
 class DexPricer:
     def __init__(self, w3: Web3, chain_id: int):
         self.w3 = w3
         self.chain_id = chain_id
         self.config = CHAINS.get(chain_id)
         self._pool_coins_cache = {}
+        # Use 'latest' for real-time pricing, or None for faster queries during congestion
+        # Can be overridden by setting environment variable PRICE_QUERY_BLOCK_IDENTIFIER
+        import os
+        self.block_identifier = os.getenv('PRICE_QUERY_BLOCK_IDENTIFIER', 'latest')
     
     def _get_pool_coins(self, pool_address: str) -> dict:
         """
@@ -45,7 +52,8 @@ class DexPricer:
             
             for i in range(MAX_CURVE_COINS):
                 try:
-                    coin_addr = pool.functions.coins(i).call()
+                    # Use configurable block identifier for performance tuning
+                    coin_addr = pool.functions.coins(i).call(block_identifier=self.block_identifier)
                     coin_map[coin_addr.lower()] = i
                     logger.debug(f"Pool {pool_address[:8]}: coins({i}) = {coin_addr}")
                 except Exception as e:
@@ -111,63 +119,58 @@ class DexPricer:
         logger.debug(f"Resolved: {token_in[:8]} (i={idx_in}) → {token_out[:8]} (j={idx_out})")
         return (idx_in, idx_out)
 
-    def get_curve_price(self, pool_address, token_in, token_out, amount):
+    def get_univ3_price(self, token_in, token_out, amount, fee=500):
         """
-        Queries Curve pool with DYNAMIC index resolution.
-        
-        MODIFIED: Now takes token addresses instead of indices
+        Queries Uniswap V3 Quoter with improved error handling.
         
         Args:
-            pool_address: Curve pool address
-            token_in: Input token address (was 'i')
-            token_out: Output token address (was 'j')
+            token_in: Input token address
+            token_out: Output token address
             amount: Input amount in wei
-        
+            fee: Pool fee tier (500, 3000, or 10000)
+            
         Returns:
             int: Output amount in wei, or 0 if query fails
+            
+        Note: Returns 0 for both "no liquidity" and "RPC error" cases.
+              Check logs to distinguish between failure modes.
         """
-        try:
-            # Get the correct indices dynamically
-            i, j = self.get_curve_indices(pool_address, token_in, token_out)
-            
-            if i is None or j is None:
-                logger.warning(f"Could not resolve Curve indices")
-                return 0
-            
-            # Query the pool with correct indices
-            pool = self.w3.eth.contract(
-                address=Web3.to_checksum_address(pool_address),
-                abi=CURVE_ABI
-            )
-            
-            output_amount = pool.functions.get_dy(i, j, int(amount)).call()
-            
-            logger.debug(f"Curve quote: {amount} → {output_amount} (i={i}, j={j})")
-            return output_amount
-            
-        except Exception as e:
-            logger.error(f"Curve price query failed: {e}")
-            return 0
-
-    def get_univ3_price(self, token_in, token_out, amount, fee=500):
-        """Queries Uniswap V3 Quoter - KEEP AS-IS"""
         quoter_addr = "0x61fFE014bA17989E743c5F6cB21bF9697530B21e" 
         
         try:
             contract = self.w3.eth.contract(address=quoter_addr, abi=UNIV3_ABI)
             quote = contract.functions.quoteExactInputSingle(
                 (token_in, token_out, int(amount), fee, 0)
-            ).call()
+            ).call(block_identifier=self.block_identifier)
             return quote[0]
+        except ValueError as e:
+            # Contract revert - typically means insufficient liquidity
+            logger.debug(f"UniV3 quote reverted (likely no liquidity): {e}")
+            return 0
+        except TimeoutError:
+            logger.warning(f"UniV3 quote timeout for {token_in[:8]} -> {token_out[:8]}")
+            return 0
         except Exception as e:
+            logger.error(f"UniV3 quote failed: {e}")
             return 0
 
     def get_curve_price(self, pool_address, token_in=None, token_out=None, amount=None, i=None, j=None):
         """
-        Queries Curve Pool for price quote.
+        Queries Curve Pool for price quote with improved error handling.
         Supports two modes:
         1. New mode: Pass token_in, token_out addresses (automatically resolves indices)
         2. Legacy mode: Pass i, j indices directly
+        
+        Args:
+            pool_address: Curve pool contract address
+            token_in: Input token address (Mode 1)
+            token_out: Output token address (Mode 1)
+            amount: Input amount in wei
+            i: Input token index (Mode 2, legacy)
+            j: Output token index (Mode 2, legacy)
+            
+        Returns:
+            int: Output amount in wei, or 0 if query fails
         """
         try:
             contract = self.w3.eth.contract(address=pool_address, abi=CURVE_ABI)
@@ -185,67 +188,55 @@ class DexPricer:
                 logger.error("get_curve_price requires either (token_in, token_out) or (i, j)")
                 return 0
             
-            return contract.functions.get_dy(i, j, int(amount)).call()
+            # Execute the price query
+            result = contract.functions.get_dy(i, j, int(amount)).call(block_identifier=self.block_identifier)
+            return result
+            
+        except ValueError as e:
+            # Contract revert - typically means invalid indices or pool state
+            logger.debug(f"Curve price query reverted: {e}")
+            return 0
+        except TimeoutError:
+            logger.warning(f"Curve price query timeout for pool {pool_address[:8]}")
+            return 0
         except Exception as e:
-            logger.debug(f"Curve price query failed: {e}")
+            logger.error(f"Curve price query failed: {e}")
             return 0
 
-    def get_curve_indices(self, pool_address, token_in, token_out):
-        """
-        Resolves token addresses to Curve pool indices.
-        Returns: (i, j) tuple where i is index of token_in and j is index of token_out
-        Returns: (None, None) if tokens not found in pool
-        """
-        try:
-            contract = self.w3.eth.contract(address=pool_address, abi=CURVE_ABI)
-            
-            # Normalize addresses to checksummed format
-            token_in = Web3.to_checksum_address(token_in)
-            token_out = Web3.to_checksum_address(token_out)
-            
-            # Iterate through pool coins to find indices
-            # Most Curve pools have 2-4 coins, so max iterations is small
-            i_idx = None
-            j_idx = None
-            
-            for idx in range(8):  # Max 8 coins in most Curve pools
-                try:
-                    coin = contract.functions.coins(idx).call()
-                    coin = Web3.to_checksum_address(coin)
-                    
-                    if coin == token_in:
-                        i_idx = idx
-                    if coin == token_out:
-                        j_idx = idx
-                    
-                    # Early exit if both found
-                    if i_idx is not None and j_idx is not None:
-                        return (i_idx, j_idx)
-                        
-                except Exception:
-                    # No more coins in pool
-                    break
-            
-            # If we get here, one or both tokens weren't found
-            if i_idx is None or j_idx is None:
-                logger.debug(f"Tokens not found in Curve pool: {token_in if i_idx is None else token_out}")
-            
-            return (i_idx, j_idx)
-            
-        except Exception as e:
-            logger.debug(f"Failed to get Curve indices: {e}")
-            return (None, None)
-
     def get_univ2_price(self, router_key, token_in, token_out, amount):
-        """Queries UniV2 Forks - KEEP AS-IS"""
-        router_addr = DEX_ROUTERS.get(router_key)
-        if not router_addr: return 0
+        """
+        Queries UniV2-style DEX routers with improved error handling.
+        
+        Args:
+            router_key: Key in DEX_ROUTERS config (e.g., 'QUICKSWAP', 'SUSHI')
+            token_in: Input token address
+            token_out: Output token address
+            amount: Input amount in wei
+            
+        Returns:
+            int: Output amount in wei, or 0 if query fails
+        """
+        router_addr = DEX_ROUTERS.get(self.chain_id, {}).get(router_key)
+        if not router_addr:
+            logger.debug(f"Router {router_key} not configured for chain {self.chain_id}")
+            return 0
         
         try:
             contract = self.w3.eth.contract(address=router_addr, abi=UNIV2_ABI)
-            amounts = contract.functions.getAmountsOut(int(amount), [token_in, token_out]).call()
+            amounts = contract.functions.getAmountsOut(
+                int(amount), 
+                [token_in, token_out]
+            ).call(block_identifier=self.block_identifier)
             return amounts[-1]
-        except Exception:
+        except ValueError as e:
+            # Contract revert - typically means insufficient liquidity
+            logger.debug(f"{router_key} quote reverted: {e}")
+            return 0
+        except TimeoutError:
+            logger.warning(f"{router_key} quote timeout")
+            return 0
+        except Exception as e:
+            logger.error(f"{router_key} quote failed: {e}")
             return 0
 
     def find_best_price(self, token_in, token_out, amount):
