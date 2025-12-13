@@ -283,7 +283,14 @@ if [ -f "requirements.txt" ]; then
         xcode-select --install 2>/dev/null || true
     fi
     
-    pip3 install -r requirements.txt
+    # Install with --user flag to avoid system-wide conflicts (unless running in venv)
+    if [ -z "$VIRTUAL_ENV" ]; then
+        print_info "Installing to user directory (use virtual environment for isolation)"
+        pip3 install --user -r requirements.txt
+    else
+        print_info "Installing to virtual environment"
+        pip3 install -r requirements.txt
+    fi
     print_status "Python dependencies installed (including rustworkx)"
     print_info "rustworkx: Rust-based graph library for pathfinding and arbitrage routing"
 else
@@ -373,6 +380,18 @@ fi
 if [[ ! "$WALLET_KEY" =~ ^0x[0-9a-fA-F]{64}$ ]]; then
     print_error "Invalid private key format. Must be 0x followed by 64 hex characters"
     print_info "Example: 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef"
+    exit 1
+fi
+
+# Additional validation: Check if key looks valid (not all zeros, not obviously invalid)
+if [[ "$WALLET_KEY" == "0x0000000000000000000000000000000000000000000000000000000000000000" ]]; then
+    print_error "Private key appears to be invalid (all zeros)"
+    exit 1
+fi
+
+# Warning for placeholder keys
+if [[ "$WALLET_KEY" =~ YOUR_PRIVATE_KEY|YOUR_KEY|REPLACE|PLACEHOLDER ]]; then
+    print_error "Private key appears to be a placeholder. Please use a real private key"
     exit 1
 fi
 
@@ -583,16 +602,41 @@ if [[ ! "$LAUNCH" =~ ^[Nn]$ ]]; then
     # Export mode
     export EXECUTION_MODE=$EXECUTION_MODE_UPPER
     
+    # Setup cleanup handler
+    cleanup_processes() {
+        print_info "Cleaning up processes..."
+        [ -f .orchestrator.pid ] && kill $(cat .orchestrator.pid) 2>/dev/null || true
+        [ -f .executor.pid ] && kill $(cat .executor.pid) 2>/dev/null || true
+        rm -f .orchestrator.pid .executor.pid
+    }
+    
+    # Register cleanup on script exit
+    trap cleanup_processes EXIT INT TERM
+    
     # Launch system components
     print_progress "Launching Mainnet Orchestrator..."
     python3 mainnet_orchestrator.py > logs/orchestrator.log 2>&1 &
     ORCHESTRATOR_PID=$!
+    echo $ORCHESTRATOR_PID > .orchestrator.pid
     sleep 3
+    
+    # Verify orchestrator started
+    if ! ps -p $ORCHESTRATOR_PID > /dev/null; then
+        print_error "Orchestrator failed to start. Check logs/orchestrator.log"
+        exit 1
+    fi
     
     print_progress "Launching Execution Engine..."
     node execution/bot.js > logs/executor.log 2>&1 &
     EXECUTOR_PID=$!
+    echo $EXECUTOR_PID > .executor.pid
     sleep 2
+    
+    # Verify executor started
+    if ! ps -p $EXECUTOR_PID > /dev/null; then
+        print_error "Executor failed to start. Check logs/executor.log"
+        exit 1
+    fi
     
     echo ""
     print_status "System launched successfully!"
@@ -611,6 +655,7 @@ if [[ ! "$LAUNCH" =~ ^[Nn]$ ]]; then
     echo ""
     echo -e "${CYAN}Stop System:${NC}"
     echo -e "  ${BLUE}kill $ORCHESTRATOR_PID $EXECUTOR_PID${NC}"
+    echo -e "  Or: ${BLUE}kill \$(cat .orchestrator.pid .executor.pid)${NC}"
     echo ""
     
     if [ "$EXECUTION_MODE_UPPER" == "PAPER" ]; then
