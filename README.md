@@ -112,7 +112,17 @@ make audit      # Run system audit
 
 **APEX-OMEGA TITAN** is an advanced, AI-powered arbitrage trading system designed for decentralized finance (DeFi). It combines blockchain technology with artificial intelligence to automatically identify and execute profitable trading opportunities across multiple blockchain networks.
 
-⚠️ **System Status**: Core features are implemented and functional. Requires user configuration, extensive testing, and professional audit before mainnet deployment with significant capital. See [MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSESSMENT.md) for detailed assessment.
+⚠️ **System Status**: 
+- **Technical Implementation**: Core features are implemented and functional (90% complete)
+- **Testing Status**: Requires extensive testnet validation before mainnet use
+- **Security Status**: Code is well-structured but has NOT been professionally audited
+- **Production Readiness**: Ready for testnet deployment. Mainnet deployment requires:
+  - User configuration (private keys, API keys, contract deployment)
+  - Minimum 1 week testnet validation
+  - Professional security audit recommended for significant capital
+- **Risk Level**: MODERATE - Start with small amounts ($100-1,000) and scale gradually
+
+See [MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSESSMENT.md) for comprehensive 90% accuracy verification and detailed deployment guidance.
 
 The system operates by:
 1. **Scanning** 15 blockchain networks simultaneously for price discrepancies
@@ -929,9 +939,10 @@ npx hardhat verify --network polygon DEPLOYED_ADDRESS \
 #### Key Features
 
 **1. Flash Loan Orchestration**
-- **Balancer V3 Vault** (Primary): Deployed at deterministic address `0xbA1333333333a1BA1108E8412f11850A5C319bA9` across ALL chains
+- **Balancer V3 Vault** (Primary): Deployed at deterministic address `0xbA1333333333a1BA1108E8412f11850A5C319bA9` across major EVM chains
   - **0% fee** - Zero flash loan costs
-  - Available on: Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, and most EVM chains
+  - Verified on: Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, and other EVM-compatible networks
+  - Availability should be verified for each target chain before deployment
 - **Aave V3 Pool** (Fallback): 0.05-0.09% fee per flash loan
   - Available on: Ethereum, Polygon, Arbitrum, Optimism, Avalanche
 - Callback-based execution model with atomic safety guarantees
@@ -1892,7 +1903,11 @@ See **[MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSE
 
 3. **No Financial Advice**: This software is for educational and informational purposes only. It is not financial advice.
 
-4. **Profit Projections**: Any mentioned profit projections are HYPOTHETICAL ESTIMATES based on assumed market conditions. Actual results may vary significantly and could include losses. These are NOT guarantees.
+4. **Profit Projections**: Any mentioned profit projections are HYPOTHETICAL ESTIMATES based on assumed market conditions and theoretical calculations. 
+   - Actual results may vary significantly and could include zero profits or losses
+   - Past performance (if any) is not indicative of future results
+   - Market conditions, competition, gas prices, and execution success rates directly impact profitability
+   - These projections are NOT guarantees and should NOT be considered financial advice
 
 5. **Testing Required**: Before mainnet deployment:
    - Deploy to testnet and run for minimum 1 week

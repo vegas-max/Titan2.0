@@ -46,9 +46,10 @@ This document provides a comprehensive assessment of the mainnet readiness claim
 **Assessment**: ❌ **INACCURATE - Balancer V3 IS deployed on Polygon**
 
 **Correction**: 
-- Balancer V3 Vault uses a **deterministic address** across ALL chains: `0xbA1333333333a1BA1108E8412f11850A5C319bA9`
-- This includes Polygon, Ethereum, Arbitrum, Optimism, Base, Avalanche, and other supported networks
+- Balancer V3 Vault uses a **deterministic address** across all major EVM-compatible chains: `0xbA1333333333a1BA1108E8412f11850A5C319bA9`
+- This includes: Polygon, Ethereum, Arbitrum, Optimism, Base, Avalanche, and other EVM-compatible Layer 1 and Layer 2 networks
 - The current configuration correctly uses this deterministic address
+- Note: Availability should be verified for each specific chain before deployment
 
 **Source**: 
 ```python
@@ -196,11 +197,17 @@ await this.redis.subscribe('trade_signals', async (msg) => {
 **Recommendation**: Add logic in `ml/brain.py` to automatically select Balancer V3 when available:
 ```python
 def select_flash_source(chain_id):
-    # Balancer V3 is available on all chains, prefer it (0% fee)
-    return 1  # Balancer V3
+    # Try Balancer V3 first (0% fee) if available on this chain
+    if has_balancer_v3(chain_id):
+        return 1  # Balancer V3
     
-    # Only use Aave V3 if Balancer fails
-    # return 2
+    # Fallback to Aave V3 if available
+    aave_pool = CHAINS[chain_id].get('aave_pool')
+    if aave_pool and aave_pool != ZERO_ADDRESS:
+        return 2  # Aave V3
+    
+    # No flash loan provider available
+    return None
 ```
 
 #### Strategy 2: Dynamic Flash Loan Sizing
