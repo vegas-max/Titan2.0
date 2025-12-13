@@ -67,6 +67,7 @@ This release includes comprehensive automation for installation, deployment, and
 
 - **[QUICKSTART.md](QUICKSTART.md)** - 15-minute setup guide
 - **[INSTALL.md](INSTALL.md)** - Detailed installation for all platforms
+- **[MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSESSMENT.md)** - 🆕 Comprehensive accuracy verification and corrections
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 - **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - Current release details
 - **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - Security features and best practices
@@ -109,12 +110,14 @@ make audit      # Run system audit
 
 ## 🎯 Overview
 
-**APEX-OMEGA TITAN** is an enterprise-grade, production-ready arbitrage trading system designed for decentralized finance (DeFi). It combines cutting-edge blockchain technology with artificial intelligence to automatically identify and execute profitable trading opportunities across multiple blockchain networks.
+**APEX-OMEGA TITAN** is an advanced, AI-powered arbitrage trading system designed for decentralized finance (DeFi). It combines blockchain technology with artificial intelligence to automatically identify and execute profitable trading opportunities across multiple blockchain networks.
+
+⚠️ **System Status**: Core features are implemented and functional. Requires user configuration, extensive testing, and professional audit before mainnet deployment with significant capital. See [MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSESSMENT.md) for detailed assessment.
 
 The system operates by:
-1. **Scanning** 10+ blockchain networks simultaneously for price discrepancies
+1. **Scanning** 15 blockchain networks simultaneously for price discrepancies
 2. **Analyzing** opportunities using AI-powered profit prediction models
-3. **Executing** trades using flash loans (zero capital required)
+3. **Executing** trades using flash loans (requires ONLY gas fees, no working capital)
 4. **Optimizing** gas fees and execution timing with reinforcement learning
 5. **Bridging** assets cross-chain when inter-chain arbitrage is profitable
 
@@ -926,9 +929,12 @@ npx hardhat verify --network polygon DEPLOYED_ADDRESS \
 #### Key Features
 
 **1. Flash Loan Orchestration**
-- Supports both Balancer V3 (0% fee) and Aave V3 (0.05-0.09% fee)
-- Automatic source selection based on availability and cost
-- Callback-based execution model
+- **Balancer V3 Vault** (Primary): Deployed at deterministic address `0xbA1333333333a1BA1108E8412f11850A5C319bA9` across ALL chains
+  - **0% fee** - Zero flash loan costs
+  - Available on: Ethereum, Polygon, Arbitrum, Optimism, Base, Avalanche, and most EVM chains
+- **Aave V3 Pool** (Fallback): 0.05-0.09% fee per flash loan
+  - Available on: Ethereum, Polygon, Arbitrum, Optimism, Avalanche
+- Callback-based execution model with atomic safety guarantees
 
 **2. Universal Swap Router**
 - Protocol-agnostic design with pluggable DEX modules
@@ -1872,6 +1878,12 @@ Contributions are welcome! Please follow these guidelines:
 
 ## ⚠️ Disclaimer
 
+### 🔴 CRITICAL: Read This Before Using
+
+**This system has NOT been professionally audited and requires extensive testing before mainnet deployment with significant capital.**
+
+See **[MAINNET_READINESS_ACCURACY_ASSESSMENT.md](MAINNET_READINESS_ACCURACY_ASSESSMENT.md)** for comprehensive accuracy verification and deployment guidance.
+
 ### Important Legal Notices
 
 1. **Experimental Software**: This software is provided "as is" without warranty of any kind. Use at your own risk.
@@ -1880,15 +1892,23 @@ Contributions are welcome! Please follow these guidelines:
 
 3. **No Financial Advice**: This software is for educational and informational purposes only. It is not financial advice.
 
-4. **Regulatory Compliance**: Users are responsible for complying with local laws and regulations regarding cryptocurrency trading.
+4. **Profit Projections**: Any mentioned profit projections are HYPOTHETICAL ESTIMATES based on assumed market conditions. Actual results may vary significantly and could include losses. These are NOT guarantees.
 
-5. **Smart Contract Risk**: Smart contracts may contain bugs or vulnerabilities. Audit before using with real funds.
+5. **Testing Required**: Before mainnet deployment:
+   - Deploy to testnet and run for minimum 1 week
+   - Execute at least 100 test transactions
+   - Start with small capital ($100-1,000) on mainnet
+   - Consider professional security audit before scaling
 
-6. **API Dependencies**: This system relies on third-party APIs which may change, fail, or become unavailable.
+6. **Regulatory Compliance**: Users are responsible for complying with local laws and regulations regarding cryptocurrency trading.
 
-7. **MEV Risk**: Even with private mempool, trades can be frontrun or sandwiched by sophisticated actors.
+7. **Smart Contract Risk**: Smart contracts may contain bugs or vulnerabilities. Professional audit recommended before using with real funds.
 
-8. **Gas Costs**: Failed transactions still consume gas fees. Test thoroughly on testnets first.
+8. **API Dependencies**: This system relies on third-party APIs which may change, fail, or become unavailable.
+
+9. **MEV Risk**: Even with private mempool, trades can be frontrun or sandwiched by sophisticated actors.
+
+10. **Gas Costs**: Failed transactions still consume gas fees. Test thoroughly on testnets first.
 
 ### Security Warnings
 
