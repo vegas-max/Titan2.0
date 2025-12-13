@@ -114,7 +114,7 @@ make audit      # Run system audit
 The system operates by:
 1. **Scanning** 10+ blockchain networks simultaneously for price discrepancies
 2. **Analyzing** opportunities using AI-powered profit prediction models
-3. **Executing** trades using flash loans (zero capital required)
+3. **Executing** trades using flash loans (requires ONLY gas fees, no working capital)
 4. **Optimizing** gas fees and execution timing with reinforcement learning
 5. **Bridging** assets cross-chain when inter-chain arbitrage is profitable
 
