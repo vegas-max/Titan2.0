@@ -43,7 +43,7 @@ This roadmap document tracks the implementation of MEV enhancement recommendatio
 
 This phase focuses on due diligence, planning, and stakeholder alignment before any code changes.
 
-**✅ COMPLETED:** Sandwich attack ethical review determined they are NOT harmful with proper guardrails.
+**✅ COMPLETED:** Sandwich attack ethical review determined they may be acceptable under specific conditions with proper guardrails, but their use remains controversial and should be carefully monitored.
 
 ### 0.1 Team Review & Alignment
 
