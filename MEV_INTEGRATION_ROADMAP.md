@@ -93,7 +93,7 @@ This phase focuses on due diligence, planning, and stakeholder alignment before 
     - [x] Documented potential harm to ecosystem participants
     - [x] Evaluated profit vs. ethical cost trade-offs
     - [x] Considered alternatives and mitigation strategies
-    - **Conclusion:** With minimum profit thresholds ($15+), large trade targeting (>$50k), and transparency, sandwich attacks do not cause meaningful harm
+    - **Conclusion:** With minimum profit thresholds ($15+), large trade targeting (>$50k), and transparency, harm from sandwich attacks is minimized and acceptable trade-offs have been established
   - [ ] **JIT Liquidity:** Assess fairness of front-running swaps with liquidity provision
     - [ ] Evaluate whether this provides value or extracts value
     - [ ] Consider impact on existing liquidity providers
