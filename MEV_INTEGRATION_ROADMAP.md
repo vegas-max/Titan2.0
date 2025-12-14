@@ -125,7 +125,7 @@ This phase focuses on due diligence, planning, and stakeholder alignment before 
 1. **Sandwich Attacks:** Include ☑ | Exclude ☐ | Conditional ☐
    - **Decision:** ✅ APPROVED (December 14, 2025) - Ethically acceptable with proper guardrails
    - **Rationale:** Ethical review determined that with minimum profit thresholds ($15+), target filtering (large trades >$50k), and transparency mechanisms, sandwich attacks can be implemented without causing harm to the ecosystem
-   - **Remaining:** Legal review and community feedback still required before implementation to the ecosystem
+   - **Remaining:** Legal review and community feedback still required before implementation in the ecosystem
 2. **JIT Liquidity:** Include ☐ | Exclude ☐ | Conditional ☐
    - If conditional, specify conditions: ___________________
 3. **Other Strategies:** Document decisions for each Priority 2-3 strategy
