@@ -122,9 +122,9 @@ This phase focuses on due diligence, planning, and stakeholder alignment before 
   - **Timeline:** Day 6
 
 #### Decision Points
-1. **Sandwich Attacks:** Include ☑ | Exclude ☐ | Conditional ☐
-   - **Decision:** ✅ APPROVED (December 14, 2025) - Ethically acceptable with proper guardrails
-   - **Rationale:** Ethical review determined that with minimum profit thresholds ($15+), target filtering (large trades >$50k), and transparency mechanisms, sandwich attacks can be implemented without causing harm to the ecosystem
+1. **Sandwich Attacks:** Include ☐ | Exclude ☐ | Conditional ☑
+   - **Decision:** ☑ CONDITIONAL APPROVAL (December 14, 2025) - Ethically acceptable with proper guardrails; pending legal and community approval
+   - **Rationale:** Ethical approval granted; with minimum profit thresholds ($15+), target filtering (large trades >$50k), and transparency mechanisms, sandwich attacks are not harmful. Legal review and community feedback are still required before implementation.
    - **Remaining:** Legal review and community feedback still required before implementation in the ecosystem
 2. **JIT Liquidity:** Include ☐ | Exclude ☐ | Conditional ☐
    - If conditional, specify conditions: ___________________
