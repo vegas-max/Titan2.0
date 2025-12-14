@@ -39,9 +39,11 @@ This roadmap document tracks the implementation of MEV enhancement recommendatio
 ## Phase 0: Pre-Implementation Review & Planning
 
 **Timeline:** Week 0 (Before any development begins)  
-**Status:** ⏳ Pending
+**Status:** 🔄 In Progress (Ethical review for sandwich attacks completed)
 
 This phase focuses on due diligence, planning, and stakeholder alignment before any code changes.
+
+**✅ COMPLETED:** Sandwich attack ethical review determined they are NOT harmful with proper guardrails.
 
 ### 0.1 Team Review & Alignment
 
@@ -82,6 +84,7 @@ This phase focuses on due diligence, planning, and stakeholder alignment before 
 
 ### 0.2 Ethical Implications Discussion
 
+**Status:** 🔄 Partially Complete (Sandwich attacks reviewed and approved)  
 **Objective:** Thoroughly evaluate the ethical considerations of MEV strategies, particularly controversial ones.
 
 #### Tasks
@@ -120,8 +123,9 @@ This phase focuses on due diligence, planning, and stakeholder alignment before 
 
 #### Decision Points
 1. **Sandwich Attacks:** Include ☑ | Exclude ☐ | Conditional ☐
-   - **Decision:** APPROVED - Ethically acceptable with proper guardrails
-   - **Rationale:** With minimum profit thresholds ($15+), target filtering (large trades >$50k), and transparency mechanisms, sandwich attacks can be implemented without causing harm to the ecosystem
+   - **Decision:** ✅ APPROVED (December 14, 2025) - Ethically acceptable with proper guardrails
+   - **Rationale:** Ethical review determined that with minimum profit thresholds ($15+), target filtering (large trades >$50k), and transparency mechanisms, sandwich attacks can be implemented without causing harm to the ecosystem
+   - **Remaining:** Legal review and community feedback still required before implementation to the ecosystem
 2. **JIT Liquidity:** Include ☐ | Exclude ☐ | Conditional ☐
    - If conditional, specify conditions: ___________________
 3. **Other Strategies:** Document decisions for each Priority 2-3 strategy
@@ -790,11 +794,11 @@ Implement profitable MEV strategies (JIT Liquidity and optionally Sandwich Attac
 **Status:** ✅ APPROVED - Ethics review complete, not considered harmful with proper guardrails  
 **Estimated Effort:** 20-30 hours development + 40-60 hours testing
 
-**✅ IMPLEMENTATION GATE PASSED:**
-1. ✅ Ethical review APPROVED sandwich attacks with defined guardrails - determined NOT harmful when properly implemented
-2. ⏳ Legal counsel approval pending (proceed with development in parallel)
-3. ⏳ Community feedback collection in progress
-4. ✅ Team consensus to proceed obtained
+**🔄 IMPLEMENTATION GATE STATUS:**
+1. ✅ Ethical review COMPLETED - Sandwich attacks APPROVED and determined NOT harmful when properly implemented
+2. ⏳ Legal counsel review - TO BE COMPLETED (can proceed with development in parallel)
+3. ⏳ Community feedback - TO BE COLLECTED as part of Phase 0
+4. ✅ Team consensus to proceed - OBTAINED based on ethical approval
 
 #### Implementation Tasks
 - [ ] **Sandwich Strategy Development**
