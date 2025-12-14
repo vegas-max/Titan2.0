@@ -33,9 +33,9 @@ echo ""
 mkdir -p logs
 SHUTDOWN_LOG="logs/emergency_shutdown_$(date '+%Y%m%d_%H%M%S').log"
 
-# Log function
+# Log function with current timestamp
 log_action() {
-    echo "[$TIMESTAMP] $1" | tee -a "$SHUTDOWN_LOG"
+    echo "[$(date '+%Y-%m-%d %H:%M:%S')] $1" | tee -a "$SHUTDOWN_LOG"
 }
 
 log_action "Emergency shutdown initiated: $REASON"
@@ -96,18 +96,18 @@ fi
 echo -e "${YELLOW}[3/6]${NC} Checking for orphaned brain processes..."
 BRAIN_PIDS=$(pgrep -f "mainnet_orchestrator.py" 2>/dev/null)
 if [ ! -z "$BRAIN_PIDS" ]; then
-    echo "$BRAIN_PIDS" | while read -r pid; do
+    while read -r pid; do
         kill -SIGTERM "$pid" 2>/dev/null
         log_action "Terminated brain process PID: $pid"
-    done
+    done <<< "$BRAIN_PIDS"
     sleep 1
     # Force kill if still running
     BRAIN_PIDS=$(pgrep -f "mainnet_orchestrator.py" 2>/dev/null)
     if [ ! -z "$BRAIN_PIDS" ]; then
-        echo "$BRAIN_PIDS" | while read -r pid; do
+        while read -r pid; do
             kill -SIGKILL "$pid" 2>/dev/null
             log_action "Force-killed brain process PID: $pid"
-        done
+        done <<< "$BRAIN_PIDS"
     fi
     echo -e "${GREEN}[✓]${NC} Brain processes terminated"
 else
@@ -119,18 +119,18 @@ fi
 echo -e "${YELLOW}[4/6]${NC} Checking for orphaned bot processes..."
 BOT_PIDS=$(pgrep -f "execution/bot.js" 2>/dev/null)
 if [ ! -z "$BOT_PIDS" ]; then
-    echo "$BOT_PIDS" | while read -r pid; do
+    while read -r pid; do
         kill -SIGTERM "$pid" 2>/dev/null
         log_action "Terminated bot process PID: $pid"
-    done
+    done <<< "$BOT_PIDS"
     sleep 1
     # Force kill if still running
     BOT_PIDS=$(pgrep -f "execution/bot.js" 2>/dev/null)
     if [ ! -z "$BOT_PIDS" ]; then
-        echo "$BOT_PIDS" | while read -r pid; do
+        while read -r pid; do
             kill -SIGKILL "$pid" 2>/dev/null
             log_action "Force-killed bot process PID: $pid"
-        done
+        done <<< "$BOT_PIDS"
     fi
     echo -e "${GREEN}[✓]${NC} Bot processes terminated"
 else
