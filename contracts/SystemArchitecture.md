@@ -52,17 +52,16 @@ enum Dex {
 }
 ```
 
-**TokenId + TokenType Enums**:
+**TokenId + TokenType**:
 ```solidity
-enum TokenId {
-    USDC,         // 0
-    USDT,         // 1
-    DAI,          // 2
-    WETH,         // 3
-    WMATIC,       // 4
-    WBTC,         // 5
-    FRAX          // 6
-}
+// Token IDs use uint8 (0-255) for flexible registry without hardcoded enums
+// Recommended conventions (not enforced):
+//   0: Wrapped native (WETH, WMATIC, etc.)
+//   1: USDC
+//   2: USDT
+//   3: DAI
+//   4: WBTC
+//   5-255: Additional tokens as registered
 
 enum TokenType {
     CANONICAL,    // 0: Native to the chain
@@ -71,18 +70,26 @@ enum TokenType {
 }
 ```
 
+**Key Design**: Token IDs are not hardcoded in an enum. This allows the registry to grow from 6 tokens to 300+ without contract bloat. The off-chain system (`brain.py`) manages the full token graph and maps to registry IDs as needed.
+
 #### Two Route Encodings
 
 **RAW_ADDRESSES (0)**:
-- Explicit router + tokenOut addresses provided
+- Explicit router + tokenOut addresses provided in calldata
 - Direct execution without registry lookup
+- **Use case**: Rare tokens, new opportunities, or tokens not yet in registry
+- **Advantage**: Maximum flexibility - can trade ANY token immediately
 
 **REGISTRY_ENUMS (1)**:
-- Hops specify DEX ID + TokenId/TokenType
-- Contract resolves addresses from on-chain mappings
-- Requires registry setup via `setDexRouter()` and `setToken()`
+- Hops specify DEX ID + Token ID (uint8) + TokenType
+- Contract resolves addresses from on-chain registry mappings
+- **Use case**: Whitelisted high-liquidity tokens (20-50 per chain)
+- **Advantage**: Compact calldata, gas-efficient for frequent tokens
 
-**Why it matters**: Keeps execution flexible and fast while giving clean governance/control via registries (set once, route by enums).
+**Design Rationale**: This dual encoding achieves **maximum coverage without bloating Solidity**:
+- **On-chain**: Tight whitelist registry for common tokens (upgradeable via `setToken()`)
+- **Off-chain**: 300+ token graph in Python brain for path discovery
+- **Calldata**: Choose encoding based on whether token is registered
 
 #### Registry Mappings
 
@@ -93,6 +100,7 @@ mapping(uint256 => mapping(uint8 => mapping(uint8 => address))) public tokenRegi
 
 - `dexRouter[chainId][dexId] = router address`
 - `tokenRegistry[chainId][tokenId][tokenType] = token address`
+- Registry IDs are `uint8` (0-255) allowing flexible growth without contract changes
 
 ---
 

@@ -53,15 +53,18 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
 
     /**
      * @notice Token identifiers for registry-based routing
+     * @dev Token IDs are uint8 (0-255) to support flexible registry without hardcoded enums.
+     *      Common tokens can be assigned low IDs (0-50) for frequent use, while rare tokens
+     *      use RAW_ADDRESSES encoding. The off-chain system manages the full 300+ token graph.
+     *      
+     *      Example conventional IDs (not enforced on-chain):
+     *      0: Wrapped native (WETH, WMATIC, etc.)
+     *      1: USDC
+     *      2: USDT
+     *      3: DAI
+     *      4: WBTC
+     *      5-255: Additional tokens as registered via setToken()
      */
-    enum TokenId {
-        WNATIVE,      // 0: Wrapped native token (WETH, WMATIC, etc.)
-        USDC,         // 1: USD Coin
-        USDT,         // 2: Tether USD
-        DAI,          // 3: Dai Stablecoin
-        WETH,         // 4: Wrapped Ether
-        WBTC          // 5: Wrapped Bitcoin
-    }
 
     /**
      * @notice Token type classification
