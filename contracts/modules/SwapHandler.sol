@@ -19,6 +19,17 @@ abstract contract SwapHandler {
     uint8 internal constant PROTOCOL_UNIV3 = 2;  // Uniswap V3
     uint8 internal constant PROTOCOL_CURVE = 3;  // Curve Finance
     
+    /* ========== CONSTANTS ========== */
+    
+    // Uniswap V3 pool fee tiers
+    uint24 internal constant FEE_LOWEST = 100;    // 0.01%
+    uint24 internal constant FEE_LOW = 500;       // 0.05%
+    uint24 internal constant FEE_MEDIUM = 3000;   // 0.3%
+    uint24 internal constant FEE_HIGH = 10000;    // 1%
+    
+    // Curve pool constraints
+    uint8 internal constant MAX_CURVE_INDICES = 8;
+    
     /* ========== CONFIGURABLE DEADLINE ========== */
     
     // Default deadline can be overridden by child contracts
@@ -105,7 +116,7 @@ abstract contract SwapHandler {
         
         // Validate pool fee tier
         require(
-            fee == 100 || fee == 500 || fee == 3000 || fee == 10000,
+            fee == FEE_LOWEST || fee == FEE_LOW || fee == FEE_MEDIUM || fee == FEE_HIGH,
             "Invalid pool fee"
         );
         
@@ -135,8 +146,8 @@ abstract contract SwapHandler {
         (int128 i, int128 j) = abi.decode(extraData, (int128, int128));
         
         // Validate indices
-        require(i >= 0 && i < 8, "Invalid Curve index i");
-        require(j >= 0 && j < 8, "Invalid Curve index j");
+        require(i >= 0 && i < int128(uint128(MAX_CURVE_INDICES)), "Invalid Curve index i");
+        require(j >= 0 && j < int128(uint128(MAX_CURVE_INDICES)), "Invalid Curve index j");
         require(i != j, "Same token swap");
         
         return ICurvePool(pool).exchange(

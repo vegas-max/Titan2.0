@@ -137,6 +137,9 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
     // Configurable deadline for time-sensitive swaps (in seconds)
     uint256 public swapDeadline = 180; // Default 3 minutes
     
+    // Loss threshold constant (50% max loss before revert)
+    uint256 private constant MIN_OUTPUT_RATIO = 2;
+    
     /* ========== REGISTRY MAPPINGS ========== */
     
     // Chain ID to Chain enum
@@ -447,7 +450,7 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
         
         // Basic sanity check (actual profit validated by flash loan repayment)
         require(
-            currentAmount >= inputAmount / 2,
+            currentAmount >= inputAmount / MIN_OUTPUT_RATIO,
             "Suspicious loss detected"
         );
         
