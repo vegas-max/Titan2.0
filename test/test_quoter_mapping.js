@@ -16,7 +16,6 @@ const SUPPORTED_CHAINS = {
     8453: "Base",
     56: "BNB Smart Chain",
     43114: "Avalanche",
-    250: "Fantom",
     42220: "Celo",
     324: "zkSync Era",
     81457: "Blast"
@@ -24,6 +23,7 @@ const SUPPORTED_CHAINS = {
 
 // Chains without official Uniswap V3 deployment
 const UNSUPPORTED_CHAINS = {
+    250: "Fantom",
     59144: "Linea",
     534352: "Scroll",
     5000: "Mantle",
@@ -80,18 +80,20 @@ for (const [chainId, name] of Object.entries(UNSUPPORTED_CHAINS)) {
 
 // Test 3: Verify no fallback to default address
 console.log("\n✅ Test 3: Unknown chain should not fallback to default");
+let passedUnknown = 0;
+let failedUnknown = 0;
 const UNKNOWN_CHAIN = 999999;
 try {
     const engine = new OmniSDKEngine(UNKNOWN_CHAIN, "https://dummy.rpc.url");
     console.log(`  ✗ Unknown chain ${UNKNOWN_CHAIN}: Should have thrown error but didn't`);
-    failedUnsupported++;
+    failedUnknown++;
 } catch (error) {
     if (error.message.includes('QuoterV2 not available')) {
         console.log(`  ✓ Unknown chain ${UNKNOWN_CHAIN}: Correctly threw error (no fallback)`);
-        passedUnsupported++;
+        passedUnknown++;
     } else {
         console.log(`  ✗ Unknown chain ${UNKNOWN_CHAIN}: Wrong error: ${error.message}`);
-        failedUnsupported++;
+        failedUnknown++;
     }
 }
 
@@ -100,9 +102,10 @@ console.log("\n" + "=".repeat(60));
 console.log("📊 Test Summary:");
 console.log(`  Supported chains: ${passedSupported}/${passedSupported + failedSupported} passed`);
 console.log(`  Fail-closed tests: ${passedUnsupported}/${passedUnsupported + failedUnsupported} passed`);
+console.log(`  Unknown chain test: ${passedUnknown}/${passedUnknown + failedUnknown} passed`);
 
-const totalPassed = passedSupported + passedUnsupported;
-const totalFailed = failedSupported + failedUnsupported;
+const totalPassed = passedSupported + passedUnsupported + passedUnknown;
+const totalFailed = failedSupported + failedUnsupported + failedUnknown;
 const totalTests = totalPassed + totalFailed;
 
 if (totalFailed === 0) {
