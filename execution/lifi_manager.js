@@ -146,12 +146,6 @@ async function initializeLifiSdk() {
       lifiConfig = null;
       sdkInitializationError = error;
       
-      // Calculate retry delay with exponential backoff
-      const retryDelay = Math.min(
-        RETRY_DELAY_MS * Math.pow(2, initAttemptCount - 1),
-        MAX_RETRY_DELAY_MS
-      );
-      
       console.error('❌ Failed to initialize LiFi SDK:', error.message);
       console.error(`   Will allow retry after ${RETRY_TIMEOUT_MS / 1000} seconds`);
     } finally {
@@ -179,6 +173,25 @@ function resetLifiSdkState() {
   console.log('🔄 LiFi SDK state reset - initialization will retry on next use');
 }
 
+/**
+ * Validate that the SDK is properly initialized and ready for use.
+ * 
+ * @returns {{valid: boolean, error?: object}} Validation result
+ */
+function validateSdkState() {
+  if (sdkInitializationError || !lifiSdk || !lifiConfig) {
+    return {
+      valid: false,
+      error: {
+        success: false,
+        error: 'LiFi SDK initialization failed',
+        details: sdkInitializationError?.message || 'SDK or config not initialized'
+      }
+    };
+  }
+  return { valid: true };
+}
+
 // === 2. EXECUTION ENGINE ===
 class LifiExecutionEngine {
   
@@ -201,13 +214,10 @@ class LifiExecutionEngine {
     // Initialize SDK on first use
     await initializeLifiSdk();
     
-    if (sdkInitializationError || !lifiSdk || !lifiConfig) {
-      console.error('❌ LiFi SDK not available:', sdkInitializationError?.message || 'SDK not initialized');
-      return {
-        success: false,
-        error: 'LiFi SDK initialization failed',
-        details: sdkInitializationError?.message || 'SDK or config not initialized'
-      };
+    const validation = validateSdkState();
+    if (!validation.valid) {
+      console.error('❌ LiFi SDK not available:', validation.error.details);
+      return validation.error;
     }
 
     const {
@@ -301,13 +311,10 @@ class LifiExecutionEngine {
     // Initialize SDK on first use
     await initializeLifiSdk();
     
-    if (sdkInitializationError || !lifiSdk || !lifiConfig) {
-      console.error('❌ LiFi SDK not available:', sdkInitializationError?.message || 'SDK not initialized');
-      return {
-        success: false,
-        error: 'LiFi SDK initialization failed',
-        details: sdkInitializationError?.message || 'SDK or config not initialized'
-      };
+    const validation = validateSdkState();
+    if (!validation.valid) {
+      console.error('❌ LiFi SDK not available:', validation.error.details);
+      return validation.error;
     }
 
     const { order = 'CHEAPEST', slippage = 0.005 } = options;
@@ -361,13 +368,10 @@ class LifiExecutionEngine {
     // Initialize SDK on first use
     await initializeLifiSdk();
     
-    if (sdkInitializationError || !lifiSdk || !lifiConfig) {
-      console.error('❌ LiFi SDK not available:', sdkInitializationError?.message || 'SDK not initialized');
-      return {
-        success: false,
-        error: 'LiFi SDK initialization failed',
-        details: sdkInitializationError?.message || 'SDK or config not initialized'
-      };
+    const validation = validateSdkState();
+    if (!validation.valid) {
+      console.error('❌ LiFi SDK not available:', validation.error.details);
+      return validation.error;
     }
 
     try {
