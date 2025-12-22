@@ -178,9 +178,6 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
         
         // Initialize chain ID mappings
         _initializeChainMappings();
-        
-        // Set default swap deadline (inherited from SwapHandler)
-        _swapDeadline = swapDeadline;
     }
     
     /* ========== INITIALIZATION ========== */
@@ -356,6 +353,9 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
         // B. Execute arbitrage route
         uint256 finalAmount = _runRoute(token, amount, routeData);
 
+        // Validate profitability before repayment
+        require(finalAmount >= amount, "Insufficient return");
+
         // C. Repay debt
         IERC20(token).safeTransfer(address(BALANCER_VAULT), amount);
         BALANCER_VAULT.settle(IERC20(token), amount);
@@ -385,6 +385,10 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
 
         // Approve repayment (loan + premium)
         uint256 owed = amount + premium;
+        
+        // Validate profitability before repayment
+        require(finalAmount >= owed, "Insufficient return");
+        
         IERC20(asset).forceApprove(address(AAVE_POOL), owed);
         
         // Emit profit event
