@@ -160,17 +160,11 @@ function encodePayload({
     throw new Error("minProfitBps must be between 0 and 10000");
   }
   
-  if (!ethers.isAddress(receiver)) {
-    // Try to validate it as a potential address by checking format
-    if (!/^0x[0-9a-fA-F]{40}$/.test(receiver)) {
-      throw new Error("Invalid receiver address format");
-    }
-    // If it's the right format but fails checksum, convert it to checksummed
-    try {
-      receiver = ethers.getAddress(receiver.toLowerCase());
-    } catch (e) {
-      throw new Error("Invalid receiver address");
-    }
+  // Validate and normalize address to checksummed format
+  try {
+    receiver = ethers.getAddress(receiver.toLowerCase());
+  } catch (e) {
+    throw new Error("Invalid receiver address");
   }
   
   // Convert amount to BigInt if it's a string
@@ -209,8 +203,11 @@ function decodePayload(payload) {
   );
   
   // Convert bytes1 back to character
+  // The decoded bytes1 is a hex string like "0x4200000000..."
+  // Extract the first byte and convert to ASCII character
   const chainEnumBytes = decoded[0];
-  const chainEnum = String.fromCharCode(parseInt(chainEnumBytes, 16));
+  const firstByte = parseInt(chainEnumBytes.slice(0, 4), 16);
+  const chainEnum = String.fromCharCode(firstByte);
   
   return {
     chainEnum: chainEnum,

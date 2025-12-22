@@ -263,11 +263,12 @@ async function main() {
   for (let i = 0; i < ranks.length; i += BATCH_SIZE) {
     const batchRanks = ranks.slice(i, i + BATCH_SIZE);
     const batchAddresses = addresses.slice(i, i + BATCH_SIZE);
+    const batchNumber = Math.floor(i / BATCH_SIZE) + 1;
     
-    console.log(`Configuring batch ${Math.floor(i / BATCH_SIZE) + 1}...`);
+    console.log(`Configuring batch ${batchNumber}...`);
     const tx = await decoder.configureTokenRanks(batchRanks, batchAddresses);
     await tx.wait();
-    console.log(`Batch ${Math.floor(i / BATCH_SIZE) + 1} configured. Tx: ${tx.hash}`);
+    console.log(`Batch ${batchNumber} configured. Tx: ${tx.hash}`);
   }
   
   // Configure USDC normalization if applicable for this chain
