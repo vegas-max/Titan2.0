@@ -281,7 +281,8 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
             keccak256(routeData)
         );
 
-        emit RouteExecuted(loanToken, loanAmount, finalAmount, uint256(pnl));
+        // RouteExecuted expects uint256 profit, only emit if profitable
+        emit RouteExecuted(loanToken, loanAmount, finalAmount, pnl >= 0 ? uint256(pnl) : 0);
         
         return "";
     }
@@ -332,7 +333,8 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
             keccak256(routeData)
         );
 
-        emit RouteExecuted(asset, amount, finalAmount, uint256(pnl));
+        // RouteExecuted expects uint256 profit, only emit if profitable
+        emit RouteExecuted(asset, amount, finalAmount, pnl >= 0 ? uint256(pnl) : 0);
         
         return true;
     }

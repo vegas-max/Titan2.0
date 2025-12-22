@@ -86,10 +86,14 @@ abstract contract SwapHandler {
             amountOut = amounts[amounts.length - 1];
 
         } else if (protocol == PROTOCOL_UNIV3) {
-            // Decide between single-hop vs multi-hop by protocolData shape.
-            // If protocolData decodes as (uint24,uint160,uint256) => single hop
-            // else decode as (bytes,uint256) => multi-hop
-            if (protocolData.length == 32 * 3) {
+            // Decide between single-hop vs multi-hop by protocolData length
+            // Single hop: (uint24, uint160, uint256) = 96 bytes (3 * 32)
+            // Multi-hop: (bytes, uint256) = variable + 32 bytes (always > 96)
+            // NOTE: This heuristic works because:
+            // - Single hop encoding is always exactly 96 bytes
+            // - Multi-hop encoding has dynamic bytes array (always different length)
+            // - Bot must encode correctly based on intended routing
+            if (protocolData.length == 96) {
                 // Single hop
                 (uint24 fee, uint160 sqrtPriceLimitX96, uint256 deadline) =
                     abi.decode(protocolData, (uint24, uint160, uint256));
@@ -133,6 +137,9 @@ abstract contract SwapHandler {
             revert UnsupportedProtocol(protocol);
         }
 
+        // Final safety check: Ensure amountOut meets minimum expectation
+        // NOTE: While protocol-specific calls already enforce minOut, this provides
+        // defense-in-depth against unexpected protocol behavior or implementation bugs
         if (amountOut < minOut) revert Slippage(amountOut, minOut);
     }
 }
