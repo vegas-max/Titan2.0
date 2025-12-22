@@ -39,8 +39,8 @@ abstract contract SwapHandler {
         bytes memory extraData
     ) internal returns (uint256 amountOut) {
         
-        // Safe approval - increase allowance for the swap
-        SafeERC20.safeIncreaseAllowance(IERC20(tokenIn), routerOrPool, amountIn);
+        // Safe approval - set exact allowance for the swap
+        SafeERC20.forceApprove(IERC20(tokenIn), routerOrPool, amountIn);
 
         if (protocol == PROTOCOL_UNIV2) {
             // UniV2-style swap (Quickswap, Sushi, etc.)
