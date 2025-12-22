@@ -46,6 +46,18 @@ abstract contract SwapHandler {
     uint8 internal constant PROTOCOL_UNIV3  = 2;
     uint8 internal constant PROTOCOL_CURVE  = 3;
 
+    // Uniswap V3 pool fee tiers
+    uint24 internal constant FEE_LOWEST = 100;    // 0.01%
+    uint24 internal constant FEE_LOW = 500;       // 0.05%
+    uint24 internal constant FEE_MEDIUM = 3000;   // 0.3%
+    uint24 internal constant FEE_HIGH = 10000;    // 1%
+    
+    // Curve pool constraints
+    uint8 internal constant MAX_CURVE_INDICES = 8;
+    
+    // Configurable deadline (can be overridden by child contracts)
+    uint256 internal _swapDeadline = 180; // 3 minutes default
+
     error UnsupportedProtocol(uint8 protocol);
     error BadRouter(address router);
     error Slippage(uint256 out, uint256 minOut);

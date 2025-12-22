@@ -137,8 +137,8 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
     // Configurable deadline for time-sensitive swaps (in seconds)
     uint256 public swapDeadline = 180; // Default 3 minutes
     
-    // Loss threshold constant (50% max loss before revert)
-    uint256 private constant MIN_OUTPUT_RATIO = 2;
+    // Loss threshold constant (10% max loss before revert - more reasonable for arbitrage)
+    uint256 private constant MAX_LOSS_BPS = 1000; // 10% in basis points
     
     /* ========== REGISTRY MAPPINGS ========== */
     
@@ -313,6 +313,7 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
     ) external onlyOwner nonReentrant {
         require(loanToken != address(0), "Invalid loan token");
         require(loanAmount > 0, "Invalid loan amount");
+        require(routeData.length > 0, "Empty route data");
         
         if (flashSource == 1) {
             // Balancer V3: "Unlock" the vault
@@ -347,42 +348,26 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
     function onBalancerUnlock(bytes calldata callbackData) external returns (bytes memory) {
         require(msg.sender == address(BALANCER_VAULT), "B3: bad caller");
 
-        (address loanToken, uint256 loanAmount, uint256 minProfitToken, uint256 feeHint, bytes memory routeData) =
-            abi.decode(callbackData, (address, uint256, uint256, uint256, bytes));
+        (address loanToken, uint256 loanAmount, bytes memory routeData) =
+            abi.decode(callbackData, (address, uint256, bytes));
 
         // Borrow inside unlocked context
         BALANCER_VAULT.sendTo(IERC20(loanToken), address(this), loanAmount);
 
-        uint256 startBal = IERC20(loanToken).balanceOf(address(this));
-
         // Execute route
         uint256 finalAmount = _runRoute(loanToken, loanAmount, routeData);
 
-        uint256 endBal = IERC20(loanToken).balanceOf(address(this));
-
-        // Profit calculation relative to starting balance (security: prevents balance masking)
-        // pnl = endBal - startBal - feeHint (loan principal cancels out)
-        int256 pnl = int256(endBal) - int256(startBal) - int256(feeHint);
-        require(pnl >= int256(minProfitToken), "MIN_PROFIT");
-
-        // A. Take debt (V3 specific)
-        BALANCER_VAULT.sendTo(IERC20(token), address(this), amount);
+        // Validate profitability before repayment
+        require(finalAmount >= loanAmount, "Insufficient return");
 
         // Balancer V3 repayment: transfer to Vault, then settle to clear debt
         // (NOT approve - approve doesn't work with B3's transient accounting)
-        IERC20(loanToken).safeTransfer(address(BALANCER_VAULT), repayAmount);
-        BALANCER_VAULT.settle(IERC20(loanToken), repayAmount);
-
-        // Validate profitability before repayment
-        require(finalAmount >= amount, "Insufficient return");
-
-        // C. Repay debt
-        IERC20(token).safeTransfer(address(BALANCER_VAULT), amount);
-        BALANCER_VAULT.settle(IERC20(token), amount);
+        IERC20(loanToken).safeTransfer(address(BALANCER_VAULT), loanAmount);
+        BALANCER_VAULT.settle(IERC20(loanToken), loanAmount);
         
         // Emit profit event
-        if (finalAmount > amount) {
-            emit ArbitrageExecuted(1, token, amount, finalAmount - amount);
+        if (finalAmount > loanAmount) {
+            emit ArbitrageExecuted(1, loanToken, loanAmount, finalAmount - loanAmount);
         }
         
         return "";
@@ -410,11 +395,6 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
 
         // Approve repayment (loan + premium)
         uint256 owed = amount + premium;
-
-        // Profit calculation relative to starting balance (security: prevents balance masking)
-        // Note: startBal already includes borrowed amount, so real pnl = endBal - startBal - premium
-        int256 pnl = int256(endBal) - int256(startBal) - int256(premium);
-        require(pnl >= int256(minProfitToken), "MIN_PROFIT");
         
         // Validate profitability before repayment
         require(finalAmount >= owed, "Insufficient return");
@@ -482,10 +462,10 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
             currentToken = path[i];
         }
         
-        // Basic sanity check (actual profit validated by flash loan repayment)
+        // Basic sanity check: allow at most 10% loss (actual profit validated by flash loan repayment)
         require(
-            currentAmount >= inputAmount / MIN_OUTPUT_RATIO,
-            "Suspicious loss detected"
+            currentAmount * 10_000 >= inputAmount * (10_000 - MAX_LOSS_BPS),
+            "Excessive loss detected"
         );
         
         return currentAmount;
@@ -508,7 +488,8 @@ contract OmniArbExecutor is Ownable, ReentrancyGuard, SwapHandler, IFlashLoanSim
     function withdrawNative() external onlyOwner {
         uint256 balance = address(this).balance;
         require(balance > 0, "No balance");
-        payable(msg.sender).transfer(balance);
+        (bool success, ) = payable(msg.sender).call{value: balance}("");
+        require(success, "Native transfer failed");
     }
     
     /**
