@@ -134,13 +134,12 @@ abstract contract SwapHandler {
         } else {
             revert UnsupportedProtocol(protocol);
         }
-    }
-
-    /* ========== PROTOCOL-SPECIFIC IMPLEMENTATIONS ========== */
 
         // Final safety check: Ensure amountOut meets minimum expectation
         // NOTE: While protocol-specific calls already enforce minOut, this provides
         // defense-in-depth against unexpected protocol behavior or implementation bugs
         if (amountOut < minOut) revert Slippage(amountOut, minOut);
     }
+
+    /* ========== PROTOCOL-SPECIFIC IMPLEMENTATIONS ========== */
 }
