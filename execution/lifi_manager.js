@@ -1,49 +1,71 @@
 require('dotenv').config();
-const { createConfig, EVM, executeRoute, getRoutes, getStatus } = require('@lifi/sdk');
 const { ethers } = require('ethers');
 
-// === 1. SDK CONFIGURATION ===
-// This maps your .env RPCs to the Li.Fi SDK Providers
-// Supports intent-based bridging via Across, Stargate, and other protocols
-const config = createConfig({
-  integrator: 'Apex-Omega-Titan',
-  apiKey: process.env.LIFI_API_KEY,
-  providers: [
-    EVM({
-      getWalletClient: async (chainId) => {
-        // Dynamic Wallet Switcher based on Chain ID
-        let rpcUrl = '';
-        switch (chainId) {
-          case 1: rpcUrl = process.env.RPC_ETHEREUM; break;
-          case 137: rpcUrl = process.env.RPC_POLYGON; break;
-          case 42161: rpcUrl = process.env.RPC_ARBITRUM; break;
-          case 10: rpcUrl = process.env.RPC_OPTIMISM; break;
-          case 56: rpcUrl = process.env.RPC_BSC; break;
-          case 43114: rpcUrl = process.env.RPC_AVALANCHE; break;
-          case 8453: rpcUrl = process.env.RPC_BASE; break;
-          case 250: rpcUrl = process.env.RPC_FANTOM; break;
-          case 59144: rpcUrl = process.env.RPC_LINEA; break;
-          case 534352: rpcUrl = process.env.RPC_SCROLL; break;
-          case 5000: rpcUrl = process.env.RPC_MANTLE; break;
-          case 324: rpcUrl = process.env.RPC_ZKSYNC; break;
-          case 81457: rpcUrl = process.env.RPC_BLAST; break;
-          case 42220: rpcUrl = process.env.RPC_CELO; break;
-          case 204: rpcUrl = process.env.RPC_OPBNB; break;
-          default: throw new Error(`Unsupported Chain: ${chainId}`);
-        }
-        
-        if (!rpcUrl) {
-          throw new Error(`No RPC URL configured for chain ${chainId}. Set the RPC_* environment variable for this chain in your .env file.`);
-        }
-        
-        // Return a Viem-compatible wallet client (wrapped ethers for SDK compatibility)
-        const provider = new ethers.JsonRpcProvider(rpcUrl);
-        const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
-        return signer;
-      },
-    }),
-  ],
-});
+// Lazy-load LiFi SDK to avoid network calls during module import
+let lifiSdk = null;
+let lifiConfig = null;
+let sdkInitializationError = null;
+
+/**
+ * Initialize LiFi SDK on first use
+ * This prevents network calls during module import, which can fail if firewall blocks access
+ */
+function initializeLifiSdk() {
+  if (lifiSdk !== null || sdkInitializationError !== null) {
+    return; // Already initialized or failed
+  }
+
+  try {
+    lifiSdk = require('@lifi/sdk');
+    const { createConfig, EVM } = lifiSdk;
+
+    // === 1. SDK CONFIGURATION ===
+    // This maps your .env RPCs to the Li.Fi SDK Providers
+    // Supports intent-based bridging via Across, Stargate, and other protocols
+    lifiConfig = createConfig({
+      integrator: 'Apex-Omega-Titan',
+      apiKey: process.env.LIFI_API_KEY,
+      providers: [
+        EVM({
+          getWalletClient: async (chainId) => {
+            // Dynamic Wallet Switcher based on Chain ID
+            let rpcUrl = '';
+            switch (chainId) {
+              case 1: rpcUrl = process.env.RPC_ETHEREUM; break;
+              case 137: rpcUrl = process.env.RPC_POLYGON; break;
+              case 42161: rpcUrl = process.env.RPC_ARBITRUM; break;
+              case 10: rpcUrl = process.env.RPC_OPTIMISM; break;
+              case 56: rpcUrl = process.env.RPC_BSC; break;
+              case 43114: rpcUrl = process.env.RPC_AVALANCHE; break;
+              case 8453: rpcUrl = process.env.RPC_BASE; break;
+              case 250: rpcUrl = process.env.RPC_FANTOM; break;
+              case 59144: rpcUrl = process.env.RPC_LINEA; break;
+              case 534352: rpcUrl = process.env.RPC_SCROLL; break;
+              case 5000: rpcUrl = process.env.RPC_MANTLE; break;
+              case 324: rpcUrl = process.env.RPC_ZKSYNC; break;
+              case 81457: rpcUrl = process.env.RPC_BLAST; break;
+              case 42220: rpcUrl = process.env.RPC_CELO; break;
+              case 204: rpcUrl = process.env.RPC_OPBNB; break;
+              default: throw new Error(`Unsupported Chain: ${chainId}`);
+            }
+            
+            if (!rpcUrl) {
+              throw new Error(`No RPC URL configured for chain ${chainId}. Set the RPC_* environment variable for this chain in your .env file.`);
+            }
+            
+            // Return a Viem-compatible wallet client (wrapped ethers for SDK compatibility)
+            const provider = new ethers.JsonRpcProvider(rpcUrl);
+            const signer = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+            return signer;
+          },
+        }),
+      ],
+    });
+  } catch (error) {
+    sdkInitializationError = error;
+    console.error('❌ Failed to initialize LiFi SDK:', error.message);
+  }
+}
 
 // === 2. EXECUTION ENGINE ===
 class LifiExecutionEngine {
@@ -64,6 +86,18 @@ class LifiExecutionEngine {
    * @returns {Promise<object>} Execution result with transaction hash and status
    */
   static async bridgeAssets(fromChainId, toChainId, fromToken, toToken, amount, options = {}) {
+    // Initialize SDK on first use
+    initializeLifiSdk();
+    
+    if (sdkInitializationError) {
+      console.error('❌ LiFi SDK not available:', sdkInitializationError.message);
+      return {
+        success: false,
+        error: 'LiFi SDK initialization failed',
+        details: sdkInitializationError.message
+      };
+    }
+
     const {
       order = 'CHEAPEST',
       slippage = 0.005,
@@ -74,6 +108,8 @@ class LifiExecutionEngine {
     console.log(`   Amount: ${amount} | Slippage: ${slippage * 100}%`);
 
     try {
+      const { getRoutes, executeRoute } = lifiSdk;
+      
       // A. Get Route (Quote) - Li.Fi automatically finds best option from 15+ bridges
       const routeResponse = await getRoutes({
         fromChainId,
@@ -112,7 +148,7 @@ class LifiExecutionEngine {
       // B. Execute Route
       // The SDK handles: Token Approval → Swap (if needed) → Bridge Transaction
       console.log('🚀 Executing bridge transaction...');
-      const executedRoute = await executeRoute(bestRoute, config);
+      const executedRoute = await executeRoute(bestRoute, lifiConfig);
 
       console.log('✅ Bridge Transaction Sent!');
       console.log(`   TX Hash: ${executedRoute.steps[0].transactionHash || 'Pending'}`);
@@ -150,9 +186,23 @@ class LifiExecutionEngine {
    * @returns {Promise<object>} Quote with route details and cost estimates
    */
   static async getQuote(fromChainId, toChainId, fromToken, toToken, amount, options = {}) {
+    // Initialize SDK on first use
+    initializeLifiSdk();
+    
+    if (sdkInitializationError) {
+      console.error('❌ LiFi SDK not available:', sdkInitializationError.message);
+      return {
+        success: false,
+        error: 'LiFi SDK initialization failed',
+        details: sdkInitializationError.message
+      };
+    }
+
     const { order = 'CHEAPEST', slippage = 0.005 } = options;
 
     try {
+      const { getRoutes } = lifiSdk;
+      
       const routeResponse = await getRoutes({
         fromChainId,
         toChainId,
@@ -196,7 +246,21 @@ class LifiExecutionEngine {
    * @returns {Promise<object>} Status object with completion state
    */
   static async monitorTransaction(txHash, fromChain, toChain) {
+    // Initialize SDK on first use
+    initializeLifiSdk();
+    
+    if (sdkInitializationError) {
+      console.error('❌ LiFi SDK not available:', sdkInitializationError.message);
+      return {
+        success: false,
+        error: 'LiFi SDK initialization failed',
+        details: sdkInitializationError.message
+      };
+    }
+
     try {
+      const { getStatus } = lifiSdk;
+      
       const status = await getStatus({
         txHash: txHash,
         bridge: 'auto', // Auto-detect bridge protocol
