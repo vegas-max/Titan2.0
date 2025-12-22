@@ -81,7 +81,7 @@ abstract contract SwapHandler {
         }
 
         // Reset approval to zero for safety (USDT compatibility)
-        IERC20(tokenIn).forceApprove(routerOrPool, 0);
+        SafeERC20.forceApprove(IERC20(tokenIn), routerOrPool, 0);
         
         return amountOut;
     }
