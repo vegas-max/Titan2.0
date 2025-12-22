@@ -28,7 +28,7 @@ import "./interfaces/IAaveV3.sol";
 /**
  * @dev Chain identifiers mapped from block.chainid
  */
-contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
+contract OmniArbExecutor is Ownable, SwapHandler, IFlashLoanSimpleReceiver {
     using SafeERC20 for IERC20;
 
     // ============================================
