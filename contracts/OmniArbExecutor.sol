@@ -76,7 +76,9 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
     uint256 public swapDeadline = 180; // Default 3 minutes
 
     // Registry mappings for REGISTRY_ENUMS encoding
-    // dexRouter[chainId][dexId] = router address
+    // Note: chainId uses actual chain IDs (e.g., 137 for Polygon, 1 for Ethereum)
+    // not Chain enum ordinal values. The Chain enum is for reference only.
+    // dexRouter[chainId][dexId] = router address (or pool address for Curve)
     mapping(uint256 => mapping(uint8 => address)) public dexRouter;
     
     // tokenRegistry[chainId][tokenId][tokenType] = token address
@@ -101,6 +103,7 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
     // ============================================
 
     constructor(address _balancer, address _aave) Ownable(msg.sender) {
+        require(_balancer != address(0) && _aave != address(0), "Invalid addresses");
         BALANCER_VAULT = IVaultV3(_balancer);
         AAVE_POOL = IAavePoolV3(_aave);
     }
@@ -219,11 +222,14 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
         // Execute route
         uint256 finalAmount = _runRoute(token, amount, routeData);
 
+        // Ensure route was at least break-even before repaying Balancer
+        require(finalAmount >= amount, "Insufficient return");
+
         // Repay debt
         IERC20(token).safeTransfer(address(BALANCER_VAULT), amount);
         BALANCER_VAULT.settle(IERC20(token), amount);
 
-        emit RouteExecuted(token, amount, finalAmount, finalAmount > amount ? finalAmount - amount : 0);
+        emit RouteExecuted(token, amount, finalAmount, finalAmount - amount);
         
         return "";
     }
@@ -247,7 +253,7 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
         
         IERC20(asset).safeApprove(address(AAVE_POOL), owed);
 
-        emit RouteExecuted(asset, amount, finalAmount, finalAmount > owed ? finalAmount - owed : 0);
+        emit RouteExecuted(asset, amount, finalAmount, finalAmount - owed);
         
         return true;
     }
@@ -399,8 +405,15 @@ contract OmniArbExecutor is Ownable, SwapHandler, IAaveFlashLoanSimpleReceiver {
      * @notice Withdraw native ETH/MATIC (emergency)
      */
     function withdrawNative() external onlyOwner {
-        payable(msg.sender).transfer(address(this).balance);
+        (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
+        require(success, "Native transfer failed");
     }
 
+    /**
+     * @notice Allow the contract to receive native ETH/MATIC
+     * @dev This is intended for handling native refunds or unwrapped WETH from
+     *      external protocols used in arbitrage flows. Any ETH accumulated here
+     *      can be recovered by the owner via {withdrawNative}.
+     */
     receive() external payable {}
 }

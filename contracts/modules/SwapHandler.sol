@@ -39,8 +39,8 @@ abstract contract SwapHandler {
         bytes memory extraData
     ) internal returns (uint256 amountOut) {
         
-        // Safe approval with reset-to-zero for USDT-style tokens
-        IERC20(tokenIn).safeIncreaseAllowance(routerOrPool, amountIn);
+        // Safe approval - use forceApprove or standard approve pattern
+        IERC20(tokenIn).safeApprove(routerOrPool, amountIn);
 
         if (protocol == PROTOCOL_UNIV2) {
             // UniV2-style swap (Quickswap, Sushi, etc.)
