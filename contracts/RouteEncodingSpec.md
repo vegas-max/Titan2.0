@@ -345,13 +345,13 @@ Profit = final USDT - (10,000 + fee)
 
 ## Registry Setup (REGISTRY_ENUMS only)
 
-Before using REGISTRY_ENUMS, owner must register:
+Before using REGISTRY_ENUMS, owner must register protocol entry contracts (routers or pools) and tokens:
 
 ```solidity
-// Register DEX routers
-executor.setDexRouter(137, 0, QUICKSWAP_ROUTER);  // Polygon, QUICKSWAP
-executor.setDexRouter(137, 1, UNIV3_ROUTER);      // Polygon, UNIV3
-executor.setDexRouter(137, 2, CURVE_POOL);        // Polygon, CURVE
+// Register DEX routers / pools (protocol entry contracts)
+executor.setDexRouter(137, 0, QUICKSWAP_ROUTER);  // Polygon, QUICKSWAP router (UniV2)
+executor.setDexRouter(137, 1, UNIV3_ROUTER);      // Polygon, UNIV3 router
+executor.setDexRouter(137, 2, CURVE_POOL);        // Polygon, CURVE pool (stored in dexRouter slot by design)
 
 // Register tokens
 executor.setToken(137, 0, 0, USDC_ADDRESS);       // USDC, CANONICAL
