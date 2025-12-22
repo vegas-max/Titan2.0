@@ -4,7 +4,7 @@
 
 This document validates all requirements for running Titan at full scale on mainnet with "Massive" market coverage, real-time DEX data, and production safeguards.
 
-> **📋 Master Validation:** This checklist is part of the comprehensive [VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md) system validation framework.
+> **📋 Related Validation:** See [VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md) for OmniArbExecutor refactoring validation (Solidity contracts, interfaces, route encoding).
 
 ---
 
