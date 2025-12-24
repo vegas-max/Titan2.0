@@ -6,6 +6,27 @@ This document provides the exact, ABI-accurate specification for `routeData` enc
 
 **CRITICAL**: `routeData` MUST be encoded with `abi.encode(...)` (standard ABI), NOT `abi.encodePacked(...)`. The contract uses `abi.decode(routeData, (...))`, so the layout must match standard ABI encoding.
 
+## Design Philosophy: Maximum Coverage Without Bloating Solidity
+
+The system uses a **dual encoding strategy** to achieve maximum token coverage while keeping the Solidity contract lean and gas-efficient:
+
+### On-Chain (Lean & Deterministic)
+- **Tight Whitelist Registry**: High-liquidity tokens (typically 20-50 per chain) registered via `setToken()`
+- **Flexible Registry IDs**: Uses `uint8` (0-255) instead of hardcoded enums, allowing upgradeable token additions
+- **No Contract Bloat**: Registry mappings only store what's actively used
+
+### Off-Chain (Heavy Computation)
+- **300+ Token Graph**: Full token discovery and path optimization happens in the Python brain (`brain.py`, `token_loader.py`)
+- **Dynamic Token Loading**: Fetches 100+ tokens per chain from 1inch API
+- **Tiered Strategy**: Prioritizes high-liquidity tokens while monitoring long-tail opportunities
+
+### Calldata (Flexible)
+- **RAW_ADDRESSES**: Explicit token/router addresses for rare tokens or new opportunities
+- **REGISTRY_ENUMS**: Compact registry IDs (uint8) for whitelisted high-liquidity tokens
+- **Optimal Encoding**: Off-chain system chooses encoding based on token registry status
+
+This architecture keeps the contract **upgradeable and deterministic** while Titan does the **heavy thinking off-chain where it belongs**.
+
 ## Core Concept
 
 A route is executed **hop-by-hop**:
@@ -158,11 +179,15 @@ tokenOut = tokenRegistry[chainId][tokenId][tokenType]
 
 - **`protocols[i]`**: Same protocol IDs as RAW_ADDRESSES
 
-- **`dexIds[i]`**: `uint8(Dex.<NAME>)`
-  - Example: `Dex.UniV2 = 0`, `Dex.UniV3 = 1`, `Dex.Curve = 2`
+- **`dexIds[i]`**: `uint8` DEX identifier registered via `setDexRouter()`
+  - Example: `0` = UniV2, `1` = UniV3, `2` = Curve
+  - Values 0-255 supported
 
-- **`tokenOutIds[i]`**: `uint8(TokenId.<NAME>)`
-  - Example: `TokenId.WNATIVE = 0`, `TokenId.USDC = 1`, `TokenId.USDT = 2`, `TokenId.WETH = 4`
+- **`tokenOutIds[i]`**: `uint8` Token identifier registered via `setToken()`
+  - Token IDs are flexible (0-255) and assigned by the registry owner
+  - Recommended convention: `0` = Wrapped native, `1` = USDC, `2` = USDT, `3` = DAI, `4` = WBTC
+  - High-liquidity tokens use low IDs (0-50), additional tokens use higher IDs
+  - Off-chain system manages the full 300+ token graph and maps to registry IDs as needed
 
 - **`tokenOutTypes[i]`**: `uint8(TokenType.<NAME>)`
   - `0` = `CANONICAL` (native on that chain)
@@ -179,19 +204,19 @@ tokenOut = tokenRegistry[chainId][tokenId][tokenType]
 protocols.length == dexIds.length == tokenOutIds.length == tokenOutTypes.length == extra.length
 ```
 
-### Ethers.js Example (same route but enum-resolved)
+### Ethers.js Example (same route but registry-resolved)
 
-Assume enums (from canonical specification):
-- `Dex.UniV2 = 0`, `Dex.UniV3 = 1`, `Dex.Curve = 2`
-- `TokenId.WNATIVE = 0`, `TokenId.USDC = 1`, `TokenId.USDT = 2`, `TokenId.WETH = 4`
-- `TokenType.CANONICAL = 0`
+Assume registry configuration:
+- DEX IDs: `0` = UniV2, `1` = UniV3, `2` = Curve (set via `setDexRouter()`)
+- Token IDs: `0` = WNATIVE, `1` = USDC, `2` = USDT, `4` = WETH (set via `setToken()`)
+- Token Types: `0` = CANONICAL, `2` = WRAPPED
 
 ```javascript
 const REG = 1;
 
 const protocols = [1, 2, 3];
-const dexIds = [0, 1, 2];          // UniV2, UniV3, Curve
-const tokenOutIds = [4, 2, 1];     // WETH, USDT, USDC
+const dexIds = [0, 1, 2];          // UniV2, UniV3, Curve (registry IDs)
+const tokenOutIds = [4, 2, 1];     // WETH, USDT, USDC (registry IDs)
 const tokenOutTypes = [0, 0, 0];   // CANONICAL for all
 
 const extra = [

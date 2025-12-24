@@ -12,25 +12,17 @@ describe("OmniArbExecutor - Route Encoding Tests", function () {
   let executor;
   let owner;
 
-  // Addresses forconst ADDRESSES = {
-
-  BALANCER: "0xba12222222228d8ba445958a75a0704d566bf2c8",
-
-  AAVE: "0x7d2768de32b0b80b7a3454c06bdacb0f5aeb3a95",
-
-  ROUTER_1: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
-
-  ROUTER_2: "0xe592427a0aece92de3edee1f18e0157c05861564",
-
-  POOL: "0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8",
-
-  TOKEN_A: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-
-  TOKEN_B: "0x6b175474e89094c44da98b954eedeac495271d0f",
-
-  TOKEN_C: "0xdac17f958d2ee523a2206206994597c13d831ec7"
-
-};
+  // Addresses for testing
+  const ADDRESSES = {
+    BALANCER: "0xba12222222228d8ba445958a75a0704d566bf2c8",
+    AAVE: "0x7d2768de32b0b80b7a3454c06bdacb0f5aeb3a95",
+    ROUTER_1: "0x11111112542d85b3ef69ae05771c2dccff4faa26",
+    ROUTER_2: "0xe592427a0aece92de3edee1f18e0157c05861564",
+    POOL: "0x8ad599c3a0ff1de082011efddc58f1908eb6e6d8",
+    TOKEN_A: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    TOKEN_B: "0x6b175474e89094c44da98b954eedeac495271d0f",
+    TOKEN_C: "0xdac17f958d2ee523a2206206994597c13d831ec7"
+  };
   beforeEach(async function () {
     [owner] = await ethers.getSigners();
 
@@ -38,7 +30,7 @@ describe("OmniArbExecutor - Route Encoding Tests", function () {
     // But the structure validates our encoding logic
     try {
       const OmniArbExecutor = await ethers.getContractFactory("OmniArbExecutor");
-      executor = await OmniArbExecutor.deploy(MOCK_BALANCER, MOCK_AAVE);
+      executor = await OmniArbExecutor.deploy(ADDRESSES.BALANCER, ADDRESSES.AAVE);
       await executor.waitForDeployment();
     } catch (e) {
       console.log("Deployment skipped (expected in test environment):", e.message);
@@ -55,23 +47,16 @@ describe("OmniArbExecutor - Route Encoding Tests", function () {
       // 3 hops: UniV2 -> UniV3 -> Curve
       const protocols = [1, 2, 3];
       
-   const routersOrPools = [
+      const routersOrPools = [
+        ADDRESSES.ROUTER_1, // UniV2 router
+        ADDRESSES.ROUTER_2, // UniV3 router
+        ADDRESSES.POOL      // Curve pool
+      ];
 
-REAL_ROUTER_1 , // UniV2 router
-
-REAL_ROUTER_2 , // UniV3 router
-
-REAL_POOL // Curve pool
-
-];
-
-const tokenOutPath = [
-
-REAL_TOKEN_A ,
-
-REAL_TOKEN_B ,
-
-REAL_TOKEN_C
+      const tokenOutPath = [
+        ADDRESSES.TOKEN_A,
+        ADDRESSES.TOKEN_B,
+        ADDRESSES.TOKEN_C
       ];
       
       // Protocol-specific extraData
@@ -189,23 +174,25 @@ REAL_TOKEN_C
       console.log("   Route data length:", routeData.length, "bytes");
     });
 
-    it("should validate enum value ranges", function () {
-      // Dex enum: 0-6 (QUICKSWAP to TRADER_JOE)
-      const validDexIds = [0, 1, 2, 3, 4, 5, 6];
+    it("should validate token ID value ranges", function () {
+      // Dex IDs: 0-255 (uint8)
+      const validDexIds = [0, 1, 2, 3, 4, 5, 6]; // Common DEXs
       expect(validDexIds).to.have.lengthOf(7);
       
-      // TokenId enum: 0-6 (USDC to FRAX)
-      const validTokenIds = [0, 1, 2, 3, 4, 5, 6];
-      expect(validTokenIds).to.have.lengthOf(7);
+      // Token IDs: 0-255 (uint8) - flexible registry, not hardcoded enum
+      // Recommended conventions: 0=WNATIVE, 1=USDC, 2=USDT, 3=DAI, 4=WBTC
+      const exampleTokenIds = [0, 1, 2, 3, 4, 5, 10, 20, 50, 100, 255];
+      expect(exampleTokenIds[0]).to.equal(0); // Min value
+      expect(exampleTokenIds[exampleTokenIds.length - 1]).to.equal(255); // Max value
       
       // TokenType enum: 0-2 (CANONICAL, BRIDGED, WRAPPED)
       const validTokenTypes = [0, 1, 2];
       expect(validTokenTypes).to.have.lengthOf(3);
       
-      console.log("✅ Enum ranges validated");
-      console.log("   DEX IDs: 0-6");
-      console.log("   Token IDs: 0-6");
-      console.log("   Token Types: 0-2");
+      console.log("✅ ID ranges validated");
+      console.log("   DEX IDs: 0-255 (uint8)");
+      console.log("   Token IDs: 0-255 (uint8) - flexible registry");
+      console.log("   Token Types: 0-2 (CANONICAL, BRIDGED, WRAPPED)");
     });
   });
 
@@ -214,8 +201,8 @@ REAL_TOKEN_C
       const abi = ethers.AbiCoder.defaultAbiCoder();
       
       const protocols = [1, 2, 3];
-      const routersOrPools = [MOCK_ROUTER_1, MOCK_ROUTER_2, MOCK_POOL];
-      const tokenOutPath = [MOCK_TOKEN_A, MOCK_TOKEN_B, MOCK_TOKEN_C];
+      const routersOrPools = [ADDRESSES.ROUTER_1, ADDRESSES.ROUTER_2, ADDRESSES.POOL];
+      const tokenOutPath = [ADDRESSES.TOKEN_A, ADDRESSES.TOKEN_B, ADDRESSES.TOKEN_C];
       const extra = ["0x", "0x", "0x"];
       
       expect(protocols.length).to.equal(routersOrPools.length);
@@ -246,16 +233,11 @@ REAL_TOKEN_C
       const abi = ethers.AbiCoder.defaultAbiCoder();
       
       const QUICKSWAP_ROUTER = "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff";
-
-const UNIV3_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
-
-const CURVE_AAVE_POOL = "0x445FE580eF8d70FF569aB36e80c647af338db351";
-
-const USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
-
-const USDT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
-
-const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
+      const UNIV3_ROUTER = "0xE592427A0AEce92De3Edee1F18E0157C05861564";
+      const CURVE_AAVE_POOL = "0x445FE580eF8d70FF569aB36e80c647af338db351";
+      const USDC = "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174";
+      const USDT = "0xc2132D05D31c914a87C6611C10748AEb04B58e8F";
+      const WMATIC = "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270";
       
       // Route: USDC -> WMATIC -> USDT -> USDC (circular arbitrage)
       const protocols = [1, 2, 3];  // UniV2, UniV3, Curve
