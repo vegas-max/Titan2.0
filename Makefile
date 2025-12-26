@@ -16,6 +16,9 @@ help:
 	@echo "  make setup      - Run complete automated setup"
 	@echo "  make install    - Install all dependencies"
 	@echo "  make compile    - Compile smart contracts"
+	@echo "  make build-rust - Build Rust core library"
+	@echo "  make build-go   - Build Go core binary"
+	@echo "  make build-core - Build both Rust and Go implementations"
 	@echo ""
 	@echo "Deployment:"
 	@echo "  make deploy-polygon   - Deploy to Polygon"
@@ -34,6 +37,8 @@ help:
 	@echo ""
 	@echo "Development:"
 	@echo "  make test       - Run tests"
+	@echo "  make test-rust  - Run Rust tests"
+	@echo "  make test-go    - Run Go tests"
 	@echo "  make clean      - Clean build artifacts"
 	@echo "  make lint       - Run linters"
 	@echo ""
@@ -191,3 +196,35 @@ verify:
 build:
 	@chmod +x build.sh
 	@./build.sh
+
+# Build Rust core library
+build-rust:
+	@echo "Building Rust core library..."
+	@cd core-rust && cargo build --release
+	@echo "✅ Rust core built: core-rust/target/release/libtitan_core.so"
+
+# Build Go core binary
+build-go:
+	@echo "Building Go core binary..."
+	@cd core-go && go build -ldflags="-s -w" -o titan-core ./main.go
+	@echo "✅ Go core built: core-go/titan-core"
+
+# Build both Rust and Go implementations
+build-core: build-rust build-go
+	@echo "✅ Core implementations built successfully"
+
+# Test Rust implementation
+test-rust:
+	@echo "Running Rust tests..."
+	@cd core-rust && cargo test
+	@echo "✅ Rust tests completed"
+
+# Test Go implementation
+test-go:
+	@echo "Running Go tests..."
+	@cd core-go && go test ./...
+	@echo "✅ Go tests completed"
+
+# Test all implementations
+test-core: test-rust test-go
+	@echo "✅ All core tests completed"
