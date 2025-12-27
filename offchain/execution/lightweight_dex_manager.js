@@ -53,13 +53,21 @@ class LightweightDEXManager {
         return null;
     }
     
-    // Compact cache set with size limit
+    // Compact cache set with LRU eviction
     _setCache(key, value) {
-        if (this.cache.size >= this.config.maxCacheSize) {
-            // Remove first (oldest) entry
-            const firstKey = this.cache.keys().next().value;
-            this.cache.delete(firstKey);
+        // If key exists, delete it first to update its position (LRU)
+        if (this.cache.has(key)) {
+            this.cache.delete(key);
         }
+        
+        // Evict oldest entry if at capacity
+        if (this.cache.size >= this.config.maxCacheSize) {
+            // First key is oldest (insertion order)
+            const oldestKey = this.cache.keys().next().value;
+            this.cache.delete(oldestKey);
+        }
+        
+        // Add new entry (becomes most recent)
         this.cache.set(key, { v: value, t: Date.now() });
     }
     
@@ -77,7 +85,8 @@ class LightweightDEXManager {
         
         this.stats.requests++;
         
-        // Simple retry loop
+        // Simple retry loop with capped exponential backoff
+        const MAX_RETRY_DELAY = 3000; // Cap at 3 seconds
         for (let i = 0; i <= this.config.maxRetries; i++) {
             try {
                 const response = await axios({
@@ -91,14 +100,18 @@ class LightweightDEXManager {
                 return response.data;
             } catch (error) {
                 if (i === this.config.maxRetries) throw error;
-                await new Promise(r => setTimeout(r, this.config.retryDelay * (i + 1)));
+                // Exponential backoff with cap
+                const delay = Math.min(this.config.retryDelay * Math.pow(1.5, i), MAX_RETRY_DELAY);
+                await new Promise(r => setTimeout(r, delay));
             }
         }
     }
     
-    // Minimal validation
+    # Minimal validation (improved)
     isValidAddress(addr) {
-        return addr && addr.length === 42 && addr.startsWith('0x');
+        if (!addr || addr.length !== 42 || !addr.startsWith('0x')) return false;
+        // Validate hex characters (case insensitive)
+        return /^0x[0-9a-fA-F]{40}$/.test(addr);
     }
     
     isValidAmount(amt) {

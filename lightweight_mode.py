@@ -31,8 +31,11 @@ memory_limit_mb = LIGHTWEIGHT_CONFIG['performance']['memory_limits']['total_mb']
 memory_limit_bytes = memory_limit_mb * 1024 * 1024
 try:
     resource.setrlimit(resource.RLIMIT_AS, (memory_limit_bytes, memory_limit_bytes))
-except Exception as e:
+except (OSError, ValueError, AttributeError) as e:
     print(f"⚠️  Could not set memory limit: {e}")
+except Exception as e:
+    # Log unexpected errors but continue
+    print(f"⚠️  Unexpected error setting memory limit: {e}")
 
 # Configure minimal logging
 import logging
@@ -98,8 +101,15 @@ def launch_lightweight_brain():
     
     # Use arm_brain but with lightweight config
     from arm_brain import ARMOptimizedBrain
+    
+    # Create brain with lightweight worker count
     brain = ARMOptimizedBrain()
-    brain.num_workers = workers  # Override with lightweight setting
+    
+    # Override worker count if different from default
+    if hasattr(brain, 'num_workers') and brain.num_workers != workers:
+        brain.num_workers = workers
+        logger.info(f"Worker count adjusted to {workers} for lightweight mode")
+    
     brain.run_continuous_scan(interval_seconds=60)
 
 def main():
