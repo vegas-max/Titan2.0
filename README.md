@@ -90,6 +90,31 @@ This release includes comprehensive automation for installation, deployment, and
 - **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - Current release details
 - **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - Security features and best practices
 
+### 🤖 Super Agent System **NEW!**
+- **[SUPER_AGENT_GUIDE.md](SUPER_AGENT_GUIDE.md)** - 🤖 Complete guide to the creative super agent system
+- **[SUPER_AGENT_QUICKREF.md](SUPER_AGENT_QUICKREF.md)** - ⚡ Quick reference for super agent commands
+
+The **Super Agent System** is an autonomous, intelligent agent framework that manages and runs the entire TITAN repository. It provides:
+
+- ✅ **Automated System Management**: Start, stop, restart, and monitor all TITAN components
+- ✅ **Self-Healing Capabilities**: Automatic detection and recovery from failures
+- ✅ **Health Monitoring**: Comprehensive system health checks
+- ✅ **Intelligent Task Scheduling**: Priority-based task queue with multi-agent coordination
+- ✅ **Build & Test Automation**: Automated compilation and testing
+- ✅ **Interactive CLI**: Easy-to-use command interface
+
+**Quick Start:**
+```bash
+# Interactive mode
+./start_super_agent.sh
+
+# Run health check
+./start_super_agent.sh once health
+
+# Start TITAN in paper mode
+./start_super_agent.sh once start paper
+```
+
 ---
 
 ## ⚡ Quick Start

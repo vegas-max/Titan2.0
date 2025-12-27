@@ -1,0 +1,136 @@
+{
+  "version": "1.0.0",
+  "description": "Configuration for APEX-OMEGA TITAN Super Agent System",
+  "agents": {
+    "orchestrator": {
+      "enabled": true,
+      "max_concurrent_tasks": 10,
+      "heartbeat_interval": 30,
+      "capabilities": [
+        "system_health_check",
+        "start_system",
+        "stop_system",
+        "restart_system",
+        "run_tests",
+        "build_project",
+        "deploy",
+        "monitor_performance",
+        "auto_scale",
+        "self_heal",
+        "optimize_resources"
+      ],
+      "auto_restart_on_failure": true,
+      "max_restart_attempts": 3
+    },
+    "developer": {
+      "enabled": true,
+      "auto_fix_enabled": true,
+      "max_concurrent_tasks": 5,
+      "capabilities": [
+        "code_analysis",
+        "bug_detection",
+        "auto_fix",
+        "code_generation",
+        "refactoring"
+      ],
+      "linting": {
+        "enabled": true,
+        "auto_fix": true,
+        "rules": "standard"
+      }
+    },
+    "tester": {
+      "enabled": true,
+      "auto_test_on_commit": true,
+      "max_concurrent_tasks": 3,
+      "capabilities": [
+        "unit_testing",
+        "integration_testing",
+        "end_to_end_testing",
+        "performance_testing",
+        "security_testing"
+      ],
+      "test_frameworks": {
+        "hardhat": true,
+        "pytest": true,
+        "jest": false
+      },
+      "coverage_threshold": 80
+    },
+    "deployer": {
+      "enabled": true,
+      "auto_deploy": false,
+      "require_approval": true,
+      "capabilities": [
+        "contract_deployment",
+        "environment_setup",
+        "configuration_management",
+        "rollback"
+      ],
+      "networks": {
+        "testnet": {
+          "auto_deploy": true,
+          "approval_required": false
+        },
+        "mainnet": {
+          "auto_deploy": false,
+          "approval_required": true,
+          "multi_sig_required": true
+        }
+      }
+    },
+    "monitor": {
+      "enabled": true,
+      "monitoring_interval": 60,
+      "alert_threshold": 0.8,
+      "capabilities": [
+        "performance_monitoring",
+        "resource_monitoring",
+        "log_analysis",
+        "anomaly_detection",
+        "alerting"
+      ],
+      "metrics": {
+        "cpu_threshold": 80,
+        "memory_threshold": 85,
+        "disk_threshold": 90,
+        "error_rate_threshold": 0.05
+      },
+      "alerts": {
+        "email": false,
+        "slack": false,
+        "telegram": false,
+        "console": true
+      }
+    }
+  },
+  "global": {
+    "log_level": "INFO",
+    "task_timeout": 300,
+    "max_retries": 3,
+    "retry_delay": 5,
+    "enable_self_healing": true,
+    "enable_auto_optimization": true,
+    "enable_learning": true
+  },
+  "system": {
+    "default_mode": "paper",
+    "auto_start_on_boot": false,
+    "graceful_shutdown_timeout": 30,
+    "health_check_interval": 300
+  },
+  "learning": {
+    "enabled": true,
+    "learning_rate": 0.1,
+    "model_save_interval": 3600,
+    "model_path": "data/models/agent_models"
+  },
+  "security": {
+    "require_authentication": false,
+    "api_key_required": false,
+    "rate_limiting": {
+      "enabled": true,
+      "max_requests_per_minute": 60
+    }
+  }
+}
