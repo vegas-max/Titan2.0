@@ -11,6 +11,9 @@
     "deploy:arbitrum": "npx hardhat run scripts/deploy.js --network arbitrum",
     "deploy:optimism": "npx hardhat run scripts/deploy.js --network optimism",
     "deploy:base": "npx hardhat run scripts/deploy.js --network base",
+    "deploy:flasharb:polygon": "npx hardhat run scripts/deployFlashArbExecutor.js --network polygon",
+    "deploy:flasharb:ethereum": "npx hardhat run scripts/deployFlashArbExecutor.js --network ethereum",
+    "deploy:flasharb:arbitrum": "npx hardhat run scripts/deployFlashArbExecutor.js --network arbitrum",
     "test": "npx hardhat test && python3 test_phase1.py",
     "audit": "python3 audit_system.py",
     "health": "node -v && python3 --version",
@@ -18,7 +21,11 @@
     "setup": "npm ci && pip3 install -r requirements.txt && npx hardhat compile",
     "setup:yarn": "yarn install && pip3 install -r requirements.txt && npx hardhat compile",
     "install-and-run": "node install_and_run.js",
-    "install-and-run:yarn": "node install_and_run.js"
+    "install-and-run:yarn": "node install_and_run.js",
+    "dashboard": "python3 live_operational_dashboard.py",
+    "dashboard:web": "python3 -m http.server 3001",
+    "dashboard:launch": "./launch_dashboard.sh",
+    "monitor": "python3 live_operational_dashboard.py"
   },
   "keywords": [
     "defi",

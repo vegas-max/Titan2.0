@@ -5,8 +5,8 @@
 **Multi-Chain Arbitrage & Flash Loan Execution System**
 
 [![Version](https://img.shields.io/badge/version-4.2.0-blue.svg)](https://github.com/MavenSource/Titan)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.20-orange.svg)](https://soliditylang.org/)
-[![Hardhat](https://img.shields.io/badge/Hardhat-2.19.5-yellow.svg)](https://hardhat.org/)
+[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-orange.svg)](https://soliditylang.org/)
+[![Hardhat](https://img.shields.io/badge/Hardhat-2.28.0-yellow.svg)](https://hardhat.org/)
 [![Node](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org/)
 [![Release](https://img.shields.io/badge/Release-Production%20Ready-brightgreen.svg)](https://github.com/MavenSource/Titan/releases)
@@ -16,6 +16,20 @@
 </div>
 
 ---
+
+## 🆕 What's New in v4.2.0 - Mainnet Ready Release
+
+**🎉 Production-Ready Flash Arbitrage Executor!**
+
+This release introduces a battle-tested, gas-optimized FlashArbExecutor contract and comprehensive mainnet configuration:
+
+- ✅ **FlashArbExecutor Contract**: Production-ready Solidity 0.8.24 contract with Balancer & Aave flash loans
+- ✅ **Comprehensive Config**: Complete `config.json` with DEX endpoints, bridges, and token lists for all major chains
+- ✅ **Multi-DEX Support**: QuickSwap, SushiSwap, Uniswap V3 integration with automated routing
+- ✅ **Enhanced Security**: Custom errors, reentrancy guards, and profit verification
+- ✅ **Deployment Scripts**: Automated deployment to Polygon, Ethereum, Arbitrum, and more
+- ✅ **Gas Optimization**: Assembly-optimized plan parsing and efficient swap dispatch
+- ✅ **Full Documentation**: End-to-end setup guide for mainnet deployment
 
 ## 🆕 What's New in v4.2.0 - Full System Release
 
