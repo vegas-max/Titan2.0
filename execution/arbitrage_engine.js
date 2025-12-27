@@ -11,17 +11,12 @@ const { ethers } = require('ethers');
 const CONTRACT_HFT = process.env.HFT_CONTRACT_ADDRESS || '0xAF00000000000000000000000000000000000000';
 const CONTRACT_ROUTER = process.env.ROUTER_CONTRACT_ADDRESS || '0x4400000000000000000000000000000000000000';
 
-// Known Uniswap V2 forks by chain
-const V2_COMPATIBLE_DEXES = {
-    1: ['uniswap', 'sushiswap', 'shibaswap'], // Ethereum
-    137: ['quickswap', 'sushiswap', 'apeswap'], // Polygon
-    56: ['pancakeswap', 'apeswap', 'biswap'], // BSC
-    42161: ['sushiswap', 'camelot'], // Arbitrum
-    10: ['velodrome', 'zipswap'], // Optimism
-    8453: ['baseswap', 'aerodrome'], // Base
-    43114: ['traderjoe', 'pangolin'], // Avalanche
-    250: ['spookyswap', 'spiritswap'] // Fantom
-};
+// Known Uniswap V2 forks - exact matching as per problem statement
+const V2_COMPATIBLE_DEXES = [
+    'UNISWAP_V2',
+    'SUSHISWAP', 
+    'PANCAKESWAP'
+];
 
 // HFT Contract ABI
 const HFT_ABI = [
@@ -67,16 +62,16 @@ class ArbitrageEngine {
     /**
      * Gate 1: Topology Check (Hard Constraint)
      * 
-     * If path length > 2, it's a multi-hop (triangular) arbitrage
-     * HFT only supports direct pair swaps (path length = 2)
+     * If route length > 2, it's a multi-hop (triangular) arbitrage
+     * HFT only supports direct pair swaps (route length = 2)
      * 
      * @param {Object} opportunity - Arbitrage opportunity data
      * @returns {Object|null} - Decision object or null to continue
      */
     _gate1_topologyCheck(opportunity) {
-        const pathLength = opportunity.path.length;
+        const routeLength = opportunity.route ? opportunity.route.length : opportunity.path_length;
         
-        if (pathLength > 2) {
+        if (routeLength > 2) {
             // Multi-hop path - must use Router
             return {
                 target: this.routerContract,
@@ -99,20 +94,21 @@ class ArbitrageEngine {
      * @returns {Object|null} - Decision object or null to continue
      */
     _gate2_liquiditySourceCheck(opportunity) {
-        const exchanges = opportunity.exchanges || [];
-        const v2Compatible = V2_COMPATIBLE_DEXES[this.chainId] || [];
+        // Extract exchanges from route or use exchanges array
+        let exchanges = [];
+        if (opportunity.route) {
+            exchanges = opportunity.route.map(r => r.exchange);
+        } else if (opportunity.exchanges) {
+            exchanges = opportunity.exchanges;
+        }
         
         // Check if all exchanges are V2 compatible
         for (const exchange of exchanges) {
-            const exchangeName = exchange.toLowerCase();
-            const isV2 = v2Compatible.some(dex => exchangeName.includes(dex));
+            // Use exact matching with uppercase exchange names
+            const exchangeUpper = exchange.toUpperCase();
+            const isV2 = V2_COMPATIBLE_DEXES.includes(exchangeUpper);
             
-            // Check for known non-V2 protocols
-            const isNonV2 = exchangeName.includes('v3') || 
-                          exchangeName.includes('curve') || 
-                          exchangeName.includes('balancer');
-            
-            if (isNonV2 || !isV2) {
+            if (!isV2) {
                 // Non-V2 exchange detected - must use Router
                 return {
                     target: this.routerContract,
@@ -218,11 +214,17 @@ class ArbitrageEngine {
     _buildHFTPayload(opportunity) {
         const iface = new ethers.Interface(HFT_ABI);
         
-        // For HFT, we need pool addresses, not router addresses
-        // Assuming opportunity has poolAddressA and poolAddressB
-        const poolA = opportunity.poolAddressA || opportunity.poolAddress_A;
-        const poolB = opportunity.poolAddressB || opportunity.poolAddress_B;
-        const amount = opportunity.amountIn || opportunity.amount;
+        // Extract pool addresses from route structure or fallback to direct properties
+        let poolA, poolB;
+        if (opportunity.route && opportunity.route.length >= 2) {
+            poolA = opportunity.route[0].pool_address;
+            poolB = opportunity.route[1].pool_address;
+        } else {
+            poolA = opportunity.poolAddressA || opportunity.poolAddress_A || opportunity.pool_address_1;
+            poolB = opportunity.poolAddressB || opportunity.poolAddress_B || opportunity.pool_address_2;
+        }
+        
+        const amount = opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei;
         
         return iface.encodeFunctionData('startArbitrage', [
             poolA,
@@ -241,9 +243,20 @@ class ArbitrageEngine {
     _buildRouterPayload(opportunity) {
         const iface = new ethers.Interface(ROUTER_ABI);
         
-        const path = opportunity.path;
-        const routers = opportunity.routers;
-        const amount = opportunity.amountIn || opportunity.amount;
+        // Extract token path and routers from route structure or use direct arrays
+        let path, routers;
+        if (opportunity.route && opportunity.route.length > 0) {
+            // Build path from route tokens
+            path = opportunity.route.map(r => r.token);
+            // Build routers array - use router addresses from exchange pool addresses
+            // Note: In real implementation, you'd map exchanges to their router addresses
+            routers = opportunity.routers || opportunity.route.map(r => r.pool_address);
+        } else {
+            path = opportunity.path;
+            routers = opportunity.routers;
+        }
+        
+        const amount = opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei;
         
         return iface.encodeFunctionData('startArbitrage', [
             path,
@@ -260,14 +273,23 @@ class ArbitrageEngine {
      */
     async selectExecutionEngine(opportunity) {
         // Validate opportunity structure
-        if (!opportunity || !opportunity.path || !opportunity.exchanges) {
-            throw new Error('Invalid opportunity structure: missing path or exchanges');
+        if (!opportunity) {
+            throw new Error('Invalid opportunity structure: opportunity is null or undefined');
+        }
+        
+        // Support both route-based and legacy path-based structures
+        if (!opportunity.route && !opportunity.path) {
+            throw new Error('Invalid opportunity structure: missing route or path');
         }
         
         console.log('\n🔍 ARBITRAGE ENGINE: Evaluating opportunity...');
-        console.log(`   Path: ${opportunity.path.join(' → ')}`);
-        console.log(`   Exchanges: ${opportunity.exchanges.join(', ')}`);
-        console.log(`   Amount: ${opportunity.amountIn || opportunity.amount}`);
+        if (opportunity.route) {
+            console.log(`   Route: ${opportunity.route.map(r => `${r.token} via ${r.exchange}`).join(' → ')}`);
+        } else {
+            console.log(`   Path: ${opportunity.path.join(' → ')}`);
+            console.log(`   Exchanges: ${(opportunity.exchanges || []).join(', ')}`);
+        }
+        console.log(`   Amount: ${opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei}`);
         
         // --- Gate 1: Topology Check ---
         const gate1Result = this._gate1_topologyCheck(opportunity);
