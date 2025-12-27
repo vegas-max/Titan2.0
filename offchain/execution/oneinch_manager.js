@@ -1,24 +1,35 @@
 require('dotenv').config();
-const axios = require('axios');
-const { ethers } = require('ethers');
+const BaseDEXManager = require('./base_dex_manager');
 
 /**
  * OneInchManager - 1inch DEX Aggregator Integration
  * Uses 1inch Pathfinder for optimal routing across multiple DEXs
  * Best for: Fast single-chain arbitrage (<1s execution)
+ * 
+ * Extends BaseDEXManager for ARM-optimized performance (4 cores, 24GB RAM)
  */
-class OneInchManager {
+class OneInchManager extends BaseDEXManager {
     /**
      * Initialize 1inch Manager
      * @param {number} chainId - EIP-155 Chain ID
      * @param {object} provider - Ethers provider (optional, for validation)
      */
     constructor(chainId, provider = null) {
-        this.chainId = chainId;
-        this.provider = provider;
-        this.apiUrl = "https://api.1inch.dev/swap/v6.0";
+        super('1inch', chainId, provider, {
+            maxRetries: 3,
+            rateLimit: 5, // 1inch has rate limits
+            cacheTTL: 30000 // 30 second cache for quotes
+        });
+        
         this.apiKey = process.env.ONEINCH_API_KEY || "";
         this.referrerAddress = process.env.ONEINCH_REFERRER_ADDRESS || "0x0000000000000000000000000000000000000000";
+    }
+    
+    /**
+     * Get API URL (override from base class)
+     */
+    getApiUrl() {
+        return "https://api.1inch.dev/swap/v6.0";
     }
     
     /**
@@ -31,52 +42,59 @@ class OneInchManager {
      * @returns {Promise<object|null>} Swap data or null if failed
      */
     async getBestSwap(srcToken, destToken, amount, userAddress, slippageBps = 100) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            console.log("⚠️ 1inch: Invalid token address");
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            console.log("⚠️ 1inch: Invalid amount");
+            return null;
+        }
+        
         try {
-            // Step 1: Get Quote
-            const quoteUrl = `${this.apiUrl}/${this.chainId}/quote`;
-            const quoteParams = {
+            const apiUrl = this.getApiUrl();
+            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
+            
+            // Step 1: Get Quote using base class makeRequest
+            const quoteUrl = `${apiUrl}/${this.chainId}/quote`;
+            const quoteParams = new URLSearchParams({
                 src: srcToken,
                 dst: destToken,
                 amount: amount
-            };
-            
-            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
-            const quoteResponse = await axios.get(quoteUrl, { 
-                params: quoteParams,
-                headers: headers
             });
             
-            if (!quoteResponse.data || !quoteResponse.data.dstAmount) {
+            const quoteData = await this.makeRequest(`${quoteUrl}?${quoteParams}`, { headers });
+            
+            if (!quoteData || !quoteData.dstAmount) {
                 console.log("⚠️ 1inch: No route found");
                 return null;
             }
             
-            const estimatedOutput = quoteResponse.data.dstAmount;
+            const estimatedOutput = quoteData.dstAmount;
             
             // Step 2: Get Swap Transaction
-            const swapUrl = `${this.apiUrl}/${this.chainId}/swap`;
-            const swapParams = {
+            const swapUrl = `${apiUrl}/${this.chainId}/swap`;
+            const swapParams = new URLSearchParams({
                 src: srcToken,
                 dst: destToken,
                 amount: amount,
                 from: userAddress,
-                slippage: slippageBps / 100, // Convert bps to percentage
+                slippage: slippageBps / 100,
                 referrer: this.referrerAddress,
-                disableEstimate: false,
-                allowPartialFill: false
-            };
-            
-            const swapResponse = await axios.get(swapUrl, { 
-                params: swapParams,
-                headers: headers
+                disableEstimate: 'false',
+                allowPartialFill: 'false'
             });
             
-            if (!swapResponse.data || !swapResponse.data.tx) {
+            const swapData = await this.makeRequest(`${swapUrl}?${swapParams}`, { headers });
+            
+            if (!swapData || !swapData.tx) {
                 console.log("⚠️ 1inch: Transaction building failed");
                 return null;
             }
             
-            const txData = swapResponse.data.tx;
+            const txData = swapData.tx;
             
             return {
                 to: txData.to,
@@ -84,41 +102,45 @@ class OneInchManager {
                 value: txData.value || "0",
                 estimatedOutput: estimatedOutput,
                 gasEstimate: txData.gas || "500000",
-                protocols: swapResponse.data.protocols || []
+                protocols: swapData.protocols || []
             };
             
         } catch (error) {
-            console.error(`❌ 1inch Error: ${error.message}`);
-            if (error.response) {
-                console.error(`Response: ${JSON.stringify(error.response.data)}`);
-            }
+            console.error(`❌ 1inch Error:`, this.formatError(error, 'getBestSwap'));
             return null;
         }
     }
     
     /**
-     * Get a quote without building transaction (faster)
+     * Get a quote without building transaction (faster, implements base class method)
      * @param {string} srcToken - Source token address
      * @param {string} destToken - Destination token address
      * @param {string} amount - Amount to swap (in wei as string)
      * @returns {Promise<object|null>} Quote data or null if failed
      */
     async getQuote(srcToken, destToken, amount) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            return null;
+        }
+        
         try {
-            const quoteUrl = `${this.apiUrl}/${this.chainId}/quote`;
-            const quoteParams = {
+            const apiUrl = this.getApiUrl();
+            const quoteUrl = `${apiUrl}/${this.chainId}/quote`;
+            const quoteParams = new URLSearchParams({
                 src: srcToken,
                 dst: destToken,
                 amount: amount
-            };
-            
-            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
-            const quoteResponse = await axios.get(quoteUrl, { 
-                params: quoteParams,
-                headers: headers
             });
             
-            if (!quoteResponse.data || !quoteResponse.data.dstAmount) {
+            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
+            const quoteData = await this.makeRequest(`${quoteUrl}?${quoteParams}`, { headers });
+            
+            if (!quoteData || !quoteData.dstAmount) {
                 return null;
             }
             
@@ -126,13 +148,13 @@ class OneInchManager {
                 srcToken: srcToken,
                 destToken: destToken,
                 srcAmount: amount,
-                destAmount: quoteResponse.data.dstAmount,
-                estimatedGas: quoteResponse.data.estimatedGas || "500000",
-                protocols: quoteResponse.data.protocols || []
+                destAmount: quoteData.dstAmount,
+                estimatedGas: quoteData.estimatedGas || "500000",
+                protocols: quoteData.protocols || []
             };
             
         } catch (error) {
-            console.error(`❌ 1inch Quote Error: ${error.message}`);
+            console.error(`❌ 1inch Quote Error:`, this.formatError(error, 'getQuote'));
             return null;
         }
     }

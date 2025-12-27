@@ -96,6 +96,9 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 - **[MAINNET_QUICKSTART.md](MAINNET_QUICKSTART.md)** - 5-minute mainnet paper mode setup
 - **[MAINNET_MODES.md](MAINNET_MODES.md)** - Paper trading vs live trading modes
 
+### Performance & Optimization
+- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 **NEW!** ARM architecture optimizations (4 cores, 24GB RAM)
+
 ### Reference
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
 - **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - Current release details

@@ -1,0 +1,107 @@
+{
+  "arm_optimization": {
+    "enabled": true,
+    "architecture": "ARM",
+    "cores": 4,
+    "ram_gb": 24,
+    "description": "Optimized for ARM-based systems with 4 cores and 24GB RAM"
+  },
+  
+  "performance": {
+    "worker_pool": {
+      "python_workers": 3,
+      "node_workers": 3,
+      "description": "Reserve 1 core for system operations, use 3 for Python and Node.js workers"
+    },
+    
+    "memory_limits": {
+      "python_process_mb": 6144,
+      "node_process_mb": 4096,
+      "cache_mb": 2048,
+      "description": "Memory allocation: Python (6GB), Node.js (4GB), Cache (2GB), System (12GB)"
+    },
+    
+    "concurrency": {
+      "max_concurrent_scans": 4,
+      "max_concurrent_api_calls": 12,
+      "batch_size": 50,
+      "description": "Optimize concurrent operations for 4-core ARM architecture"
+    },
+    
+    "cache_strategy": {
+      "enabled": true,
+      "ttl_seconds": 60,
+      "max_entries": 10000,
+      "eviction_policy": "LRU",
+      "description": "Efficient caching to reduce redundant API calls and computation"
+    },
+    
+    "garbage_collection": {
+      "node_gc_interval_minutes": 15,
+      "python_gc_threshold": [700, 10, 10],
+      "description": "Periodic GC to maintain memory efficiency"
+    }
+  },
+  
+  "execution": {
+    "mode": "PAPER",
+    "parallel_chain_scanning": true,
+    "use_multiprocessing": true,
+    "enable_request_pooling": true,
+    "description": "Enable parallel operations across multiple chains and DEXs"
+  },
+  
+  "dex_aggregators": {
+    "rate_limits": {
+      "oneinch": 5,
+      "kyberswap": 10,
+      "cowswap": 5,
+      "lifi": 5,
+      "paraswap": 10,
+      "openocean": 10,
+      "zerox": 5,
+      "rango": 5,
+      "jupiter": 10,
+      "description": "Requests per second per aggregator"
+    },
+    
+    "retry_config": {
+      "max_retries": 3,
+      "initial_delay_ms": 1000,
+      "backoff_multiplier": 2,
+      "max_delay_ms": 10000
+    },
+    
+    "timeout_ms": 10000,
+    "enable_caching": true,
+    "cache_ttl_ms": 30000
+  },
+  
+  "monitoring": {
+    "enable_metrics": true,
+    "metrics_interval_seconds": 60,
+    "log_performance_stats": true,
+    "track_memory_usage": true,
+    "track_cpu_usage": true
+  },
+  
+  "optimization_flags": {
+    "use_native_modules": true,
+    "enable_simd": true,
+    "optimize_for_arm": true,
+    "jit_compilation": true,
+    "description": "ARM-specific optimization flags"
+  },
+  
+  "system_tuning": {
+    "node_options": [
+      "--max-old-space-size=4096",
+      "--optimize-for-size"
+    ],
+    "python_options": [
+      "-O",
+      "-OO"
+    ],
+    "description": "Runtime optimization flags for Node.js and Python"
+  }
+}
