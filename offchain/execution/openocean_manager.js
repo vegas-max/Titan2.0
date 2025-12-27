@@ -1,30 +1,41 @@
 require('dotenv').config();
-const axios = require('axios');
-const { ethers } = require('ethers');
+const BaseDEXManager = require('./base_dex_manager');
 
 /**
  * OpenOceanManager - OpenOcean DEX Aggregator Integration
  * Supports 30+ chains with intelligent split routing
  * Best for: Best price discovery across 30+ chains
+ * 
+ * Extends BaseDEXManager for ARM-optimized performance (4 cores, 24GB RAM)
  */
-class OpenOceanManager {
+class OpenOceanManager extends BaseDEXManager {
     /**
      * Initialize OpenOcean Manager
      * @param {number} chainId - EIP-155 Chain ID
      * @param {object} provider - Ethers provider (optional, for validation)
      */
     constructor(chainId, provider = null) {
-        this.chainId = chainId;
-        this.provider = provider;
-        this.apiUrl = "https://open-api.openocean.finance/v3";
+        super('OpenOcean', chainId, provider, {
+            maxRetries: 3,
+            rateLimit: 10, // OpenOcean supports good rate limits
+            cacheTTL: 30000 // 30 second cache
+        });
+        
         this.apiKey = process.env.OPENOCEAN_API_KEY || "";
-        this.chainName = this._getChainName(chainId);
+        this.chainName = this.getChainName(chainId);
     }
     
     /**
-     * Get chain name for OpenOcean API
+     * Get API URL (override from base class)
      */
-    _getChainName(chainId) {
+    getApiUrl() {
+        return "https://open-api.openocean.finance/v3";
+    }
+    
+    /**
+     * Get chain name for OpenOcean API (override from base class)
+     */
+    getChainName(chainId) {
         const chainNames = {
             1: "eth",
             137: "polygon",
@@ -54,77 +65,90 @@ class OpenOceanManager {
      * @returns {Promise<object|null>} Swap data or null if failed
      */
     async getBestSwap(srcToken, destToken, amount, userAddress, slippageBps = 100) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            console.log("⚠️ OpenOcean: Invalid token address");
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            console.log("⚠️ OpenOcean: Invalid amount");
+            return null;
+        }
+        
         try {
-            const swapUrl = `${this.apiUrl}/${this.chainName}/swap_quote`;
-            const params = {
+            const apiUrl = this.getApiUrl();
+            const swapUrl = `${apiUrl}/${this.chainName}/swap_quote`;
+            const params = new URLSearchParams({
                 inTokenAddress: srcToken,
                 outTokenAddress: destToken,
                 amount: amount,
-                gasPrice: "5", // Will be overridden by bot
-                slippage: slippageBps / 100, // Convert bps to percentage
+                gasPrice: "5",
+                slippage: (slippageBps / 100).toString(),
                 account: userAddress
-            };
-            
-            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
-            const response = await axios.get(swapUrl, { 
-                params: params,
-                headers: headers
             });
             
-            if (!response.data || !response.data.data) {
+            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
+            const data = await this.makeRequest(`${swapUrl}?${params}`, { headers });
+            
+            if (!data || !data.data) {
                 console.log("⚠️ OpenOcean: No route found");
                 return null;
             }
             
-            const data = response.data.data;
+            const swapData = data.data;
             
             return {
-                to: data.to,
-                data: data.data,
-                value: data.value || "0",
-                estimatedOutput: data.outAmount,
-                gasEstimate: data.estimatedGas || "500000",
-                minOutAmount: data.minOutAmount,
-                path: data.path || []
+                to: swapData.to,
+                data: swapData.data,
+                value: swapData.value || "0",
+                estimatedOutput: swapData.outAmount,
+                gasEstimate: swapData.estimatedGas || "500000",
+                minOutAmount: swapData.minOutAmount,
+                path: swapData.path || []
             };
             
         } catch (error) {
-            console.error(`❌ OpenOcean Error: ${error.message}`);
-            if (error.response) {
-                console.error(`Response: ${JSON.stringify(error.response.data)}`);
-            }
+            console.error(`❌ OpenOcean Error:`, this.formatError(error, 'getBestSwap'));
             return null;
         }
     }
     
     /**
-     * Get a quote without building transaction (faster)
+     * Get a quote without building transaction (faster, implements base class method)
      * @param {string} srcToken - Source token address
      * @param {string} destToken - Destination token address
      * @param {string} amount - Amount to swap (in wei as string)
      * @returns {Promise<object|null>} Quote data or null if failed
      */
     async getQuote(srcToken, destToken, amount) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            return null;
+        }
+        
         try {
-            const quoteUrl = `${this.apiUrl}/${this.chainName}/quote`;
-            const params = {
+            const apiUrl = this.getApiUrl();
+            const quoteUrl = `${apiUrl}/${this.chainName}/quote`;
+            const params = new URLSearchParams({
                 inTokenAddress: srcToken,
                 outTokenAddress: destToken,
                 amount: amount,
                 gasPrice: "5"
-            };
-            
-            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
-            const response = await axios.get(quoteUrl, { 
-                params: params,
-                headers: headers
             });
             
-            if (!response.data || !response.data.data) {
+            const headers = this.apiKey ? { 'Authorization': `Bearer ${this.apiKey}` } : {};
+            const responseData = await this.makeRequest(`${quoteUrl}?${params}`, { headers });
+            
+            if (!responseData || !responseData.data) {
                 return null;
             }
             
-            const data = response.data.data;
+            const data = responseData.data;
             
             return {
                 srcToken: srcToken,
@@ -137,7 +161,7 @@ class OpenOceanManager {
             };
             
         } catch (error) {
-            console.error(`❌ OpenOcean Quote Error: ${error.message}`);
+            console.error(`❌ OpenOcean Quote Error:`, this.formatError(error, 'getQuote'));
             return null;
         }
     }

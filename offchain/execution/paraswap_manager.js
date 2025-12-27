@@ -1,23 +1,36 @@
 require('dotenv').config();
-const axios = require('axios');
+const BaseDEXManager = require('./base_dex_manager');
 const { ethers } = require('ethers');
 
 /**
  * ParaSwapManager - DEX Aggregator Integration
  * Finds best swap routes across multiple DEXs using ParaSwap API
+ * 
+ * Extends BaseDEXManager for ARM-optimized performance (4 cores, 24GB RAM)
  */
-class ParaSwapManager {
+class ParaSwapManager extends BaseDEXManager {
     /**
      * Initialize ParaSwap Manager
      * @param {number} chainId - EIP-155 Chain ID
      * @param {object} provider - Ethers provider (optional, for validation)
+     * @param {number} slippageBps - Slippage tolerance in basis points (100 bps = 1%)
      */
     constructor(chainId, provider = null, slippageBps = 100) {
-        this.chainId = chainId;
-        this.provider = provider;
-        this.apiUrl = "https://apiv5.paraswap.io";
+        super('ParaSwap', chainId, provider, {
+            maxRetries: 3,
+            rateLimit: 10, // ParaSwap allows higher rate limits
+            cacheTTL: 30000 // 30 second cache
+        });
+        
         this.partnerAddress = process.env.PARASWAP_PARTNER_ADDRESS || "0x0000000000000000000000000000000000000000";
-        this.slippageBps = slippageBps; // Slippage tolerance in basis points (100 bps = 1%)
+        this.slippageBps = slippageBps;
+    }
+    
+    /**
+     * Get API URL (override from base class)
+     */
+    getApiUrl() {
+        return "https://apiv5.paraswap.io";
     }
     
     /**
@@ -30,35 +43,48 @@ class ParaSwapManager {
      * @returns {Promise<object|null>} Swap data or null if failed
      */
     async getBestSwap(srcToken, destToken, amount, userAddress, slippageBps = null) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            console.log("⚠️ ParaSwap: Invalid token address");
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            console.log("⚠️ ParaSwap: Invalid amount");
+            return null;
+        }
+        
         try {
+            const apiUrl = this.getApiUrl();
+            
             // Fetch token decimals dynamically
             const srcDecimals = await this.getTokenDecimals(srcToken);
             const destDecimals = await this.getTokenDecimals(destToken);
             
-            // Step 1: Get Price Quote
-            const priceUrl = `${this.apiUrl}/prices`;
-            const priceParams = {
+            // Step 1: Get Price Quote using base class makeRequest
+            const priceUrl = `${apiUrl}/prices`;
+            const priceParams = new URLSearchParams({
                 srcToken: srcToken,
                 destToken: destToken,
                 amount: amount,
-                srcDecimals: srcDecimals,
-                destDecimals: destDecimals,
+                srcDecimals: srcDecimals.toString(),
+                destDecimals: destDecimals.toString(),
                 side: "SELL",
-                network: this.chainId,
+                network: this.chainId.toString(),
                 partner: this.partnerAddress
-            };
+            });
             
-            const priceResponse = await axios.get(priceUrl, { params: priceParams });
+            const priceData = await this.makeRequest(`${priceUrl}?${priceParams}`);
             
-            if (!priceResponse.data || !priceResponse.data.priceRoute) {
+            if (!priceData || !priceData.priceRoute) {
                 console.log("⚠️ ParaSwap: No route found");
                 return null;
             }
             
-            const priceRoute = priceResponse.data.priceRoute;
+            const priceRoute = priceData.priceRoute;
             
             // Step 2: Build Transaction
-            const txUrl = `${this.apiUrl}/transactions/${this.chainId}`;
+            const txUrl = `${apiUrl}/transactions/${this.chainId}`;
             const txParams = {
                 srcToken: srcToken,
                 destToken: destToken,
@@ -70,30 +96,26 @@ class ParaSwapManager {
                 slippage: slippageBps !== null ? slippageBps : this.slippageBps
             };
             
-            const txResponse = await axios.post(txUrl, txParams);
+            const txData = await this.makeRequest(txUrl, {
+                method: 'POST',
+                data: txParams
+            });
             
-            if (!txResponse.data) {
+            if (!txData) {
                 console.log("⚠️ ParaSwap: Transaction building failed");
                 return null;
             }
-            
-            const txData = txResponse.data;
             
             return {
                 to: txData.to,
                 data: txData.data,
                 value: txData.value || "0",
                 estimatedOutput: priceRoute.destAmount,
-                // Use ParaSwap's gas estimate or conservative fallback for complex multi-protocol routes
-                // 500k covers most scenarios including multi-hop swaps through aggregators
                 gasEstimate: txData.gas || "500000"
             };
             
         } catch (error) {
-            console.error(`❌ ParaSwap Error: ${error.message}`);
-            if (error.response) {
-                console.error(`Response: ${JSON.stringify(error.response.data)}`);
-            }
+            console.error(`❌ ParaSwap Error:`, this.formatError(error, 'getBestSwap'));
             return null;
         }
     }
