@@ -80,7 +80,7 @@ echo "[STARTED] Python Brain (PID: $PYTHON_PID)"
 sleep 2
 
 # Start Node.js bot in background
-node execution/bot.js &
+node offchain/execution/bot.js &
 NODE_PID=$!
 echo "[STARTED] Node.js Bot (PID: $NODE_PID)"
 

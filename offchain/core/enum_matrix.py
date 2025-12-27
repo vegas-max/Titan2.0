@@ -3,7 +3,7 @@ Enum Matrix - Chain ID enumeration and provider management utilities
 """
 from enum import IntEnum
 from web3 import Web3
-from core.config import CHAINS
+from offchain.core.config import CHAINS
 
 class ChainID(IntEnum):
     """

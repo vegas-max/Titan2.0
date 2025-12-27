@@ -186,7 +186,7 @@ class MainnetHealthMonitor:
         
         # Check if brain module can be imported
         try:
-            from ml.brain import OmniBrain
+            from offchain.ml.brain import OmniBrain
             logger.info("   ✅ Brain module: OK")
         except ImportError as e:
             logger.error(f"   ❌ Brain module: {e}")

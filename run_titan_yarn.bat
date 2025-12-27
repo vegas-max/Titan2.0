@@ -75,9 +75,9 @@ if %errorlevel% neq 0 (
 
 echo [4/4] Starting Titan system...
 echo.
-start "Titan [BRAIN]" cmd /k "python ml/brain.py"
+start "Titan [BRAIN]" cmd /k "python3 offchain/ml/brain.py"
 timeout /t 2 /nobreak >nul
-start "Titan [EXECUTOR]" cmd /k "node execution/bot.js"
+start "Titan [EXECUTOR]" cmd /k "node offchain/execution/bot.js"
 
 echo.
 echo [+] Titan is running in separate windows!

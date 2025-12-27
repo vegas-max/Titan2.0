@@ -3,7 +3,7 @@ print("Python starting...", flush=True)
 
 try:
     print("Importing OmniBrain...", flush=True)
-    from ml.brain import OmniBrain
+    from offchain.ml.brain import OmniBrain
     print("✅ Import successful", flush=True)
     
     print("Creating brain instance...", flush=True)

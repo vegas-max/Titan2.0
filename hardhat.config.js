@@ -12,6 +12,12 @@ const getAccounts = () => {
 };
 
 module.exports = {
+  paths: {
+    sources: "./onchain/contracts",
+    tests: "./onchain/test",
+    cache: "./cache",
+    artifacts: "./artifacts"
+  },
   solidity: {
     compilers: [
       {

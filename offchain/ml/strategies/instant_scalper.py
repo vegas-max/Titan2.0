@@ -4,8 +4,8 @@ from decimal import Decimal
 from datetime import datetime
 
 # Core Imports
-from core.config import CHAINS
-from ml.dex_pricer import DexPricer
+from offchain.core.config import CHAINS
+from offchain.ml.dex_pricer import DexPricer
 
 logger = logging.getLogger("InstantScalper")
 

@@ -29,12 +29,12 @@ import numpy as np
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 
 # Import REAL Titan components
-from ml.brain import OmniBrain, ProfitEngine
-from ml.dex_pricer import DexPricer
-from core.titan_commander_core import TitanCommander
-from ml.cortex.forecaster import MarketForecaster
-from ml.cortex.rl_optimizer import QLearningAgent
-from ml.cortex.feature_store import FeatureStore
+from offchain.ml.brain import OmniBrain, ProfitEngine
+from offchain.ml.dex_pricer import DexPricer
+from offchain.core.titan_commander_core import TitanCommander
+from offchain.ml.cortex.forecaster import MarketForecaster
+from offchain.ml.cortex.rl_optimizer import QLearningAgent
+from offchain.ml.cortex.feature_store import FeatureStore
 
 from web3 import Web3
 from dotenv import load_dotenv

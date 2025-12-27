@@ -7,7 +7,7 @@
 // The lazy-loading in lifi_manager.js will prevent SDK initialization during import
 process.env.LIFI_API_KEY = 'test_key';
 
-const { AggregatorSelector } = require('../execution/aggregator_selector');
+const { AggregatorSelector } = require('../../offchain/execution/aggregator_selector');
 
 // Mock provider (not needed for routing logic tests)
 const mockProvider = null;

@@ -19,9 +19,9 @@ if %errorlevel% neq 0 (
 )
 
 echo [3] Launching Titan Engines...
-start "Titan [BRAIN]" cmd /k "python ml/brain.py"
-start "Titan [EXECUTOR]" cmd /k "node execution/bot.js"
-start "Titan [API]" cmd /k "uvicorn ml.onnx_prediction_api:app --port 8000"
+start "Titan [BRAIN]" cmd /k "python3 offchain/ml/brain.py"
+start "Titan [EXECUTOR]" cmd /k "node offchain/execution/bot.js"
+start "Titan [API]" cmd /k "uvicorn offchain.ml.onnx_prediction_api:app --port 8000"
 
 echo [SUCCESS] System Live.
 pause

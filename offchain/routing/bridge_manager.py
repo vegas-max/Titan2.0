@@ -2,8 +2,8 @@
 Bridge Manager - Wrapper for bridge functionality
 Combines BridgeAggregator and BridgeOracle
 """
-from routing.bridge_aggregator import BridgeAggregator
-from ml.bridge_oracle import BridgeOracle
+from offchain.routing.bridge_aggregator import BridgeAggregator
+from offchain.ml.bridge_oracle import BridgeOracle
 
 class BridgeManager:
     """

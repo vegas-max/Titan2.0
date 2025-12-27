@@ -2,7 +2,7 @@ import json
 import os
 from web3 import Web3
 from dotenv import load_dotenv
-from core.config import CHAINS, BALANCER_V3_VAULT
+from offchain.core.config import CHAINS, BALANCER_V3_VAULT
 
 load_dotenv()
 

@@ -14,25 +14,25 @@ print("TEST 1: Component Imports")
 print("-"*70)
 
 try:
-    from ml.brain import OmniBrain
+    from offchain.ml.brain import OmniBrain
     print("✅ OmniBrain")
 except Exception as e:
     print(f"❌ OmniBrain: {e}")
     
 try:
-    from core.titan_commander_core import TitanCommander
+    from offchain.core.titan_commander_core import TitanCommander
     print("✅ TitanCommander")
 except Exception as e:
     print(f"❌ TitanCommander: {e}")
 
 try:
-    from ml.cortex.forecaster import MarketForecaster
+    from offchain.ml.cortex.forecaster import MarketForecaster
     print("✅ MarketForecaster")
 except Exception as e:
     print(f"❌ MarketForecaster: {e}")
 
 try:
-    from ml.cortex.rl_optimizer import QLearningAgent
+    from offchain.ml.cortex.rl_optimizer import QLearningAgent
     print("✅ QLearningAgent")
 except Exception as e:
     print(f"❌ QLearningAgent: {e}")

@@ -646,7 +646,7 @@ if [[ ! "$LAUNCH" =~ ^[Nn]$ ]]; then
     fi
     
     print_progress "Launching Execution Engine..."
-    node execution/bot.js > logs/executor.log 2>&1 &
+    node offchain/execution/bot.js > logs/executor.log 2>&1 &
     EXECUTOR_PID=$!
     echo $EXECUTOR_PID > .executor.pid
     sleep 2

@@ -49,31 +49,31 @@ echo ""
 # Detect terminal emulator and start processes
 if command -v gnome-terminal >/dev/null 2>&1; then
     # GNOME Terminal (Ubuntu, Debian)
-    gnome-terminal --title="Titan Brain" -- bash -c "python3 ml/brain.py; exec bash"
-    gnome-terminal --title="Titan Executor" -- bash -c "node execution/bot.js; exec bash"
+    gnome-terminal --title="Titan Brain" -- bash -c "python3 offchain/ml/brain.py; exec bash"
+    gnome-terminal --title="Titan Executor" -- bash -c "node offchain/execution/bot.js; exec bash"
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v konsole >/dev/null 2>&1; then
     # KDE Konsole
-    konsole --new-tab --title "Titan Brain" -e bash -c "python3 ml/brain.py; exec bash" &
-    konsole --new-tab --title "Titan Executor" -e bash -c "node execution/bot.js; exec bash" &
+    konsole --new-tab --title "Titan Brain" -e bash -c "python3 offchain/ml/brain.py; exec bash" &
+    konsole --new-tab --title "Titan Executor" -e bash -c "node offchain/execution/bot.js; exec bash" &
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v xterm >/dev/null 2>&1; then
     # xterm (fallback)
-    xterm -T "Titan Brain" -e "python3 ml/brain.py; bash" &
-    xterm -T "Titan Executor" -e "node execution/bot.js; bash" &
+    xterm -T "Titan Brain" -e "python3 offchain/ml/brain.py; bash" &
+    xterm -T "Titan Executor" -e "node offchain/execution/bot.js; bash" &
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v osascript >/dev/null 2>&1; then
     # macOS Terminal
-    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && python3 ml/brain.py"'
-    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && node execution/bot.js"'
+    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && python3 offchain/ml/brain.py"'
+    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && node offchain/execution/bot.js"'
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 else
     # No terminal emulator detected, run in background
     echo -e "${YELLOW}[!] No terminal emulator detected${NC}"
     echo "Starting components in background..."
-    python3 ml/brain.py > logs/brain.log 2>&1 &
+    python3 offchain/ml/brain.py > logs/brain.log 2>&1 &
     BRAIN_PID=$!
-    node execution/bot.js > logs/bot.log 2>&1 &
+    node offchain/execution/bot.js > logs/bot.log 2>&1 &
     BOT_PID=$!
     echo -e "${GREEN}[✓] Brain PID: $BRAIN_PID${NC}"
     echo -e "${GREEN}[✓] Executor PID: $BOT_PID${NC}"
