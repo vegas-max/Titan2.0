@@ -239,7 +239,7 @@ class SystemIntegrationManager:
         
         # 1. Check Python Brain
         try:
-            from ml.brain import OmniBrain
+            from offchain.ml.brain import OmniBrain
             component_status['OmniBrain'] = True
             logger.info("   ✅ OmniBrain module loaded")
         except ImportError as e:
@@ -248,8 +248,8 @@ class SystemIntegrationManager:
         
         # 2. Check ML Cortex
         try:
-            from ml.cortex.forecaster import MarketForecaster
-            from ml.cortex.rl_optimizer import QLearningAgent
+            from offchain.ml.cortex.forecaster import MarketForecaster
+            from offchain.ml.cortex.rl_optimizer import QLearningAgent
             component_status['ML_Cortex'] = True
             logger.info("   ✅ ML Cortex loaded")
         except ImportError as e:
@@ -258,7 +258,7 @@ class SystemIntegrationManager:
         
         # 3. Check Titan Commander
         try:
-            from core.titan_commander_core import TitanCommander
+            from offchain.core.titan_commander_core import TitanCommander
             component_status['TitanCommander'] = True
             logger.info("   ✅ TitanCommander loaded")
         except ImportError as e:

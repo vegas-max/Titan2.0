@@ -301,7 +301,7 @@ def get_cross_chain_quote(from_chain: int, to_chain: int, token: str, amount: st
     Convenience function to get a cross-chain bridge quote.
     
     Usage:
-        >>> from routing.lifi_wrapper import get_cross_chain_quote
+        >>> from offchain.routing.lifi_wrapper import get_cross_chain_quote
         >>> quote = get_cross_chain_quote(137, 42161, '0x...', '1000000000')
         >>> if quote and quote['success']:
         >>>     print(f"Bridge fee: ${quote['gas_cost_usd']}")
@@ -314,7 +314,7 @@ def verify_cross_chain_route(from_chain: int, to_chain: int, token: str) -> bool
     Convenience function to verify if a cross-chain route exists.
     
     Usage:
-        >>> from routing.lifi_wrapper import verify_cross_chain_route
+        >>> from offchain.routing.lifi_wrapper import verify_cross_chain_route
         >>> if verify_cross_chain_route(137, 42161, usdc_address):
         >>>     print("Route available!")
     """

@@ -126,22 +126,22 @@ export TITAN_EXECUTION_MODE=$MODE
 if command -v gnome-terminal >/dev/null 2>&1; then
     # GNOME Terminal (Ubuntu, Debian)
     gnome-terminal --title="Titan Orchestrator" -- bash -c "python3 mainnet_orchestrator.py; exec bash"
-    gnome-terminal --title="Titan Executor" -- bash -c "node execution/bot.js; exec bash"
+    gnome-terminal --title="Titan Executor" -- bash -c "node offchain/execution/bot.js; exec bash"
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v konsole >/dev/null 2>&1; then
     # KDE Konsole
     konsole --new-tab --title "Titan Orchestrator" -e bash -c "python3 mainnet_orchestrator.py; exec bash" &
-    konsole --new-tab --title "Titan Executor" -e bash -c "node execution/bot.js; exec bash" &
+    konsole --new-tab --title "Titan Executor" -e bash -c "node offchain/execution/bot.js; exec bash" &
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v xterm >/dev/null 2>&1; then
     # xterm (fallback)
     xterm -T "Titan Orchestrator" -e "python3 mainnet_orchestrator.py; bash" &
-    xterm -T "Titan Executor" -e "node execution/bot.js; bash" &
+    xterm -T "Titan Executor" -e "node offchain/execution/bot.js; bash" &
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 elif command -v osascript >/dev/null 2>&1; then
     # macOS Terminal
     osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && python3 mainnet_orchestrator.py"'
-    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && node execution/bot.js"'
+    osascript -e 'tell app "Terminal" to do script "cd '"$(pwd)"' && node offchain/execution/bot.js"'
     echo -e "${GREEN}[✓] Components started in new terminals${NC}"
 else
     # No terminal emulator detected, run in background
@@ -149,7 +149,7 @@ else
     echo "Starting components in background..."
     python3 mainnet_orchestrator.py > logs/orchestrator.log 2>&1 &
     ORCHESTRATOR_PID=$!
-    node execution/bot.js > logs/executor.log 2>&1 &
+    node offchain/execution/bot.js > logs/executor.log 2>&1 &
     EXECUTOR_PID=$!
     echo -e "${GREEN}[✓] Orchestrator PID: $ORCHESTRATOR_PID${NC}"
     echo -e "${GREEN}[✓] Executor PID: $EXECUTOR_PID${NC}"

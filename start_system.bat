@@ -13,8 +13,8 @@ echo [2] Installing Node Deps...
 call npm install >nul
 
 echo [3] Launching Modules...
-start "Brain" cmd /k "python ml/brain.py"
-start "Executor" cmd /k "node execution/bot.js"
+start "Brain" cmd /k "python3 offchain/ml/brain.py"
+start "Executor" cmd /k "node offchain/execution/bot.js"
 
 echo [SUCCESS] System Live.
 pause

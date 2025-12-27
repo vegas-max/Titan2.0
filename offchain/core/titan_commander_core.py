@@ -1,6 +1,6 @@
 import logging
-from core.titan_simulation_engine import get_provider_tvl
-from core.config import BALANCER_V3_VAULT, CHAINS
+from offchain.core.titan_simulation_engine import get_provider_tvl
+from offchain.core.config import BALANCER_V3_VAULT, CHAINS
 
 # Setup Logging
 logger = logging.getLogger("TitanCommander")

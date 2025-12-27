@@ -1,6 +1,6 @@
 import logging
 from web3 import Web3
-from core.config import DEX_ROUTERS, CHAINS
+from offchain.core.config import DEX_ROUTERS, CHAINS
 
 # Setup Logging
 logger = logging.getLogger("DexPricer")

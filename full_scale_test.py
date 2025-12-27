@@ -142,7 +142,7 @@ class FullScaleTestSuite:
         logger.info("="*70)
         
         try:
-            from ml.brain import OmniBrain
+            from offchain.ml.brain import OmniBrain
             
             start_time = time.time()
             brain = OmniBrain()
@@ -347,8 +347,8 @@ class FullScaleTestSuite:
         logger.info("="*70)
         
         try:
-            from ml.cortex.forecaster import MarketForecaster
-            from ml.cortex.rl_optimizer import QLearningAgent
+            from offchain.ml.cortex.forecaster import MarketForecaster
+            from offchain.ml.cortex.rl_optimizer import QLearningAgent
             
             # Test forecaster
             forecaster = MarketForecaster()
@@ -375,7 +375,7 @@ class FullScaleTestSuite:
         logger.info("="*70)
         
         try:
-            from core.titan_commander_core import TitanCommander
+            from offchain.core.titan_commander_core import TitanCommander
             
             commander = TitanCommander(1)
             

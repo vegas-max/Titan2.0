@@ -1,6 +1,6 @@
 from web3 import Web3
-from core.enum_matrix import ChainManager
-from core.config import CHAINS
+from offchain.core.enum_matrix import ChainManager
+from offchain.core.config import CHAINS
 import colorama
 from colorama import Fore, Style
 

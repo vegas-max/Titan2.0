@@ -268,7 +268,7 @@ if /i "!LAUNCH!"=="Y" (
     start "Titan Orchestrator" cmd /k "python mainnet_orchestrator.py"
     timeout /t 3 /nobreak >nul
     
-    start "Titan Executor" cmd /k "node execution/bot.js"
+    start "Titan Executor" cmd /k "node offchain/execution/bot.js"
     timeout /t 2 /nobreak >nul
     
     echo.
@@ -307,7 +307,7 @@ if /i "!LAUNCH!"=="Y" (
     echo.
     echo [i] Launch skipped. You can start the system later with:
     echo     python mainnet_orchestrator.py
-    echo     node execution/bot.js
+    echo     node offchain/execution/bot.js
     echo.
 )
 

@@ -43,7 +43,7 @@ def audit():
     # 2. Config Logic Check
     print(f"\n{Fore.YELLOW}[2] Checking Logic Imports...{Style.RESET_ALL}")
     try:
-        from core.config import CHAINS, DYNAMIC_REGISTRY
+        from offchain.core.config import CHAINS, DYNAMIC_REGISTRY
         print(f"   ✅ Config Loaded. Chains Configured: {len(CHAINS)}")
         if DYNAMIC_REGISTRY is None:
              print(f"   ⚠️  Dynamic Registry not built yet (Run lifi_discovery.js first)")

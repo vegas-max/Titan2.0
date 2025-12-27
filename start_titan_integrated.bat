@@ -63,7 +63,7 @@ echo.
 REM Start both processes in parallel using PowerShell
 powershell -NoProfile -Command ^
     "$pythonJob = Start-Job -ScriptBlock { cd '%cd%'; python mainnet_orchestrator.py 2>&1 }; ^
-     $nodeJob = Start-Job -ScriptBlock { cd '%cd%'; node execution/bot.js 2>&1 }; ^
+     $nodeJob = Start-Job -ScriptBlock { cd '%cd%'; node offchain/execution/bot.js 2>&1 }; ^
      try { ^
          while ($true) { ^
              Receive-Job -Job $pythonJob,nodeJob -ErrorAction SilentlyContinue; ^

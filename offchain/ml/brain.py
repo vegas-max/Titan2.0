@@ -10,16 +10,16 @@ from decimal import Decimal, getcontext
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Core Infrastructure
-from core.config import CHAINS, BALANCER_V3_VAULT, DEX_ROUTERS
-from core.token_discovery import TokenDiscovery
+from offchain.core.config import CHAINS, BALANCER_V3_VAULT, DEX_ROUTERS
+from offchain.core.token_discovery import TokenDiscovery
 from routing.bridge_manager import BridgeManager
-from core.titan_commander_core import TitanCommander
+from offchain.core.titan_commander_core import TitanCommander
 
 # The Cortex (AI Layer)
-from ml.cortex.forecaster import MarketForecaster
-from ml.cortex.rl_optimizer import QLearningAgent
-from ml.cortex.feature_store import FeatureStore
-from ml.dex_pricer import DexPricer
+from offchain.ml.cortex.forecaster import MarketForecaster
+from offchain.ml.cortex.rl_optimizer import QLearningAgent
+from offchain.ml.cortex.feature_store import FeatureStore
+from offchain.ml.dex_pricer import DexPricer
 
 # Setup Logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - [BRAIN] %(message)s')
@@ -135,7 +135,7 @@ class OmniBrain:
         logger.info("🧠 Booting Apex-Omega Titan Brain...")
         
         # A. Load Assets - Dynamic token loading from 1inch API (100+ tokens per chain)
-        from core.token_loader import TokenLoader
+        from offchain.core.token_loader import TokenLoader
         
         target_chains = [1, 137, 42161, 10, 8453, 56, 43114]  # Major chains with good liquidity
         self.inventory = {}
@@ -457,7 +457,7 @@ class OmniBrain:
                     return False
                 
                 # Get router addresses based on route
-                from core.config import DEX_ROUTERS
+                from offchain.core.config import DEX_ROUTERS
                 
                 # Get router for DEX1
                 if dex1 == 'UNIV3':

@@ -37,9 +37,9 @@ logging.basicConfig(
 logger = logging.getLogger("MainnetOrchestrator")
 
 # Import core components
-from ml.brain import OmniBrain
-from ml.cortex.forecaster import MarketForecaster
-from ml.cortex.rl_optimizer import QLearningAgent
+from offchain.ml.brain import OmniBrain
+from offchain.ml.cortex.forecaster import MarketForecaster
+from offchain.ml.cortex.rl_optimizer import QLearningAgent
 
 class ExecutionMode:
     """Execution mode constants"""

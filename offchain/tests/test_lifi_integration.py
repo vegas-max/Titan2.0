@@ -12,8 +12,8 @@ import os
 # Add parent directory to path
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from routing.lifi_wrapper import LiFiWrapper
-from ml.bridge_oracle import BridgeOracle
+from offchain.routing.lifi_wrapper import LiFiWrapper
+from offchain.ml.bridge_oracle import BridgeOracle
 
 
 class TestLiFiWrapper(unittest.TestCase):
@@ -164,7 +164,7 @@ class TestLiFiConfiguration(unittest.TestCase):
     def test_config_imports(self):
         """Test that Li.Fi configuration can be imported"""
         try:
-            from core.config import (
+            from offchain.core.config import (
                 LIFI_SUPPORTED_CHAINS,
                 INTENT_BASED_BRIDGES,
                 TRADITIONAL_BRIDGES,

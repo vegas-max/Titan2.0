@@ -393,44 +393,68 @@ The Titan system follows a modular, event-driven architecture with three primary
 
 ## 🧩 System Components
 
+The Titan system is organized into two main directories:
+
+### 📁 Directory Structure
+
+```
+Titan2.0/
+├── onchain/             # Blockchain-executable components
+│   ├── contracts/       # Solidity smart contracts
+│   ├── scripts/         # Deployment scripts
+│   └── test/            # Contract tests (Hardhat)
+├── offchain/            # Traditional computing components
+│   ├── core/            # Python infrastructure
+│   ├── execution/       # Node.js execution layer
+│   ├── ml/              # Machine learning & AI
+│   ├── routing/         # Cross-chain routing
+│   ├── monitoring/      # Real-time monitoring
+│   └── tests/           # Integration tests
+└── ...                  # Configuration and documentation files
+```
+
+**See detailed documentation:**
+- [onchain/README.md](onchain/README.md) - Smart contracts and deployment
+- [offchain/README.md](offchain/README.md) - Bot logic, AI, and execution
+
 ### Core (Python)
 
-#### `core/config.py`
+#### `offchain/core/config.py`
 - Central configuration management
 - Chain definitions with RPC endpoints
 - Contract addresses and ABIs
 - Environment variable loading
 
-#### `core/enum_matrix.py`
+#### `offchain/core/enum_matrix.py`
 - Chain ID enumeration
 - Network connection details
 - Provider management utilities
 
-#### `core/token_discovery.py`
+#### `offchain/core/token_discovery.py`
 - Multi-chain token inventory system
 - Bridge-compatible asset detection
 - Token metadata aggregation
 
-#### `core/token_loader.py`
+#### `offchain/core/token_loader.py`
 - Dynamic token list loading
 - Address normalization
 - Decimal handling
 
-#### `core/titan_commander_core.py`
+#### `offchain/core/titan_commander_core.py`
 - **TitanCommander Class**: Master control system
 - Loan size optimization with binary search
 - TVL (Total Value Locked) checking
 - Liquidity constraint enforcement
 - Slippage tolerance management
 
-#### `core/titan_simulation_engine.py`
+#### `offchain/core/titan_simulation_engine.py`
 - On-chain balance queries
 - Provider TVL calculation
 - Real-time liquidity checks
 
 ### Machine Learning (Python)
 
-#### `ml/brain.py`
+#### `offchain/ml/brain.py`
 - **OmniBrain Class**: Central AI coordinator
 - **ProfitEngine Class**: Net profit calculation
 - Hyper-graph construction (rustworkx)
@@ -439,37 +463,37 @@ The Titan system follows a modular, event-driven architecture with three primary
 - Redis signal broadcasting
 - Profit equation: `Π_net = V_loan × [(P_A × (1 - S_A)) - (P_B × (1 + S_B))] - F_flat - (V_loan × F_rate)`
 
-#### `ml/cortex/forecaster.py`
+#### `offchain/ml/cortex/forecaster.py`
 - **MarketForecaster Class**: Gas price prediction
 - Linear regression for trend detection
 - Sliding window analysis
 - AI-powered wait/execute decisions
 
-#### `ml/cortex/rl_optimizer.py`
+#### `offchain/ml/cortex/rl_optimizer.py`
 - **QLearningAgent Class**: Reinforcement learning
 - Q-table persistence
 - State: (Chain, Volatility)
 - Action: (Slippage, Priority Fee)
 - Exploration vs. exploitation strategy
 
-#### `ml/cortex/feature_store.py`
+#### `offchain/ml/cortex/feature_store.py`
 - Historical data aggregation
 - Feature engineering for ML models
 - Time-series data management
 
-#### `ml/dex_pricer.py`
+#### `offchain/ml/dex_pricer.py`
 - **DexPricer Class**: Multi-DEX price querying
 - Uniswap V3 quoter integration
 - Curve pool pricing
 - Uniswap V2 fork support (QuickSwap, Sushi, etc.)
 - Best price discovery across all DEXs
 
-#### `ml/bridge_oracle.py`
+#### `offchain/ml/bridge_oracle.py`
 - Cross-chain price oracle
 - Bridge fee estimation
 - Route optimization
 
-#### `ml/strategies/instant_scalper.py`
+#### `offchain/ml/strategies/instant_scalper.py`
 - **InstantScalper Class**: High-frequency strategy
 - Single-chain, 2-hop arbitrage
 - Tier-based pair prioritization
@@ -477,7 +501,7 @@ The Titan system follows a modular, event-driven architecture with three primary
 
 ### Execution (Node.js)
 
-#### `execution/bot.js`
+#### `offchain/execution/bot.js`
 - **TitanBot Class**: Main execution coordinator
 - Redis subscription management
 - Trade signal processing
@@ -486,26 +510,26 @@ The Titan system follows a modular, event-driven architecture with three primary
 - Transaction building and signing
 - Public/private mempool routing
 
-#### `execution/gas_manager.js`
+#### `offchain/execution/gas_manager.js`
 - **GasManager Class**: EIP-1559 optimization
 - Dynamic base fee calculation
 - Priority fee recommendations
 - Gas limit estimation
 - Network congestion detection
 
-#### `execution/lifi_manager.js`
+#### `offchain/execution/lifi_manager.js`
 - **LifiExecutionEngine Class**: Bridge integration
 - Li.Fi SDK configuration
 - Multi-chain wallet management
 - Route finding and execution
 - Bridge transaction handling
 
-#### `execution/lifi_discovery.js`
+#### `offchain/execution/lifi_discovery.js`
 - Dynamic DEX router discovery
 - Li.Fi connection enumeration
 - Registry building and caching
 
-#### `execution/omniarb_sdk_engine.js`
+#### `offchain/execution/omniarb_sdk_engine.js`
 - **OmniSDKEngine Class**: Simulation engine
 - Live on-chain quote verification
 - Full transaction simulation via `eth_call`
@@ -513,25 +537,25 @@ The Titan system follows a modular, event-driven architecture with three primary
 - Revert reason parsing
 - Multi-protocol support (Uni V2/V3, Curve, Balancer)
 
-#### `execution/bloxroute_manager.js`
+#### `offchain/execution/bloxroute_manager.js`
 - **BloxRouteManager Class**: MEV protection
 - Bundle submission
 - Private transaction routing
 - Miner tip optimization
 
-#### `execution/merkle_builder.js`
+#### `offchain/execution/merkle_builder.js`
 - Merkle proof generation
 - Multi-step trade verification
 - Cryptographic proof construction
 
-#### `execution/nonce_manager.py`
+#### `offchain/execution/nonce_manager.py`
 - Transaction nonce tracking
 - Concurrent transaction management
 - Prevents nonce conflicts
 
 ### Smart Contracts (Solidity)
 
-#### `contracts/OmniArbExecutor.sol`
+#### `onchain/contracts/OmniArbExecutor.sol`
 The core smart contract that orchestrates flash loan arbitrage:
 
 **Key Functions:**
@@ -551,20 +575,20 @@ The core smart contract that orchestrates flash loan arbitrage:
 - Balancer V3 Vault: `0xbA1333333333a1BA1108E8412f11850A5C319bA9`
 - Aave V3 Pool: Chain-specific (e.g., Polygon: `0x794a61358D6845594F94dc1DB02A252b5b4814aD`)
 
-#### `contracts/interfaces/`
+#### `onchain/contracts/interfaces/`
 - `IB3.sol`: Balancer V3 interface
 - `IAaveV3.sol`: Aave V3 interface
 - `IUniV3.sol`: Uniswap V3 interface
 - `ICurve.sol`: Curve pool interface
 
-#### `contracts/modules/`
+#### `onchain/contracts/modules/`
 - `BalancerHandler.sol`: Balancer-specific logic
 - `AaveHandler.sol`: Aave-specific logic
 - `SwapHandler.sol`: Generic swap utilities
 
 ### Routing (Python)
 
-#### `routing/bridge_aggregator.py`
+#### `offchain/routing/bridge_aggregator.py`
 - **BridgeAggregator Class**: Li.Fi API wrapper
 - Best route discovery across 15+ bridges
 - Fee calculation and comparison
@@ -572,19 +596,19 @@ The core smart contract that orchestrates flash loan arbitrage:
 
 ### Monitoring (TypeScript/JavaScript)
 
-#### `monitoring/MempoolHound.ts`
+#### `offchain/monitoring/MempoolHound.ts`
 - Real-time mempool monitoring
 - Large transaction detection
 - Frontrunning opportunity identification
 
-#### `monitoring/decoderWorker.js`
+#### `offchain/monitoring/decoderWorker.js`
 - Transaction decoding worker
 - ABI parsing and method identification
 - Parameter extraction
 
 ### Scripts
 
-#### `scripts/deploy.js`
+#### `onchain/scripts/deploy.js`
 - Hardhat deployment script
 - Contract initialization
 - Address verification
