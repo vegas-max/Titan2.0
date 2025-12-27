@@ -275,23 +275,23 @@ describe("FlashArbExecutor - End to End Verification", function () {
   
   // Helper function to create mock plan data
   function createMockPlan(stepCount, deadline) {
-    // Plan format:
+    // Plan format (CORRECTED to match contract validation):
     // [0]: version (1 byte)
-    // [1-5]: padding/reserved (5 bytes) - CHANGED: was 2 bytes
-    // [6-10]: deadline (5 bytes for uint40) - CHANGED: was [2-6]
-    // [11-30]: baseToken (20 bytes) - CHANGED: was [7-26]
-    // [31-62]: minProfit (32 bytes) - CHANGED: was [27-58]
-    // [63]: stepCount (1 byte) - CHANGED: was [59]
-    // Total: 64 bytes header - CHANGED: was 60 bytes
+    // [1]: reserved (1 byte)
+    // [2-6]: deadline (5 bytes for uint40)
+    // [7-26]: baseToken (20 bytes)
+    // [27-58]: minProfit (32 bytes)
+    // [59]: stepCount (1 byte)
+    // Total: 60 bytes header (minimum required by contract)
     
     const version = "01";
-    const padding = "0000000000"; // 5 bytes
+    const reserved = "00"; // 1 byte padding
     const deadlineHex = deadline.toString(16).padStart(10, "0"); // 5 bytes for uint40
     const baseToken = ethers.ZeroAddress.slice(2).padStart(40, "0"); // 20 bytes
     const minProfit = ethers.parseEther("0.01").toString(16).padStart(64, "0"); // 32 bytes
     const stepCountHex = stepCount.toString(16).padStart(2, "0"); // 1 byte
     
-    return "0x" + version + padding + deadlineHex + baseToken + minProfit + stepCountHex;
+    return "0x" + version + reserved + deadlineHex + baseToken + minProfit + stepCountHex;
   }
 });
 

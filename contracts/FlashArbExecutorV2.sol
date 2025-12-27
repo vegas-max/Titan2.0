@@ -323,19 +323,15 @@ contract FlashArbExecutorV2 {
         if (version != 1) revert InvalidPlan();
 
         uint40 deadline;
-        address baseToken;
         uint256 minProfit;
         uint8 stepCount;
 
         assembly {
             let data := add(plan, 32)
             deadline := shr(216, mload(add(data, 2)))
-            baseToken := shr(96, mload(add(data, 7)))
             minProfit := mload(add(data, 27))
             stepCount := shr(248, mload(add(data, 59)))
         }
-
-        baseToken; // Silence warning
 
         if (block.timestamp > deadline) revert DeadlineExpired();
         if (stepCount > MAX_STEPS) revert TooManySteps();
@@ -514,7 +510,7 @@ contract FlashArbExecutorV2 {
     function withdrawToken(address token, uint256 amount) external onlyOwner {
         if (token == address(0)) revert InvalidAddress();
         uint256 balance = IERC20(token).balanceOf(address(this));
-        if (amount > balance) amount = balance; // Cap to available balance
+        require(amount <= balance, "Amount exceeds balance");
         IERC20(token).transfer(owner, amount);
     }
 
