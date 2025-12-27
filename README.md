@@ -97,7 +97,8 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 - **[MAINNET_MODES.md](MAINNET_MODES.md)** - Paper trading vs live trading modes
 
 ### Performance & Optimization
-- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 **NEW!** ARM architecture optimizations (4 cores, 24GB RAM)
+- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 ARM architecture optimizations (4 cores, 24GB RAM)
+- **[LIGHTWEIGHT_MODE_GUIDE.md](LIGHTWEIGHT_MODE_GUIDE.md)** - ⚡ **NEW!** Ultra-lightweight mode (75% memory, 3x faster)
 
 ### Reference
 - **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
