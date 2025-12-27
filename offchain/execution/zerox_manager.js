@@ -1,29 +1,33 @@
 require('dotenv').config();
-const axios = require('axios');
-const { ethers } = require('ethers');
+const BaseDEXManager = require('./base_dex_manager');
 
 /**
  * ZeroXManager - 0x/Matcha DEX Aggregator Integration
  * Supports multi-chain routing and limit orders
  * Best for: Multi-chain routing and limit orders
+ * 
+ * Extends BaseDEXManager for ARM-optimized performance (4 cores, 24GB RAM)
  */
-class ZeroXManager {
+class ZeroXManager extends BaseDEXManager {
     /**
      * Initialize 0x Manager
      * @param {number} chainId - EIP-155 Chain ID
      * @param {object} provider - Ethers provider (optional, for validation)
      */
     constructor(chainId, provider = null) {
-        this.chainId = chainId;
-        this.provider = provider;
-        this.apiUrl = this._getApiUrl(chainId);
+        super('0x', chainId, provider, {
+            maxRetries: 3,
+            rateLimit: 5, // 0x has moderate rate limits
+            cacheTTL: 30000 // 30 second cache
+        });
+        
         this.apiKey = process.env.ZEROX_API_KEY || "";
     }
     
     /**
-     * Get API URL for specific chain
+     * Get API URL for specific chain (override from base class)
      */
-    _getApiUrl(chainId) {
+    getApiUrl() {
         const baseUrls = {
             1: "https://api.0x.org", // Ethereum
             137: "https://polygon.api.0x.org", // Polygon
@@ -33,7 +37,7 @@ class ZeroXManager {
             56: "https://bsc.api.0x.org", // BSC
             43114: "https://avalanche.api.0x.org" // Avalanche
         };
-        return baseUrls[chainId] || "https://api.0x.org";
+        return baseUrls[this.chainId] || "https://api.0x.org";
     }
     
     /**
@@ -46,30 +50,37 @@ class ZeroXManager {
      * @returns {Promise<object|null>} Swap data or null if failed
      */
     async getBestSwap(srcToken, destToken, amount, userAddress, slippageBps = 100) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            console.log("⚠️ 0x: Invalid token address");
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            console.log("⚠️ 0x: Invalid amount");
+            return null;
+        }
+        
         try {
-            const swapUrl = `${this.apiUrl}/swap/v1/quote`;
-            const params = {
+            const apiUrl = this.getApiUrl();
+            const swapUrl = `${apiUrl}/swap/v1/quote`;
+            const params = new URLSearchParams({
                 buyToken: destToken,
                 sellToken: srcToken,
                 sellAmount: amount,
                 takerAddress: userAddress,
-                slippagePercentage: slippageBps / 10000, // Convert bps to decimal (e.g., 100 bps → 0.01 = 1%)
-                skipValidation: false,
-                enableSlippageProtection: true
-            };
-            
-            const headers = this.apiKey ? { '0x-api-key': this.apiKey } : {};
-            const response = await axios.get(swapUrl, { 
-                params: params,
-                headers: headers
+                slippagePercentage: (slippageBps / 10000).toString(),
+                skipValidation: 'false',
+                enableSlippageProtection: 'true'
             });
             
-            if (!response.data || !response.data.to) {
+            const headers = this.apiKey ? { '0x-api-key': this.apiKey } : {};
+            const data = await this.makeRequest(`${swapUrl}?${params}`, { headers });
+            
+            if (!data || !data.to) {
                 console.log("⚠️ 0x: No route found");
                 return null;
             }
-            
-            const data = response.data;
             
             return {
                 to: data.to,
@@ -83,41 +94,43 @@ class ZeroXManager {
             };
             
         } catch (error) {
-            console.error(`❌ 0x Error: ${error.message}`);
-            if (error.response) {
-                console.error(`Response: ${JSON.stringify(error.response.data)}`);
-            }
+            console.error(`❌ 0x Error:`, this.formatError(error, 'getBestSwap'));
             return null;
         }
     }
     
     /**
-     * Get a quote without building transaction (faster)
+     * Get a quote without building transaction (faster, implements base class method)
      * @param {string} srcToken - Source token address
      * @param {string} destToken - Destination token address
      * @param {string} amount - Amount to swap (in wei as string)
      * @returns {Promise<object|null>} Quote data or null if failed
      */
     async getQuote(srcToken, destToken, amount) {
+        // Validate inputs
+        if (!this.isValidAddress(srcToken) || !this.isValidAddress(destToken)) {
+            return null;
+        }
+        
+        if (!this.isValidAmount(amount)) {
+            return null;
+        }
+        
         try {
-            const priceUrl = `${this.apiUrl}/swap/v1/price`;
-            const params = {
+            const apiUrl = this.getApiUrl();
+            const priceUrl = `${apiUrl}/swap/v1/price`;
+            const params = new URLSearchParams({
                 buyToken: destToken,
                 sellToken: srcToken,
                 sellAmount: amount
-            };
-            
-            const headers = this.apiKey ? { '0x-api-key': this.apiKey } : {};
-            const response = await axios.get(priceUrl, { 
-                params: params,
-                headers: headers
             });
             
-            if (!response.data || !response.data.buyAmount) {
+            const headers = this.apiKey ? { '0x-api-key': this.apiKey } : {};
+            const data = await this.makeRequest(`${priceUrl}?${params}`, { headers });
+            
+            if (!data || !data.buyAmount) {
                 return null;
             }
-            
-            const data = response.data;
             
             return {
                 srcToken: srcToken,
@@ -130,7 +143,7 @@ class ZeroXManager {
             };
             
         } catch (error) {
-            console.error(`❌ 0x Quote Error: ${error.message}`);
+            console.error(`❌ 0x Quote Error:`, this.formatError(error, 'getQuote'));
             return null;
         }
     }

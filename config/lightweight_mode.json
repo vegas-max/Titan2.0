@@ -1,0 +1,106 @@
+{
+  "lightweight_mode": {
+    "enabled": true,
+    "description": "Ultra-lightweight mode for ARM: 75% memory reduction, 3x faster",
+    "target_metrics": {
+      "memory_reduction": "75%",
+      "speed_improvement": "3x",
+      "footprint": "minimal"
+    }
+  },
+  
+  "performance": {
+    "worker_pool": {
+      "python_workers": 2,
+      "node_workers": 2,
+      "description": "Reduced workers for lightweight footprint (50% reduction from standard)"
+    },
+    
+    "memory_limits": {
+      "python_process_mb": 1536,
+      "node_process_mb": 1024,
+      "cache_mb": 256,
+      "total_mb": 6144,
+      "description": "Aggressive memory limits: 75% reduction (6GB vs 24GB standard)"
+    },
+    
+    "concurrency": {
+      "max_concurrent_scans": 2,
+      "max_concurrent_api_calls": 6,
+      "batch_size": 25,
+      "description": "Reduced concurrency for lower memory footprint"
+    },
+    
+    "cache_strategy": {
+      "enabled": true,
+      "ttl_seconds": 30,
+      "max_entries": 500,
+      "eviction_policy": "LRU",
+      "description": "Smaller cache with shorter TTL for memory efficiency"
+    },
+    
+    "garbage_collection": {
+      "node_gc_interval_minutes": 5,
+      "python_gc_threshold": [400, 5, 5],
+      "aggressive_mode": true,
+      "description": "Aggressive GC to keep memory usage minimal"
+    }
+  },
+  
+  "optimization_flags": {
+    "strip_debug": true,
+    "minimize_logging": true,
+    "disable_metrics": false,
+    "use_compact_data_structures": true,
+    "description": "Minimize runtime overhead"
+  },
+  
+  "feature_flags": {
+    "enable_full_dashboard": false,
+    "enable_statistics_tracking": true,
+    "enable_error_tracking": true,
+    "enable_performance_monitoring": false,
+    "description": "Disable non-essential features for reduced footprint"
+  },
+  
+  "dex_aggregators": {
+    "max_active": 3,
+    "priority_list": ["oneinch", "paraswap", "openocean"],
+    "rate_limits": {
+      "oneinch": 3,
+      "paraswap": 5,
+      "openocean": 5,
+      "default": 3
+    },
+    "retry_config": {
+      "max_retries": 2,
+      "initial_delay_ms": 500,
+      "backoff_multiplier": 1.5,
+      "max_delay_ms": 5000
+    },
+    "timeout_ms": 5000,
+    "enable_caching": true,
+    "cache_ttl_ms": 20000,
+    "description": "Limit to top 3 aggregators, faster timeouts"
+  },
+  
+  "data_retention": {
+    "max_trades_history": 20,
+    "max_errors_history": 10,
+    "max_gas_price_samples": 30,
+    "metrics_retention_minutes": 60,
+    "description": "Minimal data retention for memory efficiency"
+  },
+  
+  "system_tuning": {
+    "node_options": [
+      "--max-old-space-size=1024",
+      "--optimize-for-size",
+      "--gc-interval=100"
+    ],
+    "python_options": [
+      "-OO"
+    ],
+    "description": "Aggressive runtime optimization for minimal footprint"
+  }
+}
