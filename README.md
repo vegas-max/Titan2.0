@@ -17,34 +17,31 @@
 
 ---
 
-## 🆕 What's New in v4.2.0 - Mainnet Ready Release
+## 🆕 What's New in v4.2.0
 
-**🎉 Production-Ready Flash Arbitrage Executor!**
+**🎉 Production-Ready Flash Arbitrage Executor & Complete Working System!**
 
-This release introduces a battle-tested, gas-optimized FlashArbExecutor contract and comprehensive mainnet configuration:
+This release introduces a battle-tested, gas-optimized FlashArbExecutor contract with comprehensive automation for installation, deployment, and operation:
 
+### Smart Contract & Configuration
 - ✅ **FlashArbExecutor Contract**: Production-ready Solidity 0.8.24 contract with Balancer & Aave flash loans
 - ✅ **Comprehensive Config**: Complete `config.json` with DEX endpoints, bridges, and token lists for all major chains
 - ✅ **Multi-DEX Support**: QuickSwap, SushiSwap, Uniswap V3 integration with automated routing
 - ✅ **Enhanced Security**: Custom errors, reentrancy guards, and profit verification
-- ✅ **Deployment Scripts**: Automated deployment to Polygon, Ethereum, Arbitrum, and more
 - ✅ **Gas Optimization**: Assembly-optimized plan parsing and efficient swap dispatch
-- ✅ **Full Documentation**: End-to-end setup guide for mainnet deployment
 
-## 🆕 What's New in v4.2.0 - Full System Release
-
-**🎉 Instant Complete Working Builds!**
-
-This release includes comprehensive automation for installation, deployment, and operation:
-
+### Automation & Operations
 - ✅ **One-Command Setup**: `./setup.sh` - Complete installation in minutes
 - ✅ **One-Command Start**: `make start` or `./start.sh` - Launch all components
 - ✅ **One-Command Deploy**: `make deploy-polygon` - Deploy to any network
-- ✅ **Quick Start Guide**: [QUICKSTART.md](QUICKSTART.md) - 15-minute setup
+- ✅ **Deployment Scripts**: Automated deployment to Polygon, Ethereum, Arbitrum, and more
 - ✅ **Build Automation**: Makefile with 20+ commands
 - ✅ **Health Checks**: `./health-check.sh` - Comprehensive system validation
 - ✅ **CI/CD Workflows**: GitHub Actions for automated releases
-- ✅ **Complete Documentation**: Installation, configuration, and troubleshooting
+
+### Documentation
+- ✅ **Quick Start Guide**: [QUICKSTART.md](QUICKSTART.md) - 15-minute setup
+- ✅ **Complete Documentation**: Installation, configuration, troubleshooting, and end-to-end setup guide
 
 **[View Full Release Notes](RELEASE_NOTES.md)** | **[Quick Start Guide](QUICKSTART.md)** | **[Installation Guide](INSTALL.md)**
 
@@ -54,7 +51,7 @@ This release includes comprehensive automation for installation, deployment, and
 
 ## 📋 Table of Contents
 
-- 🆕 [What's New in v4.2.0](#-whats-new-in-v420---full-system-release)
+- 🆕 [What's New in v4.2.0](#-whats-new-in-v420)
 - [Quick Start](#-quick-start) - **Start here for fast setup!**
 - [Overview](#-overview)
 - [Key Features](#-key-features)
@@ -1434,20 +1431,7 @@ ROI on Infrastructure:             1,890% (monthly profit vs hosting)
 
 **Calculation Details for Transparency:**
 
-- **Profit Factor (11.2x)**: Gross Profit ($24,450) ÷ Total Gas Costs ($2,180) = 11.22x
-- **ROI on Infrastructure (1,890%)**: Net Profit ($22,270) ÷ Monthly Hosting Cost ($1,179) × 100% = 1,888%
-  - Note: Hosting cost includes VPS ($80), RPC services ($50), Redis ($25), monitoring ($20), and reserves
-- **Win Rate (86%)**: Successful Trades (1,445) ÷ Total Executed (1,680) × 100% = 86.01%
-
-**Mainnet Expectations:**
-- Expect 30-50% lower profitability on mainnet due to competition
-- MEV bots may capture 10-20% of high-value opportunities
-- Higher gas costs during network congestion
-- Recommend starting with $5,000-$10,000 capital for safety
-
-**Calculation Details for Transparency:**
-
-- **Profit Factor (11.22x)**: Gross Profit ($24,450) ÷ Total Gas Costs ($2,180) = 11.22x (rounded to 11.2x in text)
+- **Profit Factor (11.2x)**: Gross Profit ($24,450) ÷ Total Gas Costs ($2,180) = 11.22x (rounded to 11.2x in text)
 - **ROI on Infrastructure (1,890%)**: Net Profit ($22,270) ÷ Monthly Hosting Cost ($1,179) × 100% = 1,888% (rounded to 1,890%)
   - Note: Hosting cost includes VPS ($80), RPC services ($50), Redis ($25), monitoring ($20), and reserves
 - **Win Rate (86%)**: Successful Trades (1,445) ÷ Total Executed (1,680) × 100% = 86.01%
