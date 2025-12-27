@@ -2,6 +2,11 @@
 pragma solidity ^0.8.24;
 
 /*//////////////////////////////////////////////////////////////
+                    PRODUCTION FLASH ARB EXECUTOR V2
+                    (Enhanced Security Version)
+//////////////////////////////////////////////////////////////*/
+
+/*//////////////////////////////////////////////////////////////
                             INTERFACES
 //////////////////////////////////////////////////////////////*/
 
@@ -58,10 +63,10 @@ interface IUniswapV3Router {
 }
 
 /*//////////////////////////////////////////////////////////////
-                    PRODUCTION FLASH ARB EXECUTOR
+                    ENHANCED FLASH ARB EXECUTOR
 //////////////////////////////////////////////////////////////*/
 
-contract FlashArbExecutor {
+contract FlashArbExecutorV2 {
     /*//////////////////////////////////////////////////////////////
                                 ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -73,10 +78,13 @@ contract FlashArbExecutor {
     error ProfitTooLow(uint256 got, uint256 need);
     error FlashLoanFailed();
     error InsufficientRepayment();
-    error StepFailed(uint8 stepIndex);
     error InvalidDex(uint8 dexId);
     error NotVault();
     error NotPool();
+    error Paused();
+    error ReentrancyGuard();
+    error InvalidAddress();
+    error TooManySteps();
 
     /*//////////////////////////////////////////////////////////////
                             CONSTANTS
@@ -88,6 +96,9 @@ contract FlashArbExecutor {
     uint8 internal constant DEX_UNIV2_QUICKSWAP = 1;
     uint8 internal constant DEX_UNIV2_SUSHISWAP = 2;
     uint8 internal constant DEX_UNIV3 = 3;
+
+    uint8 internal constant MAX_STEPS = 10; // Maximum steps to prevent gas issues
+    uint256 internal constant DEADLINE_BUFFER = 300; // 5 minutes
 
     /*//////////////////////////////////////////////////////////////
                             IMMUTABLES
@@ -103,6 +114,12 @@ contract FlashArbExecutor {
 
     mapping(uint8 => address) public dexRouter;
     uint256 public minProfitWei;
+    bool public paused;
+    
+    // Reentrancy guard
+    uint256 private _status;
+    uint256 private constant _NOT_ENTERED = 1;
+    uint256 private constant _ENTERED = 2;
 
     /*//////////////////////////////////////////////////////////////
                             EVENTS
@@ -124,6 +141,10 @@ contract FlashArbExecutor {
         uint256 amountOut
     );
 
+    event Paused(bool isPaused);
+    event MinProfitUpdated(uint256 newMinProfit);
+    event DexRouterUpdated(uint8 dexId, address router);
+
     /*//////////////////////////////////////////////////////////////
                             CONSTRUCTOR
     //////////////////////////////////////////////////////////////*/
@@ -136,6 +157,9 @@ contract FlashArbExecutor {
         address _uniswapV3Router,
         uint256 _minProfitWei
     ) {
+        if (_balancerVault == address(0)) revert InvalidAddress();
+        if (_aavePool == address(0)) revert InvalidAddress();
+        
         owner = msg.sender;
         balancerVault = IBalancerVault(_balancerVault);
         aavePool = IAaveV3Pool(_aavePool);
@@ -145,11 +169,28 @@ contract FlashArbExecutor {
         dexRouter[DEX_UNIV3] = _uniswapV3Router;
 
         minProfitWei = _minProfitWei;
+        _status = _NOT_ENTERED;
     }
+
+    /*//////////////////////////////////////////////////////////////
+                            MODIFIERS
+    //////////////////////////////////////////////////////////////*/
 
     modifier onlyOwner() {
         if (msg.sender != owner) revert NotOwner();
         _;
+    }
+
+    modifier whenNotPaused() {
+        if (paused) revert Paused();
+        _;
+    }
+
+    modifier nonReentrant() {
+        if (_status == _ENTERED) revert ReentrancyGuard();
+        _status = _ENTERED;
+        _;
+        _status = _NOT_ENTERED;
     }
 
     /*//////////////////////////////////////////////////////////////
@@ -161,7 +202,7 @@ contract FlashArbExecutor {
         address loanToken,
         uint256 loanAmount,
         bytes calldata plan
-    ) external onlyOwner {
+    ) external onlyOwner whenNotPaused nonReentrant {
         if (plan.length < 60) revert InvalidPlan();
 
         if (providerId == PROVIDER_BALANCER) {
@@ -182,7 +223,6 @@ contract FlashArbExecutor {
         uint256 amount,
         bytes calldata plan
     ) internal {
-        // FIX 1: Initialize the arrays properly
         IERC20[] memory tokens = new IERC20[](1);
         uint256[] memory amounts = new uint256[](1);
 
@@ -220,7 +260,7 @@ contract FlashArbExecutor {
         uint256[] memory amounts,
         uint256[] memory feeAmounts,
         bytes memory userData
-    ) external {
+    ) external nonReentrant {
         if (msg.sender != address(balancerVault)) revert NotVault();
         if (tokens.length != 1 || amounts.length != 1 || feeAmounts.length != 1) revert FlashLoanFailed();
 
@@ -250,7 +290,7 @@ contract FlashArbExecutor {
         uint256 premium,
         address initiator,
         bytes calldata params
-    ) external returns (bool) {
+    ) external nonReentrant returns (bool) {
         if (msg.sender != address(aavePool)) revert NotPool();
         if (initiator != address(this)) revert FlashLoanFailed();
 
@@ -283,21 +323,18 @@ contract FlashArbExecutor {
         if (version != 1) revert InvalidPlan();
 
         uint40 deadline;
-        address baseToken;
         uint256 minProfit;
         uint8 stepCount;
 
         assembly {
             let data := add(plan, 32)
             deadline := shr(216, mload(add(data, 2)))
-            baseToken := shr(96, mload(add(data, 7)))
             minProfit := mload(add(data, 27))
             stepCount := shr(248, mload(add(data, 59)))
         }
 
-        baseToken; // Silence warning
-
         if (block.timestamp > deadline) revert DeadlineExpired();
+        if (stepCount > MAX_STEPS) revert TooManySteps();
 
         uint256 cursor = 60;
         for (uint8 i = 0; i < stepCount; i++) {
@@ -425,13 +462,12 @@ contract FlashArbExecutor {
 
         IERC20(tokenIn).approve(router, amountIn);
 
-        // FIX 2: Removed redundant manual check. The router enforces minOut.
         uint256[] memory amounts = IUniswapV2Router(router).swapExactTokensForTokens(
             amountIn,
             minOut,
             path,
             address(this),
-            block.timestamp
+            block.timestamp + DEADLINE_BUFFER
         );
 
         return amounts[amounts.length - 1];
@@ -456,7 +492,7 @@ contract FlashArbExecutor {
             tokenOut: tokenOut,
             fee: fee,
             recipient: address(this),
-            deadline: block.timestamp,
+            deadline: block.timestamp + DEADLINE_BUFFER,
             amountIn: amountIn,
             amountOutMinimum: minOut,
             sqrtPriceLimitX96: sqrtPriceLimitX96
@@ -472,24 +508,42 @@ contract FlashArbExecutor {
     //////////////////////////////////////////////////////////////*/
 
     function withdrawToken(address token, uint256 amount) external onlyOwner {
+        if (token == address(0)) revert InvalidAddress();
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(amount <= balance, "Amount exceeds balance");
         IERC20(token).transfer(owner, amount);
     }
 
     function withdrawAllToken(address token) external onlyOwner {
+        if (token == address(0)) revert InvalidAddress();
         uint256 bal = IERC20(token).balanceOf(address(this));
-        IERC20(token).transfer(owner, bal);
+        if (bal > 0) {
+            IERC20(token).transfer(owner, bal);
+        }
     }
 
     function setDexRouter(uint8 dexId, address router) external onlyOwner {
+        if (router == address(0)) revert InvalidAddress();
         dexRouter[dexId] = router;
+        emit DexRouterUpdated(dexId, router);
     }
 
     function setMinProfit(uint256 value) external onlyOwner {
         minProfitWei = value;
+        emit MinProfitUpdated(value);
+    }
+
+    function setPaused(bool _paused) external onlyOwner {
+        paused = _paused;
+        emit Paused(_paused);
     }
 
     function rescueETH() external onlyOwner {
-        payable(owner).transfer(address(this).balance);
+        uint256 balance = address(this).balance;
+        if (balance > 0) {
+            (bool success, ) = payable(owner).call{value: balance}("");
+            require(success, "ETH transfer failed");
+        }
     }
 
     receive() external payable {}
