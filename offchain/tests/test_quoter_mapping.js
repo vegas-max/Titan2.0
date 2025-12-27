@@ -5,7 +5,7 @@
  * 2. Fail-closed behavior for unsupported chains
  */
 
-const { OmniSDKEngine } = require('../../offchain/execution/omniarb_sdk_engine.js');
+const { OmniSDKEngine } = require('../execution/omniarb_sdk_engine.js');
 
 // Test data: chains we support
 const SUPPORTED_CHAINS = {
