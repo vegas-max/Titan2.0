@@ -85,3 +85,11 @@ data/history.csv
 *.pid
 .orchestrator.pid
 .executor.pid
+
+# Rust build artifacts
+core-rust/target/
+core-rust/Cargo.lock
+
+# Go build artifacts
+core-go/titan-core
+core-go/go.sum
