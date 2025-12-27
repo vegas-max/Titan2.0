@@ -1,0 +1,314 @@
+{
+  "version": "2.0.0",
+  "name": "Multi-Chain Arbitrage Bot",
+  "description": "Production-ready arbitrage bot with multi-DEX and cross-chain support",
+  
+  "networks": {
+    "polygon": {
+      "chainId": 137,
+      "name": "Polygon",
+      "currency": "MATIC",
+      "explorer": "https://polygonscan.com",
+      "multicall": "0x11ce4B23bD875D7F5C6a31084f55fDe1e9A87507",
+      "flashloan_providers": {
+        "aave": "0x794a61358D6845594F94dc1DB02A252b5b4814aD",
+        "balancer": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+      }
+    },
+    "ethereum": {
+      "chainId": 1,
+      "name": "Ethereum",
+      "currency": "ETH",
+      "explorer": "https://etherscan.io",
+      "multicall": "0xeefBa1e63905eF1D7ACbA5a8513c70307C1cE441",
+      "flashloan_providers": {
+        "aave": "0x87870Bca3F3fD6335C3F4ce8392D69350B4fA4E2",
+        "dydx": "0x1E0447b19BB6EcFdAe1e4AE1694b0C3659614e4e"
+      }
+    },
+    "bsc": {
+      "chainId": 56,
+      "name": "BSC",
+      "currency": "BNB",
+      "explorer": "https://bscscan.com",
+      "multicall": "0x41263cBA59EB80dC200F3E2544eda4ed6A90E76C"
+    },
+    "arbitrum": {
+      "chainId": 42161,
+      "name": "Arbitrum",
+      "currency": "ETH",
+      "explorer": "https://arbiscan.io",
+      "multicall": "0x842eC2c7D803033Edf55E478F461FC547Bc54EB2"
+    }
+  },
+  
+  "dex_endpoints": {
+    "quickswap": {
+      "polygon": {
+        "http": "https://api.thegraph.com/subgraphs/name/sameepsi/quickswap-v3",
+        "ws": "wss://api.thegraph.com/subgraphs/name/sameepsi/quickswap-v3",
+        "router_v2": "0xa5E0829CaCEd8fFDD4De3c43696c57F7D7A678ff",
+        "router_v3": "0xf5b509bB0909a69B1c207E495f687a596C168E12",
+        "factory_v2": "0x5757371414417b8C6CAad45bAeF941aBc7d3Ab32",
+        "factory_v3": "0x411b0fAcC3489691f28ad58c47006AF5E3Ab3A28"
+      }
+    },
+    "sushiswap": {
+      "polygon": {
+        "http": "https://api.thegraph.com/subgraphs/name/sushiswap/matic-exchange",
+        "ws": "wss://api.thegraph.com/subgraphs/name/sushiswap/matic-exchange",
+        "router": "0x1b02dA8Cb0d097eB8D57A175b88c7D8b47997506",
+        "factory": "0xc35DADB65012eC5796536bD9864eD8773aBc74C4"
+      },
+      "ethereum": {
+        "http": "https://api.thegraph.com/subgraphs/name/sushiswap/exchange",
+        "ws": "wss://api.thegraph.com/subgraphs/name/sushiswap/exchange",
+        "router": "0xd9e1cE17f2641f24aE83637ab66a2cca9C378B9F",
+        "factory": "0xC0AEe478e3658e2610c5F7A4A2E1777cE9e4f2Ac"
+      }
+    },
+    "uniswap_v3": {
+      "polygon": {
+        "http": "https://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon",
+        "ws": "wss://api.thegraph.com/subgraphs/name/ianlapham/uniswap-v3-polygon",
+        "router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "factory": "0x1F98431c8aD98523631AE4a59f267346ea31F984",
+        "quoter": "0xb27308f9F90D607463bb33eA1BeBb41C27CE5AB6"
+      },
+      "ethereum": {
+        "http": "https://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3",
+        "ws": "wss://api.thegraph.com/subgraphs/name/uniswap/uniswap-v3",
+        "router": "0xE592427A0AEce92De3Edee1F18E0157C05861564",
+        "factory": "0x1F98431c8aD98523631AE4a59f267346ea31F984"
+      }
+    },
+    "curve": {
+      "polygon": {
+        "http": "https://api.curve.fi/api/getPools/polygon/main",
+        "registry": "0x094d12e5b541784701FD8d65F11fc0598FBC6332",
+        "address_provider": "0x0000000022D53366457F9d5E68Ec105046FC4383"
+      },
+      "ethereum": {
+        "http": "https://api.curve.fi/api/getPools/ethereum/main",
+        "registry": "0x90E00ACe148ca3b23Ac1bC8C240C2a7Dd9c2d7f5",
+        "address_provider": "0x0000000022D53366457F9d5E68Ec105046FC4383"
+      }
+    },
+    "balancer": {
+      "polygon": {
+        "http": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-polygon-v2",
+        "vault": "0xBA12222222228d8Ba445958a75a0704d566BF2C8",
+        "helpers": "0x239e55F427D44C3cc793f49bFB507ebe76638a2b"
+      },
+      "ethereum": {
+        "http": "https://api.thegraph.com/subgraphs/name/balancer-labs/balancer-v2",
+        "vault": "0xBA12222222228d8Ba445958a75a0704d566BF2C8"
+      }
+    },
+    "dodo": {
+      "polygon": {
+        "http": "https://api.dodoex.io/route-service/v2/widget/polygon/routes",
+        "approve": "0x6D310348d5c12009854DFCf72e0DF9027e8cb4f4",
+        "proxy": "0xa222e6a71D1A1Dd5F279805fbe38d5329C1d0e70"
+      }
+    },
+    "kyberswap": {
+      "polygon": {
+        "http": "https://aggregator-api.kyberswap.com/polygon/route/encode",
+        "router": "0x6131B5fae19EA4f9D964eAc0408E4408b66337b5"
+      }
+    },
+    "1inch": {
+      "polygon": {
+        "http": "https://api.1inch.io/v5.0/137",
+        "router": "0x1111111254EEB25477B68fb85Ed929f73A960582"
+      }
+    }
+  },
+  
+  "bridge_endpoints": {
+    "stargate": {
+      "http": "https://mainnet-api.stargate.finance/v1",
+      "router": {
+        "ethereum": "0x8731d54E9D02c286767d56ac03e8037C07e01e98",
+        "polygon": "0x45A01E4e04F14f7A4a6702c74187c5F6222033cd"
+      }
+    },
+    "layerzero": {
+      "endpoint": {
+        "ethereum": "0x66A71Dcef29A0fFBDBE3c6a460a3B5BC225Cd675",
+        "polygon": "0x3c2269811836af69497E5F486A85D7316753cf62"
+      }
+    },
+    "celer": {
+      "http": "https://cbridge-prod2.celer.network/v2/getTransferConfigs",
+      "bridge": {
+        "ethereum": "0x5427FEFA711Eff984124bFBB1AB6fbf5E3DA1820",
+        "polygon": "0x88DCDC47D2f83a99CF0000FDF667A468bB958a78"
+      }
+    },
+    "multichain": {
+      "http": "https://bridgeapi.anyswap.exchange/v4/tokenlist/137",
+      "router": "0x4f3Aff3A747fCADe12598081e80c6605A8be192F"
+    },
+    "hop": {
+      "http": "https://api.hop.exchange/v1/quote",
+      "bridges": {
+        "USDC": {
+          "ethereum": "0x3666f603Cc164936C1b87e207F36BEBa4AC5f18a",
+          "polygon": "0x25D8039bB044dC227f741a9e381CA4cEAE2E6aE8"
+        }
+      }
+    }
+  },
+  
+  "tokens": {
+    "polygon": {
+      "WMATIC": {
+        "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",
+        "decimals": 18,
+        "price_feed": "0xAB594600376Ec9fD91F8e885dADF0CE036862dE0"
+      },
+      "USDC": {
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
+        "decimals": 6,
+        "price_feed": "0xfE4A8cc5b5B2366C1B58Bea3858e81843581b2F7"
+      },
+      "USDT": {
+        "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
+        "decimals": 6,
+        "price_feed": "0x0A6513e40db6EB1b165753AD52E80663aeA50545"
+      },
+      "DAI": {
+        "address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
+        "decimals": 18,
+        "price_feed": "0x4746DeC9e833A82EC7C2C1356372CcF2cfcD2F3D"
+      },
+      "WETH": {
+        "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
+        "decimals": 18,
+        "price_feed": "0xF9680D99D6C9589e2a93a78A04A279e509205945"
+      },
+      "WBTC": {
+        "address": "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6",
+        "decimals": 8,
+        "price_feed": "0xDE31F8bFBD8c84b5360CFACCa3539B938dd78ae6"
+      },
+      "AAVE": {
+        "address": "0xD6DF932A45C0f255f85145f286eA0b292B21C90B",
+        "decimals": 18
+      },
+      "LINK": {
+        "address": "0x53E0bca35eC356BD5ddDFebbD1Fc0fD03FaBad39",
+        "decimals": 18
+      },
+      "UNI": {
+        "address": "0xb33EaAd8d922B1083446DC23f610c2567fB5180f",
+        "decimals": 18
+      },
+      "SUSHI": {
+        "address": "0x0b3F868E0BE5597D5DB7fEB59E1CADBb0fdDa50a",
+        "decimals": 18
+      }
+    },
+    "ethereum": {
+      "WETH": {
+        "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+        "decimals": 18,
+        "price_feed": "0x5f4eC3Df9cbd43714FE2740f5E3616155c5b8419"
+      },
+      "USDC": {
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
+        "decimals": 6,
+        "price_feed": "0x8fFfFfd4AfB6115b954Bd326cbe7B4BA576818f6"
+      },
+      "USDT": {
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
+        "decimals": 6,
+        "price_feed": "0x3E7d1eAB13ad0104d2750B8863b489D65364e32D"
+      },
+      "WBTC": {
+        "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
+        "decimals": 8,
+        "price_feed": "0xF4030086522a5bEEa4988F8cA5B36dbC97BeE88c"
+      }
+    }
+  },
+  
+  "strategies": {
+    "triangular_arbitrage": {
+      "enabled": true,
+      "paths": [
+        ["WMATIC", "USDC", "WETH", "WMATIC"],
+        ["USDC", "USDT", "DAI", "USDC"],
+        ["WETH", "WBTC", "USDC", "WETH"],
+        ["WMATIC", "WETH", "USDC", "WMATIC"],
+        ["AAVE", "WETH", "USDC", "AAVE"],
+        ["LINK", "WETH", "USDC", "LINK"]
+      ],
+      "min_profit_percentage": 0.3
+    },
+    "cross_dex_arbitrage": {
+      "enabled": true,
+      "dex_pairs": [
+        ["quickswap", "sushiswap"],
+        ["quickswap", "uniswap_v3"],
+        ["sushiswap", "uniswap_v3"],
+        ["curve", "balancer"],
+        ["1inch", "kyberswap"]
+      ],
+      "check_reverse": true
+    },
+    "flash_loan_arbitrage": {
+      "enabled": true,
+      "providers": ["aave", "balancer", "dydx"],
+      "max_loan_amount_usd": 1000000,
+      "safety_margin": 1.5
+    },
+    "cross_chain_arbitrage": {
+      "enabled": true,
+      "chains": ["polygon", "ethereum", "arbitrum"],
+      "bridges": ["stargate", "hop", "celer"],
+      "min_profit_after_bridge_fees": 50
+    },
+    "sandwich_trading": {
+      "enabled": false,
+      "min_victim_trade_size": 10000,
+      "max_price_impact": 3
+    }
+  },
+  
+  "risk_management": {
+    "max_exposure_per_token": 50000,
+    "max_exposure_total": 200000,
+    "stop_loss_percentage": 5,
+    "take_profit_percentage": 20,
+    "max_gas_percentage_of_profit": 30,
+    "emergency_withdrawal_threshold": 10
+  },
+  
+  "monitoring": {
+    "health_check_interval": 60,
+    "profit_report_interval": 3600,
+    "balance_alert_threshold": 100,
+    "error_rate_threshold": 0.1,
+    "latency_threshold_ms": 1000
+  },
+  
+  "performance": {
+    "concurrent_scans": 10,
+    "batch_size": 50,
+    "cache_ttl_seconds": 10,
+    "request_timeout_ms": 5000,
+    "retry_attempts": 3,
+    "retry_delay_ms": 1000
+  },
+  
+  "security": {
+    "require_profit_verification": true,
+    "simulate_before_execute": true,
+    "max_approval_amount": "115792089237316195423570985008687907853269984665640564039457584007913129639935",
+    "revoke_approvals_after_trade": false,
+    "use_permit2": true
+  }
+}
