@@ -19,7 +19,7 @@ from typing import List, Dict, Any
 from datetime import datetime
 
 # Import configuration
-config_path = Path(__file__).parent.parent.parent / 'config' / 'arm_optimization.json'
+config_path = Path(__file__).parent / 'config' / 'arm_optimization.json'
 try:
     with open(config_path) as f:
         ARM_CONFIG = json.load(f)

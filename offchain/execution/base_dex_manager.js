@@ -276,11 +276,11 @@ class BaseDEXManager {
      * @param {string} srcToken - Source token address
      * @param {string} destToken - Destination token address
      * @param {string} amount - Amount to swap (in wei as string)
-     * @param {string} userAddress - User wallet address
-     * @param {number} slippageBps - Slippage in basis points (default: 100 = 1%)
+     * @param {string} [userAddress] - Optional user wallet address (some APIs require it)
+     * @param {number} [slippageBps] - Optional slippage in basis points
      * @returns {Promise<object|null>} Swap data or null if failed
      */
-    async getQuote(srcToken, destToken, amount, userAddress, slippageBps = 100) {
+    async getQuote(srcToken, destToken, amount, userAddress = null, slippageBps = 100) {
         throw new Error(`${this.name}: getQuote() must be implemented by subclass`);
     }
     
@@ -308,6 +308,42 @@ class BaseDEXManager {
      */
     getApiUrl() {
         throw new Error(`${this.name}: getApiUrl() must be implemented by subclass`);
+    }
+    
+    /**
+     * Get token decimals (common utility method)
+     * @param {string} tokenAddress - Token contract address
+     * @returns {Promise<number>} Token decimals
+     */
+    async getTokenDecimals(tokenAddress) {
+        if (!this.provider) {
+            return 18; // Default for most ERC20 tokens
+        }
+        
+        // Check cache first
+        const cacheKey = `decimals:${tokenAddress}`;
+        const cached = this.getFromCache(cacheKey);
+        if (cached !== null) {
+            return cached;
+        }
+        
+        try {
+            const { ethers } = require('ethers');
+            const tokenContract = new ethers.Contract(
+                tokenAddress,
+                ['function decimals() view returns (uint8)'],
+                this.provider
+            );
+            const decimals = await tokenContract.decimals();
+            
+            // Cache decimals indefinitely (they don't change)
+            this.setCache(cacheKey, decimals);
+            
+            return decimals;
+        } catch (error) {
+            // Return default on error
+            return 18;
+        }
     }
 }
 
