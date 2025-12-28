@@ -255,6 +255,15 @@ class ArbitrageEngine {
             path = opportunity.path;
             routers = opportunity.routers;
         }
+
+        // Validate path and routers arrays before encoding
+        if (!Array.isArray(path) || !Array.isArray(routers) || path.length < 2) {
+            throw new Error('Router payload requires valid path and routers arrays');
+        }
+        // For path-based routing, routers are typically one less than path length
+        if (routers.length !== path.length - 1) {
+            throw new Error('Router payload requires routers.length to equal path.length - 1');
+        }
         
         const amount = opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei;
         
