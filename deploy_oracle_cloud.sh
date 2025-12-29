@@ -336,7 +336,7 @@ After=network.target
 [Service]
 Type=notify
 ExecStart=/usr/bin/redis-server /etc/redis/redis.conf
-ExecStop=/bin/kill -s TERM \\\$MAINPID
+ExecStop=/usr/bin/redis-cli shutdown
 Restart=always
 RestartSec=5
 

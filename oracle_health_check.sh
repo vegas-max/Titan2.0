@@ -144,8 +144,8 @@ echo "-------------------"
 if [ -f ".env" ]; then
     check_ok ".env file exists"
     
-    # Check if PRIVATE_KEY is set
-    if grep -q "^PRIVATE_KEY=" .env && ! grep -q "^PRIVATE_KEY=$" .env && ! grep -q "^PRIVATE_KEY=YOUR" .env; then
+    # Check if PRIVATE_KEY is set and not empty/placeholder
+    if grep -q "^PRIVATE_KEY=" .env && ! grep -q "^PRIVATE_KEY=$" .env && ! grep -q "^PRIVATE_KEY=\s*$" .env && ! grep -q "^PRIVATE_KEY=YOUR" .env; then
         check_ok "Private key configured"
     else
         check_warn "Private key not configured in .env"

@@ -41,7 +41,7 @@ services:
       - ./data:/app/data
     networks:
       - titan-network
-    mem_limit: ${BRAIN_MEMORY_LIMIT:-2g}
+    mem_limit: ${BRAIN_MEMORY_LIMIT:-4g}
     cpus: ${BRAIN_CPU_LIMIT:-2}
     logging:
       driver: "json-file"
@@ -73,7 +73,7 @@ services:
       - ./logs:/app/logs
     networks:
       - titan-network
-    mem_limit: ${EXECUTOR_MEMORY_LIMIT:-1g}
+    mem_limit: ${EXECUTOR_MEMORY_LIMIT:-2g}
     cpus: ${EXECUTOR_CPU_LIMIT:-1}
     logging:
       driver: "json-file"
