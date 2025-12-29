@@ -336,7 +336,7 @@ After=network.target
 [Service]
 Type=notify
 ExecStart=/usr/bin/redis-server /etc/redis/redis.conf
-ExecStop=/bin/kill -s TERM \$MAINPID
+ExecStop=/bin/kill -s TERM \\\$MAINPID
 Restart=always
 RestartSec=5
 
@@ -580,7 +580,7 @@ EOF
     echo -e "     sudo journalctl -u titan-brain -f"
     echo ""
     echo -e "  ${YELLOW}5. Check health:${NC}"
-    echo -e "     ./health-check.sh"
+    echo -e "     ./oracle_health_check.sh"
     echo ""
     
     echo -e "${CYAN}📚 Documentation:${NC}"

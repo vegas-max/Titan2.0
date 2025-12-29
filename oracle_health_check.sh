@@ -277,4 +277,9 @@ echo ""
 echo "For more help, see ORACLE_CLOUD_DEPLOYMENT.md"
 echo ""
 
-exit $ISSUES
+# Exit with 0 for success (no issues), 1 for failure (issues found)
+if [ $ISSUES -eq 0 ]; then
+    exit 0
+else
+    exit 1
+fi

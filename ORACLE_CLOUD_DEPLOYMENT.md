@@ -533,7 +533,7 @@ node offchain/execution/bot.js
 
 **1. Built-in Health Check:**
 ```bash
-./health-check.sh
+./oracle_health_check.sh
 ```
 
 **2. System Resources:**
@@ -945,7 +945,7 @@ sudo systemctl status titan-brain titan-executor
 sudo journalctl -u titan-brain -f
 
 # Health check
-./health-check.sh
+./oracle_health_check.sh
 
 # Update Titan
 git pull && npm install --legacy-peer-deps && pip3 install -r requirements.txt
@@ -968,7 +968,7 @@ If you encounter issues:
 
 1. Check the [Troubleshooting](#troubleshooting) section above
 2. Review logs: `sudo journalctl -u titan-brain -n 100`
-3. Run health check: `./health-check.sh`
+3. Run health check: `./oracle_health_check.sh`
 4. Check GitHub issues: https://github.com/vegas-max/Titan2.0/issues
 
 ---
