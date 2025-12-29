@@ -1,0 +1,118 @@
+version: '3.8'
+
+services:
+  # Redis service - message queue and caching
+  redis:
+    image: redis:7-alpine
+    container_name: titan-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --bind 0.0.0.0
+    networks:
+      - titan-network
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Titan Brain - AI engine and opportunity scanner
+  brain:
+    build:
+      context: .
+      dockerfile: Dockerfile.brain
+    container_name: titan-brain
+    restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - PYTHONUNBUFFERED=1
+    volumes:
+      - ./offchain:/app/offchain
+      - ./config.json:/app/config.json
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - titan-network
+    mem_limit: ${BRAIN_MEMORY_LIMIT:-4g}
+    cpus: ${BRAIN_CPU_LIMIT:-2}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Titan Executor - trading bot
+  executor:
+    build:
+      context: .
+      dockerfile: Dockerfile.executor
+    container_name: titan-executor
+    restart: always
+    depends_on:
+      redis:
+        condition: service_healthy
+      brain:
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - NODE_ENV=production
+    volumes:
+      - ./offchain:/app/offchain
+      - ./config.json:/app/config.json
+      - ./artifacts:/app/artifacts
+      - ./logs:/app/logs
+    networks:
+      - titan-network
+    mem_limit: ${EXECUTOR_MEMORY_LIMIT:-2g}
+    cpus: ${EXECUTOR_CPU_LIMIT:-1}
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Optional: Monitoring Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile.dashboard
+    container_name: titan-dashboard
+    restart: always
+    depends_on:
+      - redis
+    env_file:
+      - .env
+    environment:
+      - REDIS_URL=redis://redis:6379
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./logs:/app/logs
+      - ./data:/app/data
+    networks:
+      - titan-network
+    mem_limit: 512m
+    cpus: 0.5
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+networks:
+  titan-network:
+    driver: bridge
+
+volumes:
+  redis_data:
+    driver: local

@@ -1,0 +1,38 @@
+# Titan Executor Dockerfile
+# Node.js-based trading bot for execution
+
+FROM node:18-slim
+
+# Set working directory
+WORKDIR /app
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy package files
+COPY package*.json ./
+
+# Install Node.js dependencies
+RUN npm install --legacy-peer-deps --production
+
+# Copy application code
+COPY offchain/execution /app/offchain/execution
+COPY config.json /app/
+COPY .env /app/
+COPY artifacts /app/artifacts
+
+# Create necessary directories
+RUN mkdir -p /app/logs
+
+# Set environment variables
+ENV NODE_ENV=production
+
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD node -e "process.exit(0)"
+
+# Run the executor
+CMD ["node", "offchain/execution/bot.js"]
