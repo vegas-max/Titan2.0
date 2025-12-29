@@ -194,17 +194,28 @@ main() {
     fi
     echo ""
     
-    # Install Redis
-    print_step "Installing Redis..."
+    # Install Redis (OPTIONAL - Titan uses file-based signals)
+    print_step "Redis Installation (Optional)..."
+    print_info "Redis is OPTIONAL for Titan (uses file-based signal system)"
+    print_info "Redis can be used for monitoring/caching but is NOT required for operation"
+    
     if ! command_exists redis-server; then
-        if [ "$OS" = "oracle" ]; then
-            sudo dnf install -y redis
+        read -p "Install Redis? (y/n, default: n): " INSTALL_REDIS
+        if [ "$INSTALL_REDIS" = "y" ] || [ "$INSTALL_REDIS" = "Y" ]; then
+            if [ "$OS" = "oracle" ]; then
+                sudo dnf install -y redis
+            else
+                sudo apt install -y redis-server
+            fi
+            print_status "Redis installed"
+            REDIS_INSTALLED="true"
         else
-            sudo apt install -y redis-server
+            print_info "Skipping Redis installation (not required)"
+            REDIS_INSTALLED="false"
         fi
-        print_status "Redis installed"
     else
         print_status "Redis already installed"
+        REDIS_INSTALLED="true"
     fi
     echo ""
     
@@ -325,12 +336,13 @@ EOF
     CURRENT_USER=$(whoami)
     CURRENT_DIR=$(pwd)
     
-    # Create Redis service file
     print_step "Creating systemd service files..."
     
-    cat > systemd/titan-redis.service << EOF
+    # Create Redis service file (only if Redis is installed)
+    if [ "$REDIS_INSTALLED" = "true" ]; then
+        cat > systemd/titan-redis.service << EOF
 [Unit]
-Description=Redis Server for Titan
+Description=Redis Server for Titan (Optional)
 After=network.target
 
 [Service]
@@ -343,13 +355,13 @@ RestartSec=5
 [Install]
 WantedBy=multi-user.target
 EOF
+    fi
     
-    # Create Brain service file
+    # Create Brain service file (no Redis dependency)
     cat > systemd/titan-brain.service << EOF
 [Unit]
 Description=Titan Brain (AI Engine)
-After=network.target titan-redis.service
-Requires=titan-redis.service
+After=network.target
 
 [Service]
 Type=simple
@@ -367,12 +379,11 @@ MemoryLimit=$([ "$LIGHTWEIGHT_MODE" = "true" ] && echo "700M" || echo "4G")
 WantedBy=multi-user.target
 EOF
     
-    # Create Executor service file
+    # Create Executor service file (no Redis dependency)
     cat > systemd/titan-executor.service << EOF
 [Unit]
 Description=Titan Executor (Trading Bot)
-After=network.target titan-redis.service titan-brain.service
-Requires=titan-redis.service
+After=network.target titan-brain.service
 
 [Service]
 Type=simple
@@ -396,7 +407,9 @@ EOF
     
     # Install service files
     print_step "Installing systemd services..."
-    sudo cp systemd/titan-redis.service /etc/systemd/system/
+    if [ "$REDIS_INSTALLED" = "true" ]; then
+        sudo cp systemd/titan-redis.service /etc/systemd/system/
+    fi
     sudo cp systemd/titan-brain.service /etc/systemd/system/
     sudo cp systemd/titan-executor.service /etc/systemd/system/
     sudo systemctl daemon-reload
@@ -405,7 +418,9 @@ EOF
     
     # Enable services
     print_step "Enabling services to start on boot..."
-    sudo systemctl enable titan-redis
+    if [ "$REDIS_INSTALLED" = "true" ]; then
+        sudo systemctl enable titan-redis
+    fi
     sudo systemctl enable titan-brain
     sudo systemctl enable titan-executor
     print_status "Services enabled"
@@ -448,8 +463,11 @@ EOF
     cat > start_oracle.sh << 'EOF'
 #!/bin/bash
 echo "🚀 Starting Titan services..."
-sudo systemctl start titan-redis
-sleep 2
+# Redis is optional - start if available
+if systemctl list-unit-files | grep -q titan-redis.service; then
+    sudo systemctl start titan-redis 2>/dev/null && echo "  ✓ Redis started (optional)" || echo "  ℹ Redis not configured"
+    sleep 1
+fi
 sudo systemctl start titan-brain
 sleep 2
 sudo systemctl start titan-executor
@@ -466,7 +484,10 @@ EOF
 echo "🛑 Stopping Titan services..."
 sudo systemctl stop titan-executor
 sudo systemctl stop titan-brain
-sudo systemctl stop titan-redis
+# Redis is optional - stop if available
+if systemctl list-unit-files | grep -q titan-redis.service; then
+    sudo systemctl stop titan-redis 2>/dev/null
+fi
 echo "✅ Titan stopped!"
 EOF
     chmod +x stop_oracle.sh
@@ -486,8 +507,11 @@ EOF
 #!/bin/bash
 echo "📊 Titan Service Status:"
 echo ""
-sudo systemctl status titan-redis --no-pager
-echo ""
+# Redis is optional - show status if available
+if systemctl list-unit-files | grep -q titan-redis.service; then
+    sudo systemctl status titan-redis --no-pager 2>/dev/null || echo "Redis: Not configured (optional)"
+    echo ""
+fi
 sudo systemctl status titan-brain --no-pager
 echo ""
 sudo systemctl status titan-executor --no-pager

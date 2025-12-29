@@ -1,7 +1,6 @@
 [Unit]
 Description=Titan Executor (Trading Bot)
-After=network.target titan-redis.service titan-brain.service
-Requires=titan-redis.service
+After=network.target titan-brain.service
 
 [Service]
 Type=simple

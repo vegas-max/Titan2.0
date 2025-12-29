@@ -2,6 +2,10 @@
 
 This guide will help you deploy APEX-OMEGA TITAN to an Oracle Cloud Always Free tier instance.
 
+## ⚠️ Important: Redis is OPTIONAL
+
+**Titan uses a file-based signal system for communication between components.** Redis is NOT required for operation. The deployment script will ask if you want to install Redis (for optional monitoring/caching), but you can skip it entirely and Titan will work perfectly fine.
+
 ## 📋 Table of Contents
 
 - [Oracle Cloud Always Free Tier Overview](#oracle-cloud-always-free-tier-overview)

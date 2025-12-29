@@ -94,17 +94,15 @@ else
     ((ISSUES++))
 fi
 
-# Redis
+# Redis (OPTIONAL - Titan uses file-based signals)
 if command -v redis-cli >/dev/null 2>&1; then
     if redis-cli ping >/dev/null 2>&1; then
-        check_ok "Redis: Running"
+        check_ok "Redis: Running (optional)"
     else
-        check_fail "Redis: Not responding"
-        ((ISSUES++))
+        check_warn "Redis: Not responding (optional - not required)"
     fi
 else
-    check_fail "Redis not installed"
-    ((ISSUES++))
+    check_ok "Redis: Not installed (optional - Titan uses file-based signals)"
 fi
 
 echo ""
@@ -204,19 +202,38 @@ fi
 
 echo ""
 
-# 6. Check Redis Data
-echo -e "${BLUE}[6] Redis Status${NC}"
+# 6. Check Signal Files (File-based Communication)
+echo -e "${BLUE}[6] Signal Communication${NC}"
 echo "-------------------"
 
+# Check signals directory
+if [ -d "signals/outgoing" ]; then
+    SIGNAL_COUNT=$(find signals/outgoing -name "*.json" 2>/dev/null | wc -l)
+    echo "Signal files: $SIGNAL_COUNT"
+    check_ok "File-based signal system active"
+    
+    # Check for recent signals (last 5 minutes)
+    RECENT_SIGNALS=$(find signals/outgoing -name "*.json" -mmin -5 2>/dev/null | wc -l)
+    if [ $RECENT_SIGNALS -gt 0 ]; then
+        check_ok "Recent signals found ($RECENT_SIGNALS in last 5 minutes)"
+    else
+        check_warn "No recent signals (brain may be idle or starting)"
+    fi
+else
+    check_warn "Signals directory not found (will be created on first run)"
+fi
+
+# Optional: Check Redis if installed
 if redis-cli ping >/dev/null 2>&1; then
-    # Check if keys exist
+    echo ""
+    echo "Redis Status (Optional):"
     KEYS_COUNT=$(redis-cli DBSIZE | awk '{print $2}')
     echo "Keys in Redis: $KEYS_COUNT"
     
     if [ $KEYS_COUNT -gt 0 ]; then
-        check_ok "Redis has data (system is active)"
+        check_ok "Redis has data"
     else
-        check_warn "Redis is empty (system may not have started)"
+        check_ok "Redis is empty (not required for operation)"
     fi
     
     # Check memory usage
