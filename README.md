@@ -81,6 +81,8 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 
 ### Validation & Deployment
 - **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ **NEW!** Deploy to Oracle Cloud Always Free tier
+- **[ORACLE_QUICK_REFERENCE.md](ORACLE_QUICK_REFERENCE.md)** - ⚡ **NEW!** One-page reference for Oracle Cloud
+- **[ORACLE_TROUBLESHOOTING.md](ORACLE_TROUBLESHOOTING.md)** - 🔧 **NEW!** Oracle Cloud troubleshooting guide
 - **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Master validation checklist for deployment readiness
 - **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Full-scale mainnet deployment validation checklist
 - **[CHECKLIST_VALIDATION_SUMMARY.md](CHECKLIST_VALIDATION_SUMMARY.md)** - Executive validation summary
