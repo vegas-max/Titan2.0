@@ -80,7 +80,8 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 ## 📚 Additional Documentation
 
 ### Validation & Deployment
-- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 **NEW!** Master validation checklist for deployment readiness
+- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ **NEW!** Deploy to Oracle Cloud Always Free tier
+- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Master validation checklist for deployment readiness
 - **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Full-scale mainnet deployment validation checklist
 - **[CHECKLIST_VALIDATION_SUMMARY.md](CHECKLIST_VALIDATION_SUMMARY.md)** - Executive validation summary
 - **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - Comprehensive testing procedures
@@ -666,6 +667,33 @@ Each network is configured with:
 ---
 
 ## 📦 Installation
+
+### 🌩️ Oracle Cloud Deployment (FREE Hosting!)
+
+Deploy Titan to Oracle Cloud's Always Free tier for **zero hosting costs**:
+
+**One-Command Deployment:**
+```bash
+# On your Oracle Cloud instance:
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
+chmod +x deploy_oracle_cloud.sh
+./deploy_oracle_cloud.sh
+```
+
+**Recommended Instance:** VM.Standard.A1.Flex (ARM)
+- ✅ 4 OCPUs (free forever)
+- ✅ 24 GB RAM (free forever)
+- ✅ Perfect for Titan's multi-threaded operations
+
+**See [ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md) for complete guide including:**
+- Instance setup and configuration
+- Docker deployment option
+- Systemd service configuration
+- Monitoring and maintenance
+- Security hardening
+- Troubleshooting
+
+---
 
 ### Quick Installation (Recommended)
 

@@ -1,0 +1,20 @@
+[Unit]
+Description=Titan Executor (Trading Bot)
+After=network.target titan-redis.service titan-brain.service
+Requires=titan-redis.service
+
+[Service]
+Type=simple
+User=REPLACE_WITH_USER
+WorkingDirectory=REPLACE_WITH_WORKDIR
+Environment="PATH=/usr/local/bin:/usr/bin:/bin"
+Environment="NODE_ENV=production"
+ExecStart=/usr/bin/node REPLACE_WITH_WORKDIR/offchain/execution/bot.js
+Restart=always
+RestartSec=10
+StandardOutput=journal
+StandardError=journal
+MemoryLimit=2G
+
+[Install]
+WantedBy=multi-user.target
