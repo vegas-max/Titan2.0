@@ -287,8 +287,8 @@ class ArbitrageEngine {
         }
         
         // Support both route-based and legacy path-based structures
-        if (!opportunity.route && !opportunity.path) {
-            throw new Error('Invalid opportunity structure: missing route or path');
+        if (!opportunity.route && (!opportunity.path || !opportunity.exchanges)) {
+            throw new Error('Invalid opportunity structure: missing route, or legacy path/exchanges');
         }
         
         console.log('\n🔍 ARBITRAGE ENGINE: Evaluating opportunity...');
