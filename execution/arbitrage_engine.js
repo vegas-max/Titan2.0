@@ -334,7 +334,17 @@ class ArbitrageEngine {
         
         console.log('\n🔍 ARBITRAGE ENGINE: Evaluating opportunity...');
         if (opportunity.route) {
-            console.log(`   Route: ${opportunity.route.map(r => `${r.token} via ${r.exchange}`).join(' → ')}`);
+            const formattedRoute = Array.isArray(opportunity.route)
+                ? opportunity.route.map((r, idx) => {
+                    if (!r || (typeof r !== 'object')) {
+                        return `entry#${idx}`;
+                    }
+                    const token = r.token !== undefined && r.token !== null ? r.token : 'unknown-token';
+                    const exchange = r.exchange !== undefined && r.exchange !== null ? r.exchange : 'unknown-exchange';
+                    return `${token} via ${exchange}`;
+                }).join(' → ')
+                : String(opportunity.route);
+            console.log(`   Route: ${formattedRoute}`);
         } else {
             console.log(`   Path: ${opportunity.path.join(' → ')}`);
             console.log(`   Exchanges: ${(opportunity.exchanges || []).join(', ')}`);
