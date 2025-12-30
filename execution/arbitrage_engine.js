@@ -11,12 +11,28 @@ const { ethers } = require('ethers');
 const CONTRACT_HFT = process.env.HFT_CONTRACT_ADDRESS || '0xAF00000000000000000000000000000000000000';
 const CONTRACT_ROUTER = process.env.ROUTER_CONTRACT_ADDRESS || '0x4400000000000000000000000000000000000000';
 
-// Known Uniswap V2 forks - exact matching as per problem statement
-const V2_COMPATIBLE_DEXES = [
-    'UNISWAP_V2',
-    'SUSHISWAP', 
-    'PANCAKESWAP'
-];
+// Known Uniswap V2 forks per chainId
+// This structure is intentionally chain-indexed so that isV2Compatible()
+// and related methods can safely access V2_COMPATIBLE_DEXES[this.chainId].
+const V2_COMPATIBLE_DEXES = {
+    // Ethereum Mainnet
+    1: [
+        'UNISWAP_V2',
+        'SUSHISWAP'
+    ],
+    // Binance Smart Chain
+    56: [
+        'PANCAKESWAP'
+    ],
+    // Polygon
+    137: [
+        'QUICKSWAP'
+    ],
+    // Avalanche
+    43114: [
+        'TRADERJOE'
+    ]
+};
 
 // HFT Contract ABI
 const HFT_ABI = [
