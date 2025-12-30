@@ -93,3 +93,11 @@ core-rust/Cargo.lock
 # Go build artifacts
 core-go/titan-core
 core-go/go.sum
+
+# Signal files (runtime generated)
+signals/outgoing/*.json
+signals/incoming/*.json
+
+# Backup files
+backup-*.tar.gz
+*.backup
