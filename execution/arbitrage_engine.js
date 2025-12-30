@@ -232,15 +232,32 @@ class ArbitrageEngine {
         
         // Extract pool addresses from route structure or fallback to direct properties
         let poolA, poolB;
-        if (opportunity.route && opportunity.route.length >= 2) {
+
+        const hasRoutePools =
+            Array.isArray(opportunity.route) &&
+            opportunity.route.length >= 2 &&
+            opportunity.route[0] &&
+            opportunity.route[1] &&
+            opportunity.route[0].pool_address &&
+            opportunity.route[1].pool_address;
+
+        if (hasRoutePools) {
             poolA = opportunity.route[0].pool_address;
             poolB = opportunity.route[1].pool_address;
         } else {
             poolA = opportunity.poolAddressA || opportunity.poolAddress_A || opportunity.pool_address_1;
             poolB = opportunity.poolAddressB || opportunity.poolAddress_B || opportunity.pool_address_2;
         }
+
+        if (!poolA || !poolB) {
+            throw new Error('HFT_PAYLOAD: Missing required pool addresses for arbitrage opportunity');
+        }
         
         const amount = opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei;
+
+        if (!amount) {
+            throw new Error('HFT_PAYLOAD: Missing amount for arbitrage opportunity');
+        }
         
         return iface.encodeFunctionData('startArbitrage', [
             poolA,
