@@ -278,7 +278,7 @@ class ArbitrageEngine {
 
         // Validate path and routers arrays before encoding
         if (!Array.isArray(path) || !Array.isArray(routers) || path.length < 2) {
-            throw new Error('Router payload requires valid path and routers arrays');
+            throw new Error('Router payload requires valid path and routers arrays with at least 2 tokens in path');
         }
         // For path-based routing, routers are typically one less than path length
         if (routers.length !== path.length - 1) {
