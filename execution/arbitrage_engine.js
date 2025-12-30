@@ -248,9 +248,13 @@ class ArbitrageEngine {
         if (opportunity.route && opportunity.route.length > 0) {
             // Build path from route tokens
             path = opportunity.route.map(r => r.token);
-            // Build routers array - use router addresses from exchange pool addresses
+            // Build routers array from provided router addresses
             // Note: In real implementation, you'd map exchanges to their router addresses
-            routers = opportunity.routers || opportunity.route.map(r => r.pool_address);
+            if (opportunity.routers && opportunity.routers.length > 0) {
+                routers = opportunity.routers;
+            } else {
+                throw new Error('Router execution requires opportunity.routers (router contract addresses); pool_address values must not be used as routers.');
+            }
         } else {
             path = opportunity.path;
             routers = opportunity.routers;
