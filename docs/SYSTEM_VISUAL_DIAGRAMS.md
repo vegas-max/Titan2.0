@@ -710,10 +710,15 @@ Immutability Guarantees:
                                 │
                                 ▼
     ┌──────────────────────────────────────────────────────────────────┐
-    │          OmniArbExecutor.sol - execute() Entry Point              │
+    │           Executor Contract - execute() Entry Point               │
+    │                                                                   │
+    │  Executor Options (configured at EXECUTOR_ADDRESS):              │
+    │  • OmniArbExecutor.sol - Registry-based routing with enums       │
+    │  • FlashArbExecutorV2.sol - Enhanced flash arbitrage             │
+    │  • FlashArbExecutor.sol - Original flash arbitrage               │
     │                                                                   │
     │  function execute(                                                │
-    │      uint8 flashSource,    // 0=Aave, 1=Balancer                │
+    │      uint8 flashSource,    // 1=Balancer, 2=Aave                │
     │      address loanToken,    // Token to borrow                    │
     │      uint256 loanAmount,   // Amount to borrow                   │
     │      bytes calldata routeData  // Encoded route                  │
@@ -722,14 +727,26 @@ Immutability Guarantees:
     │  Security Checks:                                                 │
     │  • onlyOwner: Only contract owner can execute                    │
     │  • nonReentrant: Prevents reentrancy attacks                     │
-    │  • Validates flashSource (0 or 1)                                │
+    │  • Validates flashSource (1 or 2)                                │
     └───────────────────────────┬──────────────────────────────────────┘
                                 │
                                 ▼
     ┌──────────────────────────────────────────────────────────────────┐
     │                    Flashloan Initiation                           │
     │                                                                   │
-    │  IF flashSource == 0 (Aave V3):                                  │
+    │  IF flashSource == 1 (Balancer V3):                              │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ IVault(BALANCER_VAULT).unlock(                         │     │
+    │  │   abi.encodeCall(                                      │     │
+    │  │     this.onBalancerUnlock,                             │     │
+    │  │     (callbackData)                                     │     │
+    │  │   )                                                    │     │
+    │  │ )                                                      │     │
+    │  │                                                         │     │
+    │  │ → Callback: onBalancerUnlock()                         │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  IF flashSource == 2 (Aave V3):                                  │
     │  ┌────────────────────────────────────────────────────────┐     │
     │  │ IPool(AAVE_POOL).flashLoanSimple(                      │     │
     │  │   address(this),    // Receiver                        │     │
@@ -740,18 +757,6 @@ Immutability Guarantees:
     │  │ )                                                      │     │
     │  │                                                         │     │
     │  │ → Callback: executeOperation()                         │     │
-    │  └────────────────────────────────────────────────────────┘     │
-    │                                                                   │
-    │  IF flashSource == 1 (Balancer V3):                              │
-    │  ┌────────────────────────────────────────────────────────┐     │
-    │  │ IVault(BALANCER_VAULT).unlock(                         │     │
-    │  │   abi.encodeCall(                                      │     │
-    │  │     this.unlockCallback,                               │     │
-    │  │     (loanToken, loanAmount, routeData)                 │     │
-    │  │   )                                                    │     │
-    │  │ )                                                      │     │
-    │  │                                                         │     │
-    │  │ → Callback: unlockCallback()                           │     │
     │  └────────────────────────────────────────────────────────┘     │
     │                                                                   │
     │  Loan Received:                                                   │
