@@ -1088,20 +1088,38 @@ Once running, the system operates autonomously:
 
 ### Monitoring Output
 
-**Brain Output (Python):**
-```
-📡 Connecting to POLYGON... ✅ ONLINE | Block: 52847291
-💰 PROFIT FOUND: USDC | Net: $7.23
-⚡ SIGNAL BROADCASTED TO REDIS
-```
+The system includes a **unified terminal display** that automatically shows:
 
-**Executor Output (Node.js):**
+**Real-Time Opportunity Scanning:**
+- Token, chain, and DEX route information
+- Profit estimates for profitable opportunities
+- Gas prices across different chains
+
+**System Decision Logic:**
+- Gas price checks and threshold validations
+- AI-powered parameter optimization
+- Profitability analysis and approval decisions
+
+**Execution Tracking:**
+- Trade start and completion with timestamps
+- Execution mode (PAPER or LIVE)
+- Duration, status, and profit results
+
+**Periodic Statistics (Every 60 Seconds):**
+- Total opportunities scanned and profitable count
+- Execution success/failure rates
+- Cumulative profit and paper trade count
+
+All output is color-coded, timestamped, and includes icons for easy visual scanning. The display works in both PAPER and LIVE modes without any configuration required.
+
+**Example Output:**
 ```
-🌉 Li.Fi: Calculating best route from 137 to 42161...
-🧪 Running Full System Simulation...
-✅ Simulation SUCCESS. Estimated Gas: 285000
-🚀 BloxRoute: Bundle submitted | Hash: 0x1234...
-✅ TX: 0x5678... | Profit: $7.23
+💰 [06:35:59] SCAN: WETH on Arbitrum (UNIV3↔SUSHI) | $2000 | PROFIT: $8.50
+🧠 [06:36:01] AI_TUNE: WETH on Arbitrum | ML-optimized parameters
+✅ [06:36:02] APPROVE: WETH on Arbitrum | Profitable trade approved
+⚡ SIGNAL GENERATED [06:36:03] | Token: WETH | Profit: $8.50 | Route: UNIV3 → SUSHI
+📝 EXECUTION START [06:36:05] | ID: PAPER-1 | Mode: PAPER
+✅ EXECUTION COMPLETE [06:36:05] | Status: SIMULATED | Profit: $8.50
 ```
 
 ### Stopping the System
@@ -2382,6 +2400,72 @@ def cleanup_after_scan():
 ---
 
 ## 📊 Monitoring & Alerts
+
+### 🖥️ Terminal Display (Default)
+
+**NEW!** Titan now includes a comprehensive unified terminal display that shows real-time information about opportunities, system decisions, and executions - **enabled by default** when you start the system.
+
+The terminal display provides:
+
+#### Real-Time Opportunity Scanning
+```
+🔍 [06:35:59] SCAN: DAI on Polygon (UNIV3↔QUICKSWAP) | $500 | Gas: 28.5gwei
+💰 [06:35:59] SCAN: WETH on Arbitrum (UNIV3↔SUSHI) | $2000 | PROFIT: $8.50 | Gas: 0.8gwei
+```
+
+#### System Decision Logic
+```
+⛽ [06:36:01] GAS_CHECK: WETH on Arbitrum | Gas price within acceptable range
+🧠 [06:36:01] AI_TUNE: WETH on Arbitrum | Optimizing execution parameters with ML
+✅ [06:36:02] APPROVE: WETH on Arbitrum | Profitable trade approved for execution
+```
+
+#### Signal Generation
+```
+================================================================================
+⚡ SIGNAL GENERATED [06:36:03]
+Token: WETH on Arbitrum
+Expected Profit: $8.50
+Route: UNIV3 → SUSHI
+Gas Price: 0.8 gwei
+Execution Params:
+  • slippage: 45
+  • priority: 25
+================================================================================
+```
+
+#### Execution Tracking
+```
+────────────────────────────────────────────────────────────────────────────────
+📝 EXECUTION START [6:35:07 AM] | ID: PAPER-1-123456
+  Token: USDC | Chain: Polygon | Amount: 1000000000 | Mode: PAPER
+────────────────────────────────────────────────────────────────────────────────
+✅ EXECUTION COMPLETE [6:35:09 AM] | ID: PAPER-1-123456
+  Status: SIMULATED | Duration: 150ms | Profit: $12.50
+```
+
+#### System Statistics (Updated Every 60 Seconds)
+```
+┌─ STATS ─────────────────────────────────────────────────────────────────────
+│ Runtime: 2h 15m | Scanned: 1,547 | Profitable: 23 (1.5%) | Signaled: 15
+│ Executions: 15 (✓14 / ✗1, 93% success) | Paper: 15 | Profit: $187.50
+└──────────────────────────────────────────────────────────────────────────────
+```
+
+**Key Features:**
+- ✅ **Timestamped Events**: Every log entry includes precise timestamps
+- ✅ **Color-Coded Output**: Different event types use different colors for quick recognition
+- ✅ **Comprehensive Coverage**: Opportunities, decisions, signals, executions, and system health
+- ✅ **Automatic Stats**: System automatically prints statistics every 60 seconds
+- ✅ **No Configuration Required**: Works out of the box with both PAPER and LIVE modes
+
+**Try the Demo:**
+```bash
+# See the terminal display in action
+python3 demo_terminal_display.py
+```
+
+### 📊 Web Dashboard (Optional)
 
 ### Console Logging
 
