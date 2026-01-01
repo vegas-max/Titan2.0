@@ -776,7 +776,7 @@ Immutability Guarantees:
     │  Validation:                                                      │
     │  • Require all arrays have matching lengths                      │
     │  • Require at least one hop (protocols.length > 0)               │
-    │  • Require tokenPath.length == protocols.length                  │
+    │  • Require tokenPath.length == protocols.length + 1             │
     └───────────────────────────┬──────────────────────────────────────┘
                                 │
                                 ▼
