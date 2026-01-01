@@ -1,0 +1,208 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                   TITAN ORACLE CLOUD DEPLOYMENT FLOW                       ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         📋 PRE-DEPLOYMENT PHASE                             │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  1. Oracle Cloud Account Setup
+     ├─ Create free account
+     ├─ Generate SSH keys
+     └─ Prepare API keys (Infura, Alchemy, Li.Fi)
+
+  2. Create Compute Instance
+     ├─ Choose ARM A1.Flex (4 OCPU, 24GB) ⭐ Recommended
+     │  └─ OR AMD E2.1.Micro (1 OCPU, 1GB)
+     ├─ Configure networking
+     └─ Note public IP address
+
+  3. Connect via SSH
+     └─ ssh opc@YOUR_PUBLIC_IP
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🚀 DEPLOYMENT PHASE                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Clone Repository
+     │
+     ├─ git clone https://github.com/vegas-max/Titan2.0.git
+     └─ cd Titan2.0
+     │
+     ▼
+  Run Automated Deployment
+     │
+     ├─ ./deploy_oracle_cloud.sh
+     │
+     ├─ Detects Architecture ──┬── ARM  → Optimize for high performance
+     │                          └── AMD  → Enable lightweight mode
+     │
+     ├─ Installs Dependencies ──┬── Node.js 18+
+     │                          ├── Python 3.11+
+     │                          ├── Redis (optional)
+     │                          └── Build tools
+     │
+     ├─ Sets Up Titan ──────────┬── npm install
+     │                          ├── pip install -r requirements.txt
+     │                          └── npx hardhat compile
+     │
+     ├─ Creates Services ───────┬── titan-brain.service
+     │                          ├── titan-executor.service
+     │                          └── titan-redis.service (optional)
+     │
+     ├─ Generates Scripts ──────┬── start_oracle.sh
+     │                          ├── stop_oracle.sh
+     │                          ├── restart_oracle.sh
+     │                          └── status_oracle.sh
+     │
+     └─ Configures System ──────┬── Swap (if low memory)
+                                ├── Firewall rules
+                                └─ Security settings
+     │
+     ▼
+  Configure Environment
+     │
+     └─ nano .env
+        ├─ PRIVATE_KEY=0x...
+        ├─ RPC_POLYGON=https://...
+        ├─ LIFI_API_KEY=...
+        └─ EXECUTION_MODE=PAPER
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       ✅ POST-DEPLOYMENT PHASE                              │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Start Services
+     │
+     └─ ./start_oracle.sh
+        │
+        ├─ Starts Redis (optional) ────────────┐
+        ├─ Starts Brain (AI Engine) ───────────┤
+        └─ Starts Executor (Trading Bot) ──────┤
+                                               │
+                                               ▼
+  Verify Deployment                    ┌──────────────┐
+     │                                 │   RUNNING    │
+     ├─ ./status_oracle.sh ──────────▶ │   SERVICES   │
+     │                                 └──────────────┘
+     └─ ./oracle_health_check.sh
+        │
+        └─ Checks ────────────┬── System resources
+                              ├── Dependencies
+                              ├── Services status
+                              ├── Configuration
+                              ├── Network connectivity
+                              └── Signal system
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🧪 TESTING PHASE (REQUIRED!)                        │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Paper Mode Testing (24-48 hours minimum)
+     │
+     ├─ Verify: EXECUTION_MODE=PAPER
+     │
+     ├─ Monitor Logs ───────────┬── sudo journalctl -u titan-brain -f
+     │                          └── sudo journalctl -u titan-executor -f
+     │
+     ├─ Check Signals ──────────└── ls signals/outgoing/
+     │
+     ├─ Verify Opportunities ───└── Check logs for detected arbitrage
+     │
+     └─ Run Health Checks ──────└── ./oracle_health_check.sh
+                                   (Every 6 hours)
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                         🎯 OPERATIONS PHASE                                 │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  Daily Operations
+     │
+     ├─ Service Management ─────┬── ./start_oracle.sh
+     │                          ├── ./stop_oracle.sh
+     │                          ├── ./restart_oracle.sh
+     │                          └── ./status_oracle.sh
+     │
+     ├─ Monitoring ─────────────┬── ./oracle_health_check.sh
+     │                          ├── sudo journalctl -u titan-* -f
+     │                          └── htop, free -h, df -h
+     │
+     ├─ Troubleshooting ────────┬── Check logs for errors
+     │                          ├── Verify .env configuration
+     │                          └── See ORACLE_TROUBLESHOOTING.md
+     │
+     └─ Maintenance ────────────┬── Weekly backups
+                                ├── Monthly updates
+                                └── Log rotation
+
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                    🚀 GOING LIVE (Optional, After Testing)                  │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+  After Successful Paper Trading
+     │
+     ├─ Switch to Live Mode
+     │  └─ nano .env → EXECUTION_MODE=LIVE
+     │
+     ├─ Fund Dedicated Wallet (small amount, e.g., $20-50)
+     │
+     ├─ Restart Services
+     │  └─ ./restart_oracle.sh
+     │
+     └─ Monitor Closely (24 hours)
+        ├─ Check every 2-4 hours
+        ├─ Watch for real trades
+        └─ Ready to stop: ./stop_oracle.sh
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                          📚 DOCUMENTATION MAP                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+  Quick Start (15 min)          →  ORACLE_QUICKSTART.md
+  Complete Guide               →  ORACLE_CLOUD_DEPLOYMENT.md
+  Step-by-Step Checklist       →  ORACLE_DEPLOYMENT_CHECKLIST.md
+  Command Reference            →  ORACLE_QUICK_REFERENCE.md
+  Troubleshooting              →  ORACLE_TROUBLESHOOTING.md
+  Overview                     →  ORACLE_DEPLOYMENT_SUMMARY.md
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                           🛠️ SCRIPT REFERENCE                              ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+  deploy_oracle_cloud.sh       →  Automated deployment (one-time setup)
+  start_oracle.sh              →  Start all Titan services
+  stop_oracle.sh               →  Stop all Titan services
+  restart_oracle.sh            →  Restart Titan services
+  status_oracle.sh             →  View service status
+  oracle_health_check.sh       →  Comprehensive health check
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                              🎯 SUCCESS PATH                               ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+  Oracle Account → Create Instance → SSH Connect → Deploy Script →
+  Configure .env → Start Services → Verify Health → Paper Test 24h →
+  Monitor & Optimize → (Optional) Go Live → Daily Operations
+
+
+╔════════════════════════════════════════════════════════════════════════════╗
+║                         ⚠️  IMPORTANT REMINDERS                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+  ✓ ALWAYS start in PAPER MODE (test for 24-48 hours minimum)
+  ✓ Use ARM A1.Flex instance (4 OCPU, 24GB RAM) for best performance
+  ✓ Use DEDICATED WALLET with limited funds (never main wallet!)
+  ✓ Monitor CLOSELY during first 24 hours of live operation
+  ✓ Redis is OPTIONAL - Titan uses file-based signal system
+  ✓ Keep .env file SECURE (chmod 600)
+  ✓ Backup .env weekly
+  ✓ Update system and Titan monthly
+

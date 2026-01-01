@@ -47,6 +47,32 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 
 ---
 
+## 🌩️ Deploy to Oracle Cloud Always Free ⚡
+
+**NEW!** Deploy Titan to Oracle Cloud's generous Always Free tier (4 CPUs, 24GB RAM):
+
+- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ⚡ Get running in 15 minutes
+- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 📖 Complete deployment guide
+- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ Step-by-step checklist
+
+**Quick Deploy:**
+```bash
+# On your Oracle Cloud instance
+git clone https://github.com/vegas-max/Titan2.0.git
+cd Titan2.0
+./deploy_oracle_cloud.sh  # Automated one-command deployment!
+```
+
+**Management Commands:**
+```bash
+./start_oracle.sh    # Start Titan
+./stop_oracle.sh     # Stop Titan
+./status_oracle.sh   # Check status
+./oracle_health_check.sh  # Run health check
+```
+
+---
+
 ---
 
 ## 📋 Table of Contents
@@ -80,9 +106,11 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 ## 📚 Additional Documentation
 
 ### Validation & Deployment
-- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ **NEW!** Deploy to Oracle Cloud Always Free tier
-- **[ORACLE_QUICK_REFERENCE.md](ORACLE_QUICK_REFERENCE.md)** - ⚡ **NEW!** One-page reference for Oracle Cloud
-- **[ORACLE_TROUBLESHOOTING.md](ORACLE_TROUBLESHOOTING.md)** - 🔧 **NEW!** Oracle Cloud troubleshooting guide
+- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ⚡ **NEW!** Oracle Cloud 15-minute quick start
+- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud Always Free deployment guide
+- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ **NEW!** Step-by-step deployment checklist
+- **[ORACLE_QUICK_REFERENCE.md](ORACLE_QUICK_REFERENCE.md)** - 📋 One-page command reference for Oracle Cloud
+- **[ORACLE_TROUBLESHOOTING.md](ORACLE_TROUBLESHOOTING.md)** - 🔧 Oracle Cloud troubleshooting guide
 - **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Master validation checklist for deployment readiness
 - **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Full-scale mainnet deployment validation checklist
 - **[CHECKLIST_VALIDATION_SUMMARY.md](CHECKLIST_VALIDATION_SUMMARY.md)** - Executive validation summary
