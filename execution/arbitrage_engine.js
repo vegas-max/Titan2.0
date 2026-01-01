@@ -286,7 +286,7 @@ class ArbitrageEngine {
             if (opportunity.routers && opportunity.routers.length > 0) {
                 routers = opportunity.routers;
             } else {
-                throw new Error('Router execution requires opportunity.routers (router contract addresses); pool_address values must not be used as routers.');
+                throw new Error('Router execution requires a non-empty opportunity.routers array containing router contract addresses.');
             }
         } else {
             path = opportunity.path;
