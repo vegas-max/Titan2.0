@@ -252,10 +252,6 @@ class ArbitrageEngine {
         if (!poolA || !poolB) {
             throw new Error('HFT payload requires both poolA and poolB addresses');
         }
-
-        if (!poolA || !poolB) {
-            throw new Error('HFT_PAYLOAD: Missing required pool addresses for arbitrage opportunity');
-        }
         
         const amount = opportunity.amountIn || opportunity.amount || opportunity.amount_in_wei;
 
