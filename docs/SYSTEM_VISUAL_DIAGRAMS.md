@@ -525,7 +525,7 @@ Immutability Guarantees:
     │    "route": {                                                    │
     │      "protocols": [1, 2, 3],  // Protocol IDs                   │
     │      "dexs": [...],            // DEX routers                    │
-    │      "tokenPath": [...],       // Token swap path                │
+    │      "tokenPath": [...],       // Token swap path: token registry IDs when using REGISTRY_ENUMS, or raw token addresses when using RAW_ADDRESSES │
     │      "extra": [...]            // Protocol-specific params       │
     │    },                                                            │
     │    "gasEstimate": "285000",                                      │
