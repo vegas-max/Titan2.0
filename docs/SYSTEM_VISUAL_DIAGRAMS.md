@@ -499,7 +499,7 @@ Immutability Guarantees:
     │                                                                   │
     │  Input Parameters:                                                │
     │  • amount: Loan amount                                           │
-    │  • amount_out: Expected output (simulated)                       │
+    │  • amount_out: Expected output (estimated)                       │
     │  • bridge_fee_usd: Cross-chain bridge fees                       │
     │  • gas_cost_usd: Estimated gas costs                             │
     │                                                                   │
