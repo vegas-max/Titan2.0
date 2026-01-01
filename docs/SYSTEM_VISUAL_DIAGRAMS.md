@@ -624,7 +624,7 @@ Immutability Guarantees:
     │  └────────────────────────────────────────────────────────┘     │
     │                                                                   │
     │  Transaction Parameters:                                          │
-    │  • flashSource: 0 (Aave V3) | 1 (Balancer V3)                   │
+    │  • flashSource: 1 (Balancer V3) | 2 (Aave V3)                   │
     │  • loanToken: Token address for flashloan                        │
     │  • loanAmount: Loan amount in token units                        │
     │  • routeData: Encoded route (above)                              │
