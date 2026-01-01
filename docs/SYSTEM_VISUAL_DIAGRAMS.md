@@ -808,7 +808,8 @@ Immutability Guarantees:
     │  END FOR                                                         │
     │                                                                   │
     │  Final State:                                                     │
-    │  • currentToken = original loanToken (circular arbitrage)        │
+    │  • currentToken = original loanToken (for intra-chain circular   │
+    │    arbitrage routes)                                             │
     │  • finalBalance > startBalance (profit condition)                │
     └───────────────────────────┬──────────────────────────────────────┘
                                 │
