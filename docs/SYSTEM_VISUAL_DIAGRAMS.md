@@ -448,6 +448,565 @@ Immutability Guarantees:
 
 ---
 
-**Last Updated**: 2025-12-22  
-**Version**: 1.0.0  
+## 8. End-to-End Operational Data Flow
+
+```
+╔══════════════════════════════════════════════════════════════════════════╗
+║            TITAN PRODUCTION OPERATIONS: END-TO-END DATA FLOW              ║
+╚══════════════════════════════════════════════════════════════════════════╝
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 1: OFF-CHAIN OPPORTUNITY DISCOVERY               │
+│                         (Python Brain / ML Layer)                         │
+└──────────────────────────────────────────────────────────────────────────┘
+
+    ┌─────────────────────────────────────────────────────────────────┐
+    │                      OmniBrain.py (Entry Point)                  │
+    │  • Multi-threaded scanner (ThreadPoolExecutor)                   │
+    │  • RustworkX graph construction (256+ nodes)                     │
+    │  • Real-time blockchain monitoring via Web3                      │
+    └───────────────────────────┬─────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                   Token Discovery & Inventory                     │
+    │  • TokenDiscovery: Multi-chain token scanning                    │
+    │  • DexPricer: Real-time price queries (UniV3, Curve, etc.)       │
+    │  • BridgeOracle: Cross-chain price verification                  │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    AI Analysis & Optimization                     │
+    │  • MarketForecaster: Gas price prediction                        │
+    │  • QLearningAgent: Strategy optimization                         │
+    │  • FeatureStore: Historical pattern analysis                     │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                     Profit Calculation Engine                     │
+    │  Π_net = V_loan × [(P_A × (1-S_A)) - (P_B × (1+S_B))]           │
+    │          - F_flat - (V_loan × F_rate)                            │
+    │                                                                   │
+    │  Input Parameters:                                                │
+    │  • amount: Loan amount                                           │
+    │  • amount_out: Expected output (simulated)                       │
+    │  • bridge_fee_usd: Cross-chain bridge fees                       │
+    │  • gas_cost_usd: Estimated gas costs                             │
+    │                                                                   │
+    │  Output (Expected):                                               │
+    │  • net_profit: Final profit after all costs                      │
+    │  • gross_spread: Revenue - Loan cost                             │
+    │  • total_fees: Sum of all operational costs                      │
+    │  • is_profitable: Boolean (profit > MIN_PROFIT_USD)              │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │ IF is_profitable == True
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                 Signal Generation & Serialization                 │
+    │  File: signals/outgoing/{timestamp}-{token}-{chain}.json         │
+    │                                                                   │
+    │  Signal Structure (JSON):                                         │
+    │  {                                                                │
+    │    "type": "intra-chain" | "cross-chain",                        │
+    │    "chainId": 137,                                               │
+    │    "token": "USDC",                                              │
+    │    "amount": "10000.00",                                         │
+    │    "expectedProfit": "7.23",                                     │
+    │    "route": {                                                    │
+    │      "protocols": [1, 2, 3],  // Protocol IDs                   │
+    │      "dexs": [...],            // DEX routers                    │
+    │      "tokenPath": [...],       // Token swap path                │
+    │      "extra": [...]            // Protocol-specific params       │
+    │    },                                                            │
+    │    "gasEstimate": "285000",                                      │
+    │    "timestamp": 1704067200                                       │
+    │  }                                                               │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                │ File-based message passing
+                                ▼
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 2: OFF-CHAIN EXECUTION LAYER                     │
+│                      (Node.js Bot / Execution Engine)                     │
+└──────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    TitanBot.js (Signal Watcher)                   │
+    │  • File system watcher (1-second polling)                        │
+    │  • Reads signals/outgoing/*.json                                 │
+    │  • Deduplication via processedSignals Set                        │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                      Execution Mode Router                        │
+    │                                                                   │
+    │  Mode Selection (TITAN_EXECUTION_MODE):                          │
+    │                                                                   │
+    │  ┌─────────────────┐              ┌─────────────────┐           │
+    │  │  PAPER MODE     │              │   LIVE MODE     │           │
+    │  │  (Simulation)   │              │  (Production)   │           │
+    │  ├─────────────────┤              ├─────────────────┤           │
+    │  │ • No blockchain │              │ • Real txs      │           │
+    │  │ • No gas costs  │              │ • Real gas      │           │
+    │  │ • Validate logic│              │ • Real profit   │           │
+    │  │ • Track metrics │              │ • MEV protected │           │
+    │  │                 │              │                 │           │
+    │  │ Return:         │              │ (Continue to    │           │
+    │  │ • Simulated P/L │              │  validation)    │           │
+    │  │ • Validation ✓  │              │                 │           │
+    │  └─────────────────┘              └────────┬────────┘           │
+    └─────────────────────────────────────────────┼────────────────────┘
+                                                  │ (LIVE mode only)
+                                                  ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                  Pre-Execution Validation Layer                   │
+    │                                                                   │
+    │  1. Wallet Balance Check:                                        │
+    │     • provider.getBalance(EXECUTOR_ADDRESS)                      │
+    │     • Ensure sufficient gas funds                                │
+    │                                                                   │
+    │  2. Gas Price Validation (GasManager):                           │
+    │     • Current base fee < MAX_BASE_FEE_GWEI                       │
+    │     • EIP-1559 fee estimation                                    │
+    │     • Network congestion check                                   │
+    │                                                                   │
+    │  3. On-Chain Simulation (OmniSDKEngine):                         │
+    │     • eth_call simulation                                        │
+    │     • Validate route execution                                   │
+    │     • Verify profitability                                       │
+    │                                                                   │
+    │  4. Aggregator Selection (if applicable):                        │
+    │     • AggregatorSelector.selectBestRoute()                       │
+    │     • Compare: Li.Fi, 1inch, ParaSwap, 0x, CoW, etc.            │
+    │     • Pick lowest-cost, highest-profit route                     │
+    │                                                                   │
+    │  Return (Produced):                                               │
+    │  • validationSuccess: true/false                                 │
+    │  • simulatedProfit: Actual expected profit                       │
+    │  • gasEstimate: Updated gas estimate                             │
+    │  • optimalRoute: Best execution path                             │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │ IF validationSuccess == true
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    Payload Construction Layer                     │
+    │                                                                   │
+    │  Route Encoding (per RouteEncodingSpec.md):                      │
+    │                                                                   │
+    │  Option A: RAW_ADDRESSES (Mode 0)                                │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ routeData = abi.encode(                                │     │
+    │  │   ["uint8", "uint8[]", "address[]", "address[]",       │     │
+    │  │    "bytes[]"],                                         │     │
+    │  │   [0, protocols, routers, tokenPath, extra]            │     │
+    │  │ )                                                      │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  Option B: REGISTRY_ENUMS (Mode 1)                               │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ routeData = abi.encode(                                │     │
+    │  │   ["uint8", "uint8[]", "uint8[]", "uint8[]",           │     │
+    │  │    "uint8[]", "bytes[]"],                              │     │
+    │  │   [1, protocols, dexIds, tokenIds, tokenTypes, extra]  │     │
+    │  │ )                                                      │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  Transaction Parameters:                                          │
+    │  • flashSource: 0 (Aave V3) | 1 (Balancer V3)                   │
+    │  • loanToken: Token address for flashloan                        │
+    │  • loanAmount: Loan amount in token units                        │
+    │  • routeData: Encoded route (above)                              │
+    │                                                                   │
+    │  Output (Import):                                                 │
+    │  • txRequest: Populated transaction object                       │
+    │  • gasLimit: Calculated gas limit                                │
+    │  • maxFeePerGas: EIP-1559 max fee                                │
+    │  • maxPriorityFeePerGas: Priority fee                            │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    Transaction Signing Layer                      │
+    │                                                                   │
+    │  const wallet = new ethers.Wallet(PRIVATE_KEY, provider);        │
+    │  const signedTx = await wallet.signTransaction(txRequest);       │
+    │                                                                   │
+    │  Signed Transaction Components:                                   │
+    │  • nonce: Account nonce                                          │
+    │  • to: Contract address (OmniArbExecutor)                        │
+    │  • data: Encoded function call                                   │
+    │  • gasLimit: Maximum gas                                         │
+    │  • maxFeePerGas: EIP-1559 max fee                                │
+    │  • maxPriorityFeePerGas: Priority fee                            │
+    │  • chainId: Network chain ID                                     │
+    │  • v, r, s: ECDSA signature components                           │
+    │                                                                   │
+    │  Output:                                                          │
+    │  • signedTx: Signed transaction (RLP encoded)                    │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                 Transaction Broadcast Layer                       │
+    │                                                                   │
+    │  Path Selection (MEV Protection):                                │
+    │                                                                   │
+    │  IF (gasCostHigh && profitLarge):                                │
+    │    ┌────────────────────────────────────────────┐               │
+    │    │     BloxRoute Private Mempool               │               │
+    │    │  • Bundle submission                        │               │
+    │    │  • MEV protection                           │               │
+    │    │  • Frontrun prevention                      │               │
+    │    │  await bloxRoute.submitBundle([signedTx])   │               │
+    │    └────────────────────────────────────────────┘               │
+    │  ELSE:                                                           │
+    │    ┌────────────────────────────────────────────┐               │
+    │    │     Standard Public Mempool                 │               │
+    │    │  • Direct RPC submission                    │               │
+    │    │  • Lower latency                            │               │
+    │    │  • Standard propagation                     │               │
+    │    │  await wallet.sendTransaction(txRequest)    │               │
+    │    └────────────────────────────────────────────┘               │
+    │                                                                   │
+    │  Broadcast Output:                                                │
+    │  • txHash: Transaction hash (0x...)                              │
+    │  • timestamp: Submission time                                    │
+    │  • blockNumber: Target block (estimated)                         │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │ TX broadcast to network
+                                ▼
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                    PHASE 3: ON-CHAIN EXECUTION                            │
+│                        (Smart Contract Layer)                             │
+└──────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │              Mempool → Block Inclusion → Execution                │
+    │                                                                   │
+    │  1. Mempool Queue:                                               │
+    │     • Transaction enters mempool                                 │
+    │     • Miners/validators select based on gas price                │
+    │     • Sorted by maxPriorityFeePerGas                             │
+    │                                                                   │
+    │  2. Block Inclusion:                                             │
+    │     • Transaction included in block                              │
+    │     • Block validated and propagated                             │
+    │     • EVM execution begins                                       │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │          OmniArbExecutor.sol - execute() Entry Point              │
+    │                                                                   │
+    │  function execute(                                                │
+    │      uint8 flashSource,    // 0=Aave, 1=Balancer                │
+    │      address loanToken,    // Token to borrow                    │
+    │      uint256 loanAmount,   // Amount to borrow                   │
+    │      bytes calldata routeData  // Encoded route                  │
+    │  ) external onlyOwner nonReentrant                               │
+    │                                                                   │
+    │  Security Checks:                                                 │
+    │  • onlyOwner: Only contract owner can execute                    │
+    │  • nonReentrant: Prevents reentrancy attacks                     │
+    │  • Validates flashSource (0 or 1)                                │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    Flashloan Initiation                           │
+    │                                                                   │
+    │  IF flashSource == 0 (Aave V3):                                  │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ IPool(AAVE_POOL).flashLoanSimple(                      │     │
+    │  │   address(this),    // Receiver                        │     │
+    │  │   loanToken,        // Asset                           │     │
+    │  │   loanAmount,       // Amount                          │     │
+    │  │   routeData,        // Params                          │     │
+    │  │   0                 // Referral code                   │     │
+    │  │ )                                                      │     │
+    │  │                                                         │     │
+    │  │ → Callback: executeOperation()                         │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  IF flashSource == 1 (Balancer V3):                              │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ IVault(BALANCER_VAULT).unlock(                         │     │
+    │  │   abi.encodeCall(                                      │     │
+    │  │     this.unlockCallback,                               │     │
+    │  │     (loanToken, loanAmount, routeData)                 │     │
+    │  │   )                                                    │     │
+    │  │ )                                                      │     │
+    │  │                                                         │     │
+    │  │ → Callback: unlockCallback()                           │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  Loan Received:                                                   │
+    │  • loanToken transferred to contract                             │
+    │  • startBalance = IERC20(loanToken).balanceOf(address(this))    │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                     Route Decoding & Parsing                      │
+    │                                                                   │
+    │  Decode routeData based on encoding mode:                        │
+    │                                                                   │
+    │  IF encodingMode == 0 (RAW_ADDRESSES):                           │
+    │  • Extract: protocols, routers, tokenPath, extra                 │
+    │  • Use addresses directly (no registry lookup)                   │
+    │                                                                   │
+    │  IF encodingMode == 1 (REGISTRY_ENUMS):                          │
+    │  • Extract: protocols, dexIds, tokenIds, tokenTypes, extra       │
+    │  • Resolve routers: dexRouter[chainId][dexId]                    │
+    │  • Resolve tokens: tokenRegistry[chain][tokenId][tokenType]      │
+    │                                                                   │
+    │  Validation:                                                      │
+    │  • Require all arrays have matching lengths                      │
+    │  • Require at least one hop (protocols.length > 0)               │
+    │  • Require tokenPath.length == protocols.length                  │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                   Hop-by-Hop Route Execution                      │
+    │                     (SwapHandler.sol Module)                      │
+    │                                                                   │
+    │  FOR each hop in route:                                          │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ Hop i: currentToken → tokenOut                         │     │
+    │  │                                                         │     │
+    │  │ 1. Get current balance:                                │     │
+    │  │    amountIn = IERC20(currentToken).balanceOf(this)     │     │
+    │  │                                                         │     │
+    │  │ 2. Approve DEX router:                                 │     │
+    │  │    IERC20(currentToken).approve(router, amountIn)      │     │
+    │  │                                                         │     │
+    │  │ 3. Execute swap based on protocol:                     │     │
+    │  │                                                         │     │
+    │  │    Protocol 1 (UniV2):                                 │     │
+    │  │    • swapExactTokensForTokens(amountIn, ...)           │     │
+    │  │                                                         │     │
+    │  │    Protocol 2 (UniV3):                                 │     │
+    │  │    • exactInputSingle(params)                          │     │
+    │  │    • Decode fee from extra[i]                          │     │
+    │  │                                                         │     │
+    │  │    Protocol 3 (Curve):                                 │     │
+    │  │    • exchange(i, j, amountIn, minOut)                  │     │
+    │  │    • Decode indices from extra[i]                      │     │
+    │  │                                                         │     │
+    │  │ 4. Verify output:                                      │     │
+    │  │    amountOut = IERC20(tokenOut).balanceOf(this)        │     │
+    │  │    require(amountOut > 0, "Zero output")               │     │
+    │  │                                                         │     │
+    │  │ 5. Update currentToken = tokenOut                      │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │  END FOR                                                         │
+    │                                                                   │
+    │  Final State:                                                     │
+    │  • currentToken = original loanToken (circular arbitrage)        │
+    │  • finalBalance > startBalance (profit condition)                │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                 Flashloan Repayment & Profit Lock                 │
+    │                                                                   │
+    │  1. Calculate amounts:                                           │
+    │     finalBalance = IERC20(loanToken).balanceOf(address(this))    │
+    │     owed = loanAmount + flashFee                                 │
+    │                                                                   │
+    │  2. Validate profitability:                                      │
+    │     require(finalBalance >= owed, "Insufficient return")         │
+    │     profit = finalBalance - owed                                 │
+    │                                                                   │
+    │  3. Repay flashloan:                                             │
+    │     IF Aave V3:                                                  │
+    │       • IERC20(loanToken).approve(AAVE_POOL, owed)               │
+    │       • Aave automatically pulls repayment                       │
+    │     IF Balancer V3:                                              │
+    │       • vault.settle(loanToken, owed)                            │
+    │       • Balancer handles transient debt settlement               │
+    │                                                                   │
+    │  4. Profit retention:                                            │
+    │     • Profit remains in contract                                 │
+    │     • Owner can withdraw via withdraw() function                 │
+    │                                                                   │
+    │  5. Emit event:                                                  │
+    │     emit ArbitrageExecuted(                                      │
+    │       flashSource,                                               │
+    │       loanToken,                                                 │
+    │       loanAmount,                                                │
+    │       profit                                                     │
+    │     );                                                           │
+    │                                                                   │
+    │  Transaction Outcome:                                             │
+    │  • SUCCESS: Transaction confirmed, profit locked                 │
+    │  • REVERT: Transaction fails, gas fees still charged             │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │ Transaction finalized
+                                ▼
+
+┌──────────────────────────────────────────────────────────────────────────┐
+│                  PHASE 4: POST-EXECUTION MONITORING                       │
+│                      (Off-Chain Confirmation Layer)                       │
+└──────────────────────────────────────────────────────────────────────────┘
+
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                  Transaction Confirmation Watcher                 │
+    │                                                                   │
+    │  const receipt = await tx.wait(1);  // Wait 1 confirmation       │
+    │                                                                   │
+    │  Receipt Analysis:                                                │
+    │  • receipt.status: 1 (success) | 0 (failure)                     │
+    │  • receipt.gasUsed: Actual gas consumed                          │
+    │  • receipt.effectiveGasPrice: Actual gas price paid              │
+    │  • receipt.logs: Event logs (ArbitrageExecuted)                  │
+    │  • receipt.blockNumber: Inclusion block                          │
+    │  • receipt.transactionHash: Final tx hash                        │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                   Profit/Loss Calculation (Produced)              │
+    │                                                                   │
+    │  IF receipt.status == 1 (SUCCESS):                               │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ Parse ArbitrageExecuted event:                         │     │
+    │  │ • actualProfit = event.profit                          │     │
+    │  │                                                         │     │
+    │  │ Calculate real costs:                                  │     │
+    │  │ • actualGasCost = gasUsed × effectiveGasPrice          │     │
+    │  │ • actualGasCostUSD = gasCost × ethPriceUSD             │     │
+    │  │                                                         │     │
+    │  │ Net result:                                            │     │
+    │  │ • netProfitUSD = actualProfit - actualGasCostUSD       │     │
+    │  │ • profitMargin = (netProfit / loanAmount) × 100        │     │
+    │  │                                                         │     │
+    │  │ Return (Produced):                                     │     │
+    │  │ {                                                      │     │
+    │  │   success: true,                                       │     │
+    │  │   txHash: "0x...",                                     │     │
+    │  │   profit: actualProfit,                                │     │
+    │  │   netProfitUSD: 7.23,                                  │     │
+    │  │   gasCostUSD: 2.15,                                    │     │
+    │  │   gasUsed: 285000,                                     │     │
+    │  │   blockNumber: 12345678,                               │     │
+    │  │   executionTime: "2.3s",                               │     │
+    │  │   mode: "LIVE"                                         │     │
+    │  │ }                                                      │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    │                                                                   │
+    │  IF receipt.status == 0 (FAILURE):                               │
+    │  ┌────────────────────────────────────────────────────────┐     │
+    │  │ Return (Produced):                                     │     │
+    │  │ {                                                      │     │
+    │  │   success: false,                                      │     │
+    │  │   txHash: "0x...",                                     │     │
+    │  │   profit: 0,                                           │     │
+    │  │   netProfitUSD: -actualGasCostUSD,  // Loss           │     │
+    │  │   gasCostUSD: 2.15,                                    │     │
+    │  │   error: "Transaction reverted",                       │     │
+    │  │   blockNumber: 12345678,                               │     │
+    │  │   mode: "LIVE"                                         │     │
+    │  │ }                                                      │     │
+    │  └────────────────────────────────────────────────────────┘     │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                   Logging & Metrics Recording                     │
+    │                                                                   │
+    │  Console Output:                                                  │
+    │  • "✅ TX CONFIRMED: 0x... | Profit: $7.23 | Gas: $2.15"         │
+    │  • "❌ TX FAILED: 0x... | Loss: $2.15 (gas only)"                │
+    │                                                                   │
+    │  File Output (signals/processed/):                               │
+    │  • Move signal file from outgoing/ to processed/                 │
+    │  • Append execution result to signal                             │
+    │                                                                   │
+    │  Metrics Tracking:                                                │
+    │  • Update success rate counter                                   │
+    │  • Update total profit counter                                   │
+    │  • Update gas cost counter                                       │
+    │  • Update execution time average                                 │
+    │                                                                   │
+    │  Circuit Breaker Check:                                           │
+    │  • IF consecutive failures > 10:                                 │
+    │    → Activate circuit breaker                                    │
+    │    → Pause execution for 60 seconds                              │
+    │    → Alert operator                                              │
+    └───────────────────────────┬──────────────────────────────────────┘
+                                │
+                                ▼
+    ┌──────────────────────────────────────────────────────────────────┐
+    │                    Feedback Loop to Brain                         │
+    │                                                                   │
+    │  Update AI Models (FeatureStore):                                │
+    │  • Record actual profit vs expected profit                       │
+    │  • Update gas price predictions (MarketForecaster)               │
+    │  • Adjust strategy parameters (QLearningAgent)                   │
+    │  • Update success rate by chain/protocol                         │
+    │                                                                   │
+    │  Strategy Optimization:                                           │
+    │  • IF profitability declining:                                   │
+    │    → Increase MIN_PROFIT_USD threshold                           │
+    │    → Disable underperforming chains                              │
+    │  • IF success rate high:                                         │
+    │    → Lower MIN_PROFIT_USD (capture more opportunities)           │
+    │    → Enable additional chains                                    │
+    └──────────────────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════
+                          SUMMARY: KEY METRICS
+═══════════════════════════════════════════════════════════════════════════
+
+MODES:
+├─ PAPER MODE: Simulation only, no blockchain execution
+│  └─ Returns: Simulated profit, validation checks
+└─ LIVE MODE: Real blockchain execution
+   └─ Returns: Actual profit, gas costs, transaction hash
+
+TASKS & RETURN VALUES:
+├─ Opportunity Discovery (Brain)
+│  └─ Expected: Profitable signals with net_profit > MIN_PROFIT_USD
+├─ Pre-Execution Validation (Bot)
+│  └─ Expected: Simulation success, validated route
+├─ Payload Construction
+│  └─ Import: Route data, transaction parameters
+├─ Transaction Broadcast
+│  └─ Export: Signed transaction to mempool/BloxRoute
+├─ On-Chain Execution (Contract)
+│  └─ Produced: Actual profit, event logs
+└─ Post-Execution Analysis (Bot)
+   └─ Produced: Net profit, gas costs, success/failure
+
+IMPORTS:
+• Token prices (DexPricer, BridgeOracle)
+• Gas prices (MarketForecaster, RPC providers)
+• Route data (AggregatorSelector, Li.Fi)
+• Historical patterns (FeatureStore)
+
+EXPORTS:
+• Signed transactions → Blockchain mempool
+• Execution results → Logs, metrics
+• Profits → Contract (on-chain) → Wallet (withdrawal)
+• Feedback → AI models for optimization
+
+PERFORMANCE TARGETS:
+• Opportunity detection: 5-15 signals/minute
+• Execution success rate: 80-90%
+• Expected profit: $200-800/day (moderate conditions)
+• Gas costs: $50-150/day
+• Net ROI: 500%+
+```
+
+---
+
+**Last Updated**: 2026-01-01  
+**Version**: 1.1.0  
 **Status**: Complete ✅
