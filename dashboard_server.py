@@ -367,8 +367,15 @@ class DashboardServer:
             if not isinstance(route.resource, web.StaticResource):
                 cors.add(route)
         
-        # Start simulation task
-        asyncio.create_task(self.simulate_data())
+        # Start data tasks
+        if self.redis_client:
+            # Use Redis listener for live data
+            asyncio.create_task(self.redis_listener())
+            logger.info("Using Redis for live data")
+        else:
+            # Use simulation for testing
+            asyncio.create_task(self.simulate_data())
+            logger.info("Using simulation data (Redis not available)")
         
         # Start server
         runner = web.AppRunner(self.app)
