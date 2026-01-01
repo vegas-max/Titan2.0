@@ -486,8 +486,16 @@ Immutability Guarantees:
                                 ▼
     ┌──────────────────────────────────────────────────────────────────┐
     │                     Profit Calculation Engine                     │
-    │  Π_net = V_loan × [(P_A × (1-S_A)) - (P_B × (1+S_B))]           │
+    │  Π_net = V_loan × [(P_A × (1-S_A)) - (P_B × (1+S_B))]            │
     │          - F_flat - (V_loan × F_rate)                            │
+    │                                                                   │
+    │  Legend:                                                          │
+    │  • Π_net: Net profit after fees                                   │
+    │  • V_loan: Notional loan volume                                  │
+    │  • P_A, P_B: Asset prices on exchange A and B                     │
+    │  • S_A, S_B: Effective slippage fractions on exchanges A and B    │
+    │  • F_flat: Flat operational/bridge fee (in USD-equivalent)       │
+    │  • F_rate: Proportional fee rate applied to V_loan               │
     │                                                                   │
     │  Input Parameters:                                                │
     │  • amount: Loan amount                                           │
