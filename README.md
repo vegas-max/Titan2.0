@@ -116,6 +116,30 @@ cd Titan2.0
 - **[CHECKLIST_VALIDATION_SUMMARY.md](CHECKLIST_VALIDATION_SUMMARY.md)** - Executive validation summary
 - **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - Comprehensive testing procedures
 
+### 📊 Interactive Dashboard **NEW!**
+- **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - ⚡ **NEW!** 5-minute dashboard setup guide
+- **[INTERACTIVE_DASHBOARD_README.md](INTERACTIVE_DASHBOARD_README.md)** - 📊 **NEW!** Complete dashboard documentation
+- **Multi-Page Real-Time Dashboard Features:**
+  - ✅ 5 interactive pages (Overview, Market Scanner, Executable TXs, Live Execution, Analytics)
+  - ✅ WebSocket real-time updates (<1 second latency)
+  - ✅ Interactive control buttons (Pause/Resume/Emergency Stop)
+  - ✅ Real-time market opportunity scanner
+  - ✅ Executable transaction queue display
+  - ✅ Live transaction execution monitor
+  - ✅ Advanced filtering and search
+  - ✅ Beautiful responsive UI
+
+**Quick Start Dashboard:**
+```bash
+# One command to launch
+./launch_interactive_dashboard.sh
+
+# Or with npm
+npm run dashboard:interactive
+
+# Open browser to http://localhost:8080
+```
+
 ### Installation & Setup
 - **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - ⚡ One-click installation guide (simplest way!)
 - **[FULL_INSTALLATION_GUIDE.md](FULL_INSTALLATION_GUIDE.md)** - Complete one-command installation guide

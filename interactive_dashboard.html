@@ -1,0 +1,1163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TITAN - Multi-Page Interactive Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary-color: #00d4ff;
+            --secondary-color: #00ff88;
+            --danger-color: #ff4444;
+            --warning-color: #ffa500;
+            --success-color: #00ff88;
+            --bg-dark: #0a0a0f;
+            --bg-card: rgba(255, 255, 255, 0.05);
+            --border-color: rgba(255, 255, 255, 0.1);
+            --text-primary: #ffffff;
+            --text-secondary: #888;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #0f0c29, #302b63, #24243e);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+
+        /* Navigation */
+        .top-nav {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border-color);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            backdrop-filter: blur(10px);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .logo {
+            font-size: 1.5em;
+            font-weight: bold;
+            background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .nav-tabs {
+            display: flex;
+            gap: 10px;
+        }
+
+        .nav-tab {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .nav-tab:hover {
+            background: var(--bg-card);
+            border-color: var(--primary-color);
+        }
+
+        .nav-tab.active {
+            background: var(--primary-color);
+            color: #000;
+            border-color: var(--primary-color);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.operational {
+            background: var(--success-color);
+        }
+
+        .status-dot.degraded {
+            background: var(--warning-color);
+        }
+
+        .status-dot.critical {
+            background: var(--danger-color);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        /* Main Content */
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        .page {
+            display: none;
+        }
+
+        .page.active {
+            display: block;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* Cards */
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .card-title {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: var(--primary-color);
+        }
+
+        /* Metrics Grid */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 15px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 20px rgba(0, 212, 255, 0.3);
+        }
+
+        .metric-label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metric-value {
+            font-size: 1.8em;
+            font-weight: bold;
+        }
+
+        .metric-value.positive { color: var(--success-color); }
+        .metric-value.negative { color: var(--danger-color); }
+        .metric-value.neutral { color: var(--primary-color); }
+        .metric-value.warning { color: var(--warning-color); }
+
+        .metric-change {
+            font-size: 0.8em;
+            color: var(--text-secondary);
+            margin-top: 5px;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9em;
+        }
+
+        .btn-primary {
+            background: var(--primary-color);
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #00a8cc;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 212, 255, 0.4);
+        }
+
+        .btn-success {
+            background: var(--success-color);
+            color: #000;
+        }
+
+        .btn-success:hover {
+            background: #00cc6f;
+        }
+
+        .btn-warning {
+            background: var(--warning-color);
+            color: #000;
+        }
+
+        .btn-warning:hover {
+            background: #cc8400;
+        }
+
+        .btn-danger {
+            background: var(--danger-color);
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #cc0000;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .control-buttons {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        /* Table */
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 15px;
+        }
+
+        .data-table th {
+            background: rgba(0, 212, 255, 0.1);
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--primary-color);
+            font-weight: bold;
+            font-size: 0.9em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .data-table tr:hover {
+            background: rgba(0, 212, 255, 0.05);
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+
+        .status-badge.success {
+            background: rgba(0, 255, 136, 0.2);
+            color: var(--success-color);
+        }
+
+        .status-badge.pending {
+            background: rgba(255, 165, 0, 0.2);
+            color: var(--warning-color);
+        }
+
+        .status-badge.failed {
+            background: rgba(255, 68, 68, 0.2);
+            color: var(--danger-color);
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .filter-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .filter-group label {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+
+        .filter-group input,
+        .filter-group select {
+            padding: 8px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            color: var(--text-primary);
+            font-size: 0.9em;
+        }
+
+        .filter-group input:focus,
+        .filter-group select:focus {
+            outline: none;
+            border-color: var(--primary-color);
+        }
+
+        /* Scrollable container */
+        .scrollable {
+            max-height: 500px;
+            overflow-y: auto;
+            padding-right: 10px;
+        }
+
+        .scrollable::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        .scrollable::-webkit-scrollbar-track {
+            background: var(--bg-card);
+            border-radius: 4px;
+        }
+
+        .scrollable::-webkit-scrollbar-thumb {
+            background: var(--primary-color);
+            border-radius: 4px;
+        }
+
+        /* Live indicator */
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+            color: var(--success-color);
+        }
+
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--success-color);
+            border-radius: 50%;
+            animation: blink 1s infinite;
+        }
+
+        @keyframes blink {
+            0%, 50%, 100% { opacity: 1; }
+            25%, 75% { opacity: 0.3; }
+        }
+
+        /* Chart container */
+        .chart-container {
+            position: relative;
+            height: 300px;
+            margin-top: 20px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .top-nav {
+                flex-direction: column;
+                gap: 15px;
+            }
+
+            .nav-tabs {
+                flex-wrap: wrap;
+            }
+
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .control-buttons {
+                flex-direction: column;
+            }
+
+            .filters {
+                flex-direction: column;
+            }
+        }
+
+        /* Loading state */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--bg-card);
+            border-top: 3px solid var(--primary-color);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* Empty state */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state-icon {
+            font-size: 3em;
+            margin-bottom: 10px;
+            opacity: 0.3;
+        }
+
+        /* Profit highlight */
+        .profit-positive {
+            color: var(--success-color);
+            font-weight: bold;
+        }
+
+        .profit-negative {
+            color: var(--danger-color);
+            font-weight: bold;
+        }
+
+        /* Hash display */
+        .hash {
+            font-family: monospace;
+            font-size: 0.85em;
+            color: var(--primary-color);
+        }
+
+        .hash-short {
+            cursor: pointer;
+        }
+
+        .hash-short:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    <!-- Top Navigation -->
+    <nav class="top-nav">
+        <div class="logo">🚀 TITAN Dashboard</div>
+        <div class="nav-tabs">
+            <button class="nav-tab active" data-page="overview">📊 Overview</button>
+            <button class="nav-tab" data-page="market-scanner">🔍 Market Scanner</button>
+            <button class="nav-tab" data-page="executable-txs">⚡ Executable TXs</button>
+            <button class="nav-tab" data-page="live-execution">🎯 Live Execution</button>
+            <button class="nav-tab" data-page="analytics">📈 Analytics</button>
+        </div>
+        <div class="status-indicator">
+            <div class="status-dot operational" id="statusDot"></div>
+            <span id="statusText">Connecting...</span>
+        </div>
+    </nav>
+
+    <!-- Main Container -->
+    <div class="container">
+        <!-- Page 1: Overview -->
+        <div id="overview" class="page active">
+            <div class="control-buttons">
+                <button class="btn btn-success" id="btnResume">▶️ Resume Scanning</button>
+                <button class="btn btn-warning" id="btnPause">⏸️ Pause Scanning</button>
+                <button class="btn btn-danger" id="btnEmergencyStop">🛑 Emergency Stop</button>
+            </div>
+
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-label">💰 Total Profit</div>
+                    <div class="metric-value positive" id="totalProfit">$0.00</div>
+                    <div class="metric-change">+$0.00 today</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">⛽ Total Gas Spent</div>
+                    <div class="metric-value warning" id="totalGas">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">📊 Net Profit</div>
+                    <div class="metric-value" id="netProfit">$0.00</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">✅ Transactions Executed</div>
+                    <div class="metric-value neutral" id="txsExecuted">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">🎯 Success Rate</div>
+                    <div class="metric-value" id="successRate">0%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">⏱️ System Uptime</div>
+                    <div class="metric-value neutral" id="uptime">0s</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">🔍 Opportunities Found</div>
+                    <div class="metric-value neutral" id="oppsFound">0</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">⛽ Current Gas Price</div>
+                    <div class="metric-value" id="gasPrice">0 Gwei</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">Recent Executions</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE</span>
+                    </div>
+                </div>
+                <div class="scrollable" id="recentExecutions">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Waiting for data...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 2: Market Scanner -->
+        <div id="market-scanner" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🔍 Real-Time Market Opportunities</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>LIVE SCANNING</span>
+                    </div>
+                </div>
+
+                <div class="filters">
+                    <div class="filter-group">
+                        <label>Min Profit (USD)</label>
+                        <input type="number" id="filterMinProfit" placeholder="5.00" step="0.01">
+                    </div>
+                    <div class="filter-group">
+                        <label>Chain</label>
+                        <select id="filterChain">
+                            <option value="">All Chains</option>
+                            <option value="Ethereum">Ethereum</option>
+                            <option value="Polygon">Polygon</option>
+                            <option value="Arbitrum">Arbitrum</option>
+                            <option value="Optimism">Optimism</option>
+                            <option value="Base">Base</option>
+                            <option value="BSC">BSC</option>
+                            <option value="Avalanche">Avalanche</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Strategy</label>
+                        <select id="filterStrategy">
+                            <option value="">All Strategies</option>
+                            <option value="Flash Arbitrage">Flash Arbitrage</option>
+                            <option value="Cross-DEX">Cross-DEX</option>
+                            <option value="Triangular">Triangular</option>
+                            <option value="Cross-Chain">Cross-Chain</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>&nbsp;</label>
+                        <button class="btn btn-primary" id="btnApplyFilters">Apply Filters</button>
+                    </div>
+                </div>
+
+                <div class="scrollable" id="marketOpportunities">
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Scanning markets...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 3: Executable Transactions -->
+        <div id="executable-txs" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ Executable Transaction Queue</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span id="executableCount">0 Ready</span>
+                    </div>
+                </div>
+
+                <div class="scrollable" id="executableTransactions">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚡</div>
+                        <p>No executable transactions in queue</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">Waiting for profitable opportunities...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 4: Live Execution Monitor -->
+        <div id="live-execution" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🎯 Live Transaction Execution Monitor</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>MONITORING</span>
+                    </div>
+                </div>
+
+                <div class="scrollable" id="liveExecutions">
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>No recent executions</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">Executions will appear here as they happen...</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 5: Analytics -->
+        <div id="analytics" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">📈 Performance Analytics</h3>
+                </div>
+
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-label">📊 Avg Profit/TX</div>
+                        <div class="metric-value positive" id="avgProfitPerTx">$0.00</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">🔍 Total Scans</div>
+                        <div class="metric-value neutral" id="totalScans">0</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">💎 Conversion Rate</div>
+                        <div class="metric-value neutral" id="conversionRate">0%</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-label">⚡ Avg Execution Time</div>
+                        <div class="metric-value neutral" id="avgExecTime">0ms</div>
+                    </div>
+                </div>
+
+                <div class="card">
+                    <h3 class="card-title">Chain Performance</h3>
+                    <div class="chart-container" id="chainChart">
+                        <p style="color: var(--text-secondary); text-align: center; padding: 100px;">
+                            Chart will be displayed here
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // WebSocket connection
+        let ws = null;
+        let reconnectTimer = null;
+
+        // Data stores
+        let marketOpps = [];
+        let executableTxs = [];
+        let recentExecs = [];
+        let metrics = {};
+
+        // Connect to WebSocket
+        function connectWebSocket() {
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.hostname}:${window.location.port || 8080}/ws`;
+            
+            ws = new WebSocket(wsUrl);
+
+            ws.onopen = () => {
+                console.log('WebSocket connected');
+                updateConnectionStatus('OPERATIONAL');
+                clearTimeout(reconnectTimer);
+            };
+
+            ws.onmessage = (event) => {
+                const message = JSON.parse(event.data);
+                handleWebSocketMessage(message);
+            };
+
+            ws.onerror = (error) => {
+                console.error('WebSocket error:', error);
+                updateConnectionStatus('ERROR');
+            };
+
+            ws.onclose = () => {
+                console.log('WebSocket disconnected');
+                updateConnectionStatus('DISCONNECTED');
+                // Attempt to reconnect after 3 seconds
+                reconnectTimer = setTimeout(connectWebSocket, 3000);
+            };
+        }
+
+        // Handle WebSocket messages
+        function handleWebSocketMessage(message) {
+            const { type, data } = message;
+
+            switch (type) {
+                case 'initial_state':
+                    metrics = data.metrics || {};
+                    marketOpps = data.market_opportunities || [];
+                    executableTxs = data.executable_txs || [];
+                    recentExecs = data.recent_executions || [];
+                    updateAllDisplays();
+                    break;
+
+                case 'metrics_update':
+                    metrics = data;
+                    updateMetrics();
+                    break;
+
+                case 'market_opportunity':
+                    marketOpps.unshift(data);
+                    if (marketOpps.length > 100) marketOpps.pop();
+                    updateMarketOpportunities();
+                    break;
+
+                case 'executable_tx':
+                    executableTxs.unshift(data);
+                    if (executableTxs.length > 50) executableTxs.pop();
+                    updateExecutableTxs();
+                    break;
+
+                case 'execution_result':
+                    recentExecs.unshift(data);
+                    if (recentExecs.length > 100) recentExecs.pop();
+                    updateRecentExecutions();
+                    updateLiveExecutions();
+                    // Remove from executable queue if it was there
+                    executableTxs = executableTxs.filter(tx => tx.id !== data.id);
+                    updateExecutableTxs();
+                    break;
+
+                case 'control_response':
+                    showNotification(data.success ? 'success' : 'error', data.message);
+                    break;
+            }
+        }
+
+        // Update connection status
+        function updateConnectionStatus(status) {
+            const statusDot = document.getElementById('statusDot');
+            const statusText = document.getElementById('statusText');
+
+            statusDot.className = 'status-dot';
+            
+            switch (status) {
+                case 'OPERATIONAL':
+                    statusDot.classList.add('operational');
+                    statusText.textContent = 'Operational';
+                    break;
+                case 'DISCONNECTED':
+                    statusDot.classList.add('degraded');
+                    statusText.textContent = 'Reconnecting...';
+                    break;
+                case 'ERROR':
+                    statusDot.classList.add('critical');
+                    statusText.textContent = 'Connection Error';
+                    break;
+            }
+        }
+
+        // Update all displays
+        function updateAllDisplays() {
+            updateMetrics();
+            updateMarketOpportunities();
+            updateExecutableTxs();
+            updateRecentExecutions();
+            updateLiveExecutions();
+        }
+
+        // Update metrics
+        function updateMetrics() {
+            document.getElementById('totalProfit').textContent = `$${metrics.total_profit?.toFixed(2) || '0.00'}`;
+            document.getElementById('totalGas').textContent = `$${metrics.total_gas?.toFixed(2) || '0.00'}`;
+            
+            const netProfit = metrics.net_profit || 0;
+            const netProfitEl = document.getElementById('netProfit');
+            netProfitEl.textContent = `$${netProfit.toFixed(2)}`;
+            netProfitEl.className = 'metric-value ' + (netProfit >= 0 ? 'positive' : 'negative');
+
+            document.getElementById('txsExecuted').textContent = metrics.txs_executed || 0;
+            
+            const successRate = metrics.success_rate || 0;
+            const successRateEl = document.getElementById('successRate');
+            successRateEl.textContent = `${successRate.toFixed(1)}%`;
+            successRateEl.className = 'metric-value ' + (successRate >= 70 ? 'positive' : successRate >= 50 ? 'warning' : 'negative');
+
+            const uptime = metrics.uptime || 0;
+            const hours = Math.floor(uptime / 3600);
+            const minutes = Math.floor((uptime % 3600) / 60);
+            const seconds = uptime % 60;
+            document.getElementById('uptime').textContent = `${hours}h ${minutes}m ${seconds}s`;
+
+            document.getElementById('oppsFound').textContent = metrics.opportunities_found || 0;
+            
+            const gasPrice = metrics.current_gas_price || 0;
+            const gasPriceEl = document.getElementById('gasPrice');
+            gasPriceEl.textContent = `${gasPrice.toFixed(2)} Gwei`;
+            gasPriceEl.className = 'metric-value ' + (gasPrice < 100 ? 'positive' : gasPrice < 150 ? 'warning' : 'negative');
+
+            // Analytics page
+            document.getElementById('avgProfitPerTx').textContent = `$${metrics.avg_profit_per_tx?.toFixed(2) || '0.00'}`;
+            document.getElementById('totalScans').textContent = metrics.total_scans || 0;
+            
+            const conversionRate = metrics.opportunities_found > 0 
+                ? (metrics.txs_executed / metrics.opportunities_found * 100) 
+                : 0;
+            document.getElementById('conversionRate').textContent = `${conversionRate.toFixed(2)}%`;
+        }
+
+        // Update market opportunities
+        function updateMarketOpportunities() {
+            const container = document.getElementById('marketOpportunities');
+            
+            if (marketOpps.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🔍</div>
+                        <p>No opportunities detected yet</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">Scanning markets...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Chain</th>
+                            <th>Token Pair</th>
+                            <th>Strategy</th>
+                            <th>DEX A → B</th>
+                            <th>Spread</th>
+                            <th>Profit</th>
+                            <th>Gas</th>
+                            <th>Net</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${marketOpps.map(opp => `
+                            <tr>
+                                <td>${formatTime(opp.timestamp)}</td>
+                                <td>${opp.chain}</td>
+                                <td>${opp.token_pair}</td>
+                                <td>${opp.strategy}</td>
+                                <td style="font-size: 0.85em;">${opp.dex_a} → ${opp.dex_b}</td>
+                                <td>${opp.spread_bps} bps</td>
+                                <td class="profit-positive">$${opp.profit_usd.toFixed(2)}</td>
+                                <td>$${opp.gas_cost.toFixed(2)}</td>
+                                <td class="${opp.net_profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                    $${opp.net_profit.toFixed(2)}
+                                </td>
+                                <td>
+                                    ${opp.executable 
+                                        ? '<span class="status-badge success">EXECUTABLE</span>' 
+                                        : '<span class="status-badge">ANALYZED</span>'}
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Update executable transactions
+        function updateExecutableTxs() {
+            const container = document.getElementById('executableTransactions');
+            const countEl = document.getElementById('executableCount');
+            
+            countEl.textContent = `${executableTxs.length} Ready`;
+
+            if (executableTxs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">⚡</div>
+                        <p>No executable transactions in queue</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">Waiting for profitable opportunities...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Queued</th>
+                            <th>Chain</th>
+                            <th>Token Pair</th>
+                            <th>Strategy</th>
+                            <th>Expected Profit</th>
+                            <th>Est. Gas</th>
+                            <th>Net Profit</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${executableTxs.map(tx => `
+                            <tr>
+                                <td>${formatTime(tx.queued_at)}</td>
+                                <td>${tx.chain}</td>
+                                <td>${tx.token_pair}</td>
+                                <td>${tx.strategy}</td>
+                                <td class="profit-positive">$${tx.profit_usd.toFixed(2)}</td>
+                                <td>$${tx.gas_cost.toFixed(2)}</td>
+                                <td class="profit-positive">$${tx.net_profit.toFixed(2)}</td>
+                                <td>
+                                    <span class="status-badge pending">PENDING EXECUTION</span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Update recent executions (overview page)
+        function updateRecentExecutions() {
+            const container = document.getElementById('recentExecutions');
+            
+            if (recentExecs.length === 0) {
+                container.innerHTML = `
+                    <div class="loading">
+                        <div class="spinner"></div>
+                        <p>Waiting for executions...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Time</th>
+                            <th>Chain</th>
+                            <th>Strategy</th>
+                            <th>Profit</th>
+                            <th>Gas</th>
+                            <th>Net</th>
+                            <th>TX Hash</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recentExecs.slice(0, 10).map(exec => `
+                            <tr>
+                                <td>${formatTime(exec.executed_at)}</td>
+                                <td>${exec.chain}</td>
+                                <td>${exec.strategy}</td>
+                                <td class="profit-positive">$${exec.profit_usd.toFixed(2)}</td>
+                                <td>$${exec.gas_cost.toFixed(2)}</td>
+                                <td class="${exec.actual_profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                    $${exec.actual_profit.toFixed(2)}
+                                </td>
+                                <td>
+                                    <span class="hash hash-short" title="${exec.tx_hash}">
+                                        ${shortenHash(exec.tx_hash)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${exec.status === 'SUCCESS' ? 'success' : 'failed'}">
+                                        ${exec.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Update live executions (live execution page)
+        function updateLiveExecutions() {
+            const container = document.getElementById('liveExecutions');
+            
+            if (recentExecs.length === 0) {
+                container.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">🎯</div>
+                        <p>No recent executions</p>
+                        <p style="font-size: 0.85em; margin-top: 10px;">Executions will appear here as they happen...</p>
+                    </div>
+                `;
+                return;
+            }
+
+            const html = `
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>Executed At</th>
+                            <th>Chain</th>
+                            <th>Token Pair</th>
+                            <th>Strategy</th>
+                            <th>DEX Route</th>
+                            <th>Expected Profit</th>
+                            <th>Actual Profit</th>
+                            <th>Gas Used</th>
+                            <th>TX Hash</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        ${recentExecs.map(exec => `
+                            <tr>
+                                <td>${formatTime(exec.executed_at)}</td>
+                                <td>${exec.chain}</td>
+                                <td>${exec.token_pair}</td>
+                                <td>${exec.strategy}</td>
+                                <td style="font-size: 0.85em;">${exec.dex_a} → ${exec.dex_b}</td>
+                                <td class="profit-positive">$${exec.profit_usd.toFixed(2)}</td>
+                                <td class="${exec.actual_profit >= 0 ? 'profit-positive' : 'profit-negative'}">
+                                    $${exec.actual_profit.toFixed(2)}
+                                </td>
+                                <td>${exec.gas_used?.toLocaleString() || 'N/A'}</td>
+                                <td>
+                                    <span class="hash hash-short" title="${exec.tx_hash}">
+                                        ${shortenHash(exec.tx_hash)}
+                                    </span>
+                                </td>
+                                <td>
+                                    <span class="status-badge ${exec.status === 'SUCCESS' ? 'success' : 'failed'}">
+                                        ${exec.status}
+                                    </span>
+                                </td>
+                            </tr>
+                        `).join('')}
+                    </tbody>
+                </table>
+            `;
+            
+            container.innerHTML = html;
+        }
+
+        // Utility functions
+        function formatTime(timestamp) {
+            if (!timestamp) return 'N/A';
+            const date = new Date(timestamp);
+            return date.toLocaleTimeString();
+        }
+
+        function shortenHash(hash) {
+            if (!hash) return 'N/A';
+            return `${hash.substr(0, 6)}...${hash.substr(-4)}`;
+        }
+
+        function showNotification(type, message) {
+            // Simple notification - could be enhanced with a toast library
+            alert(`${type.toUpperCase()}: ${message}`);
+        }
+
+        // Navigation
+        document.querySelectorAll('.nav-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                const targetPage = tab.dataset.page;
+                
+                // Update active tab
+                document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                
+                // Show target page
+                document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+                document.getElementById(targetPage).classList.add('active');
+            });
+        });
+
+        // Control buttons
+        document.getElementById('btnResume').addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'control', action: 'resume_scanning' }));
+            }
+        });
+
+        document.getElementById('btnPause').addEventListener('click', () => {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'control', action: 'pause_scanning' }));
+            }
+        });
+
+        document.getElementById('btnEmergencyStop').addEventListener('click', () => {
+            if (confirm('Are you sure you want to emergency stop the system?')) {
+                if (ws && ws.readyState === WebSocket.OPEN) {
+                    ws.send(JSON.stringify({ type: 'control', action: 'emergency_stop' }));
+                }
+            }
+        });
+
+        // Filters
+        document.getElementById('btnApplyFilters').addEventListener('click', () => {
+            const filters = {
+                min_profit: document.getElementById('filterMinProfit').value,
+                chain: document.getElementById('filterChain').value,
+                strategy: document.getElementById('filterStrategy').value
+            };
+            
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                ws.send(JSON.stringify({ type: 'filter', filters }));
+            }
+        });
+
+        // Initialize
+        connectWebSocket();
+    </script>
+</body>
+</html>

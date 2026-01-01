@@ -25,6 +25,8 @@
     "dashboard": "python3 live_operational_dashboard.py",
     "dashboard:web": "python3 -m http.server 3001",
     "dashboard:launch": "./launch_dashboard.sh",
+    "dashboard:interactive": "./launch_interactive_dashboard.sh",
+    "dashboard:multi": "python3 dashboard_server.py",
     "monitor": "python3 live_operational_dashboard.py"
   },
   "keywords": [
