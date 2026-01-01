@@ -1011,7 +1011,7 @@ PERFORMANCE TARGETS:
 • Execution success rate: 80-90%
 • Expected profit: $200-800/day (moderate conditions)
 • Gas costs: $50-150/day
-• Net ROI: 500%+
+• Net ROI: up to ~500% in historical best-case simulations; actual ROI will vary and is not guaranteed
 ```
 
 ---
