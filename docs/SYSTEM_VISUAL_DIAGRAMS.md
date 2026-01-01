@@ -945,9 +945,9 @@ Immutability Guarantees:
     │  • Update execution time average                                 │
     │                                                                   │
     │  Circuit Breaker Check:                                           │
-    │  • IF consecutive failures > 10:                                 │
+    │  • IF consecutive failures > 10 (configurable threshold):        │
     │    → Activate circuit breaker                                    │
-    │    → Pause execution for 60 seconds                              │
+    │    → Pause execution for 60 seconds (configurable backoff)       │
     │    → Alert operator                                              │
     └───────────────────────────┬──────────────────────────────────────┘
                                 │
