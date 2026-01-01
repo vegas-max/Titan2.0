@@ -210,7 +210,7 @@ class TitanBot {
             
             this.paperTradeCount++;
             const tradeId = `PAPER-${this.paperTradeCount}-${Date.now()}`;
-            const tokenSymbol = signal.token_symbol || signal.token || 'UNKNOWN';
+            const tokenSymbol = signal.token_symbol || signal.token;
             
             // Log execution start
             this.display.logExecutionStart(tradeId, tokenSymbol, signal.chainId, signal.amount, 'PAPER');

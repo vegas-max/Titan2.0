@@ -3,7 +3,8 @@
  * Test script for JavaScript terminal display functionality
  */
 
-const { terminalDisplay } = require('./offchain/execution/terminal_display.js');
+const path = require('path');
+const { terminalDisplay } = require(path.join(__dirname, 'offchain', 'execution', 'terminal_display.js'));
 
 function sleep(ms) {
     return new Promise(resolve => setTimeout(resolve, ms));

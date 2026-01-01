@@ -362,7 +362,20 @@ class TerminalDisplay:
 _terminal_display = None
 
 def get_terminal_display() -> TerminalDisplay:
-    """Get or create the global terminal display instance"""
+    """
+    Get or create the global terminal display instance.
+    
+    This function implements the singleton pattern to ensure only one
+    terminal display instance exists throughout the application lifecycle.
+    
+    Returns:
+        TerminalDisplay: The global singleton terminal display instance.
+    
+    Example:
+        >>> display = get_terminal_display()
+        >>> display.print_header("PAPER")
+        >>> display.log_opportunity_scan("USDC", 137, "UNIV3", "SUSHI", 1000)
+    """
     global _terminal_display
     if _terminal_display is None:
         _terminal_display = TerminalDisplay()

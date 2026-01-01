@@ -172,10 +172,13 @@ class TerminalDisplay {
         
         if (Object.keys(details).length > 0) {
             const detailParts = Object.entries(details).map(([k, v]) => {
-                if (typeof v === 'number') {
+                if (v === null || v === undefined) {
+                    return `${k}=N/A`;
+                } else if (typeof v === 'number' && !isNaN(v)) {
                     return `${k}=${v.toFixed(2)}`;
+                } else {
+                    return `${k}=${v}`;
                 }
-                return `${k}=${v}`;
             });
             if (detailParts.length > 0) {
                 msg += ` | ${detailParts.join(', ')}`;
