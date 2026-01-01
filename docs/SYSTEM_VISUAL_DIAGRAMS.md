@@ -629,7 +629,7 @@ Immutability Guarantees:
     │  • loanAmount: Loan amount in token units                        │
     │  • routeData: Encoded route (above)                              │
     │                                                                   │
-    │  Output (Import):                                                 │
+    │  Output:                                                          │
     │  • txRequest: Populated transaction object                       │
     │  • gasLimit: Calculated gas limit                                │
     │  • maxFeePerGas: EIP-1559 max fee                                │
