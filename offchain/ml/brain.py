@@ -14,6 +14,7 @@ from offchain.core.config import CHAINS, BALANCER_V3_VAULT, DEX_ROUTERS
 from offchain.core.token_discovery import TokenDiscovery
 from routing.bridge_manager import BridgeManager
 from offchain.core.titan_commander_core import TitanCommander
+from offchain.core.terminal_display import get_terminal_display
 
 # The Cortex (AI Layer)
 from offchain.ml.cortex.forecaster import MarketForecaster
@@ -98,6 +99,9 @@ class OmniBrain:
         self.signals_dir = Path('signals/outgoing')
         self.signals_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Signal output directory: {self.signals_dir}")
+        
+        # 4. Terminal Display
+        self.display = get_terminal_display()
         
         # 4. Wallet Configuration
         import os
@@ -438,6 +442,19 @@ class OmniBrain:
                         # Found profitable trade at this size!
                         logger.info(f"💰 PROFIT: {token_sym} ${target_trade_usd} {route_name} = ${result['net_profit']:.2f}")
                         
+                        # Log profitable opportunity to terminal
+                        self.display.log_opportunity_scan(
+                            token=token_sym,
+                            chain_id=src_chain,
+                            dex1=dex1,
+                            dex2=dex2,
+                            amount_usd=float(cost_usd),
+                            profitable=True,
+                            profit_usd=float(result['net_profit']),
+                            gas_gwei=gas_price_gwei,
+                            details=f"Size: ${target_trade_usd}"
+                        )
+                        
                         # Continue with signal generation...
                         break  # Use this size
                         
@@ -490,9 +507,25 @@ class OmniBrain:
             try:
                 exec_params = self.optimizer.recommend_parameters(src_chain, "MEDIUM")
                 
+                # Log AI tuning decision
+                self.display.log_decision(
+                    decision_type="AI_TUNE",
+                    token=token_sym,
+                    chain_id=src_chain,
+                    reason="AI-optimized execution parameters",
+                    details=exec_params
+                )
+                
                 # Validate AI parameters
                 if exec_params.get('slippage', 0) > self.MAX_SLIPPAGE_BPS:
                     logger.warning(f"AI slippage {exec_params['slippage']} exceeds max {self.MAX_SLIPPAGE_BPS}, capping")
+                    self.display.log_decision(
+                        decision_type="SLIPPAGE",
+                        token=token_sym,
+                        chain_id=src_chain,
+                        reason=f"Capping slippage from {exec_params['slippage']} to {self.MAX_SLIPPAGE_BPS} BPS",
+                        details={'max_allowed': self.MAX_SLIPPAGE_BPS}
+                    )
                     exec_params['slippage'] = self.MAX_SLIPPAGE_BPS
                 
                 max_priority = float(self.MAX_GAS_PRICE_GWEI) / 2
@@ -531,6 +564,29 @@ class OmniBrain:
             logger.info(f"   ⛽ Gas: {chain_gas_map.get(src_chain, 0):.1f} Gwei")
             self.consecutive_failures = 0
             
+            # Log signal generation to terminal display
+            protocol_names = [dex1, dex2]
+            self.display.log_signal_generated(
+                token=token_sym,
+                chain_id=src_chain,
+                profit_usd=float(result['net_profit']),
+                route=protocol_names,
+                gas_gwei=float(chain_gas_map.get(src_chain, 0)),
+                execution_params=exec_params
+            )
+            
+            # Log approval decision
+            self.display.log_decision(
+                decision_type="APPROVE",
+                token=token_sym,
+                chain_id=src_chain,
+                reason=f"Profitable opportunity approved for execution",
+                details={
+                    'profit_usd': float(result['net_profit']),
+                    'gas_gwei': float(chain_gas_map.get(src_chain, 0))
+                }
+            )
+            
             # Write signal to file for bot.js consumption
             self._write_signal_to_file(signal)
             
@@ -563,6 +619,11 @@ class OmniBrain:
     def scan_loop(self):
         logger.info("🚀 Titan Brain: Engaging Hyper-Parallel Scan Loop...")
         
+        # Print header in terminal display
+        import os
+        execution_mode = os.getenv('EXECUTION_MODE', 'PAPER').upper()
+        self.display.print_header(mode=execution_mode)
+        
         # Log initial coverage stats
         total_tokens = sum(len(tokens) for tokens in self.inventory.values())
         total_chains = len(self.inventory)
@@ -571,15 +632,27 @@ class OmniBrain:
             chain_name = CHAINS.get(chain_id, {}).get('name', f'Chain {chain_id}')
             logger.info(f"   • {chain_name}: {len(tokens)} tokens")
         
+        scan_count = 0
+        last_stats_print = time.time()
+        
         while True:
             try:
                 # Circuit breaker check
                 if self.consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
                     logger.error(f"🛑 CIRCUIT BREAKER TRIGGERED: {self.consecutive_failures} consecutive failures")
                     logger.info("⏸️ Pausing for 60 seconds before retry...")
+                    self.display.log_error("BRAIN", "Circuit breaker triggered",
+                                          f"{self.consecutive_failures} consecutive failures")
                     time.sleep(60)
                     self.consecutive_failures = 0  # Reset after cooldown
                     continue
+                
+                # Print stats every 60 seconds
+                if time.time() - last_stats_print > 60:
+                    self.display.print_stats_bar()
+                    last_stats_print = time.time()
+                
+                scan_count += 1
                 
                 # 1. GAS CHECK with error handling
                 try:
@@ -592,6 +665,14 @@ class OmniBrain:
                             chain_id = gas_futures[f]
                             gas_price = f.result()
                             chain_gas_map[chain_id] = gas_price
+                            
+                            # Log gas updates to terminal display (throttled)
+                            if scan_count % 10 == 0:  # Every 10 scans
+                                self.display.log_gas_update(
+                                    chain_id=chain_id,
+                                    gas_gwei=gas_price,
+                                    threshold=float(self.MAX_GAS_PRICE_GWEI)
+                                )
                         except Exception as e:
                             logger.warning(f"Failed to get gas price for chain: {e}")
                             

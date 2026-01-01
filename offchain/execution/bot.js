@@ -7,6 +7,7 @@ const { BloxRouteManager } = require('./bloxroute_manager');
 const { AggregatorSelector } = require('./aggregator_selector');
 const { OmniSDKEngine } = require('./omniarb_sdk_engine');
 const { LifiExecutionEngine } = require('./lifi_manager');
+const { terminalDisplay } = require('./terminal_display');
 
 const SIGNALS_DIR = path.join(__dirname, '..', 'signals', 'outgoing');
 const PROCESSED_DIR = path.join(__dirname, '..', 'signals', 'processed');
@@ -44,6 +45,7 @@ class TitanBot {
         this.paperTrades = [];
         this.paperTradeCount = 0;
         this.processedSignals = new Set();
+        this.display = terminalDisplay;
         
         // Ensure directories exist
         if (!fs.existsSync(this.signalsDir)) {
@@ -66,6 +68,9 @@ class TitanBot {
     }
 
     async init() {
+        // Print header with terminal display
+        this.display.printHeader(this.executionMode);
+        
         console.log("🤖 Titan Bot Starting...");
         console.log(`📋 Execution Mode: ${this.executionMode}`);
         
@@ -83,17 +88,22 @@ class TitanBot {
         // Validate configuration (only required for LIVE mode)
         if (this.executionMode === 'LIVE') {
             if (!PRIVATE_KEY || !/^0x[0-9a-fA-F]{64}$/.test(PRIVATE_KEY)) {
+                this.display.logError('BOT', 'Invalid private key format in .env', 
+                    'Must be 64 hex characters with 0x prefix');
                 console.error('❌ CRITICAL: Invalid private key format in .env');
                 console.error('   Must be 64 hex characters with 0x prefix (e.g., 0x1234...)');
                 process.exit(1);
             }
             
             if (!EXECUTOR_ADDR || !/^0x[0-9a-fA-F]{40}$/.test(EXECUTOR_ADDR)) {
+                this.display.logError('BOT', 'Invalid executor address format in .env',
+                    'Must be 40 hex characters with 0x prefix');
                 console.error('❌ CRITICAL: Invalid executor address format in .env');
                 console.error('   Must be 40 hex characters with 0x prefix (e.g., 0xabcd...)');
                 process.exit(1);
             }
         } else {
+            this.display.logInfo("Paper mode: Skipping wallet validation");
             console.log("ℹ️  Paper mode: Skipping wallet validation");
         }
         
@@ -122,10 +132,19 @@ class TitanBot {
      */
     startSignalWatcher() {
         console.log("👀 Starting signal file watcher...");
+        this.display.logInfo("Signal monitoring started");
+        
+        let lastStatsPrint = Date.now();
         
         // Check for signals every second
         setInterval(() => {
             try {
+                // Print stats every 60 seconds
+                if (Date.now() - lastStatsPrint > 60000) {
+                    this.display.printStatsBar();
+                    lastStatsPrint = Date.now();
+                }
+                
                 const files = fs.readdirSync(this.signalsDir)
                     .filter(f => f.endsWith('.json') && !this.processedSignals.has(f))
                     .sort(); // Process oldest first
@@ -135,6 +154,7 @@ class TitanBot {
                 }
             } catch (error) {
                 console.error('Error reading signals directory:', error.message);
+                this.display.logError('WATCHER', 'Error reading signals directory', error.message);
             }
         }, 1000);
     }
@@ -153,6 +173,12 @@ class TitanBot {
             const signalData = fs.readFileSync(filepath, 'utf8');
             const signal = JSON.parse(signalData);
             
+            // Log signal reception
+            const signalId = path.basename(filename, '.json');
+            const profitUSD = signal.metrics?.profit_usd || 0;
+            const tokenSymbol = signal.token_symbol || signal.token || 'UNKNOWN';
+            this.display.logSignalReceived(signalId, tokenSymbol, signal.chainId, profitUSD);
+            
             // Execute trade (paper or live)
             await this.executeTrade(signal);
             
@@ -162,6 +188,7 @@ class TitanBot {
             
         } catch (error) {
             console.error(`❌ Error processing signal file ${filename}:`, error.message);
+            this.display.logError('BOT', `Error processing signal ${filename}`, error.message);
             // Remove from processed set so we can retry
             this.processedSignals.delete(filename);
         }
@@ -177,17 +204,22 @@ class TitanBot {
             // Validate signal
             if (!signal || !signal.chainId || !signal.token || !signal.amount) {
                 console.error('❌ Invalid signal structure:', signal);
+                this.display.logError('PAPER_TRADE', 'Invalid signal structure');
                 return;
             }
             
             this.paperTradeCount++;
             const tradeId = `PAPER-${this.paperTradeCount}-${Date.now()}`;
+            const tokenSymbol = signal.token_symbol || signal.token;
+            
+            // Log execution start
+            this.display.logExecutionStart(tradeId, tokenSymbol, signal.chainId, signal.amount, 'PAPER');
             
             console.log(`\n📝 Paper Trade #${this.paperTradeCount} - ${new Date().toISOString()}`);
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log(`   Trade ID: ${tradeId}`);
             console.log(`   Chain: ${signal.chainId}`);
-            console.log(`   Token: ${signal.token}`);
+            console.log(`   Token: ${tokenSymbol}`);
             console.log(`   Amount: ${signal.amount}`);
             console.log(`   Type: ${signal.type || 'INTRA_CHAIN'}`);
             console.log(`   Expected Profit: $${signal.metrics?.profit_usd?.toFixed(2) || 'N/A'}`);
@@ -195,13 +227,16 @@ class TitanBot {
             // Simulate execution delay (realistic timing)
             await new Promise(resolve => setTimeout(resolve, 100));
             
+            const duration = Date.now() - startTime;
+            const profitUSD = signal.metrics?.profit_usd || 0;
+            
             // Record paper trade
             const paperTrade = {
                 id: tradeId,
                 timestamp: new Date().toISOString(),
                 signal: signal,
                 status: 'SIMULATED',
-                duration_ms: Date.now() - startTime,
+                duration_ms: duration,
                 mode: 'PAPER'
             };
             
@@ -213,11 +248,15 @@ class TitanBot {
             }
             
             console.log(`   Status: ✅ SIMULATED`);
-            console.log(`   Duration: ${paperTrade.duration_ms}ms`);
+            console.log(`   Duration: ${duration}ms`);
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+            
+            // Log execution complete
+            this.display.logExecutionComplete(tradeId, 'SIMULATED', duration, profitUSD);
             
         } catch (e) {
             console.error('❌ Paper trade error:', e.message);
+            this.display.logError('PAPER_TRADE', e.message);
         }
     }
 
