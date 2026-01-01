@@ -655,7 +655,7 @@ Immutability Guarantees:
     │                                                                   │
     │  Output:                                                          │
     │  • signedTx: Signed transaction (RLP encoded)                    │
-    │  Usage: Submitted to Transaction Broadcast Layer                  │
+    │  • Submitted to Transaction Broadcast Layer                      │
     └───────────────────────────┬──────────────────────────────────────┘
                                 │
                                 ▼
