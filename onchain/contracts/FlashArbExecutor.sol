@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
 
+import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+
 /*//////////////////////////////////////////////////////////////
                             INTERFACES
 //////////////////////////////////////////////////////////////*/
@@ -9,6 +11,7 @@ interface IERC20 {
     function balanceOf(address) external view returns (uint256);
     function transfer(address to, uint256 amount) external returns (bool);
     function approve(address spender, uint256 amount) external returns (bool);
+    function allowance(address owner, address spender) external view returns (uint256);
 }
 
 interface IBalancerVault {
@@ -61,7 +64,7 @@ interface IUniswapV3Router {
                     PRODUCTION FLASH ARB EXECUTOR
 //////////////////////////////////////////////////////////////*/
 
-contract FlashArbExecutor {
+contract FlashArbExecutor is ReentrancyGuard {
     /*//////////////////////////////////////////////////////////////
                                 ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -77,6 +80,8 @@ contract FlashArbExecutor {
     error InvalidDex(uint8 dexId);
     error NotVault();
     error NotPool();
+    error InvalidToken();
+    error InvalidAmount();
 
     /*//////////////////////////////////////////////////////////////
                             CONSTANTS
@@ -161,7 +166,10 @@ contract FlashArbExecutor {
         address loanToken,
         uint256 loanAmount,
         bytes calldata plan
-    ) external onlyOwner {
+    ) external onlyOwner nonReentrant {
+        // CRITICAL FIX #4: Pre-validate BEFORE taking flash loan
+        if (loanToken == address(0)) revert InvalidToken();
+        if (loanAmount == 0) revert InvalidAmount();
         if (plan.length < 60) revert InvalidPlan();
 
         if (providerId == PROVIDER_BALANCER) {
@@ -220,7 +228,8 @@ contract FlashArbExecutor {
         uint256[] memory amounts,
         uint256[] memory feeAmounts,
         bytes memory userData
-    ) external {
+    ) external nonReentrant {
+        // CRITICAL FIX #2: Add reentrancy protection
         if (msg.sender != address(balancerVault)) revert NotVault();
         if (tokens.length != 1 || amounts.length != 1 || feeAmounts.length != 1) revert FlashLoanFailed();
 
@@ -250,7 +259,8 @@ contract FlashArbExecutor {
         uint256 premium,
         address initiator,
         bytes calldata params
-    ) external returns (bool) {
+    ) external nonReentrant returns (bool) {
+        // CRITICAL FIX #2: Add reentrancy protection
         if (msg.sender != address(aavePool)) revert NotPool();
         if (initiator != address(this)) revert FlashLoanFailed();
 
@@ -297,11 +307,12 @@ contract FlashArbExecutor {
 
         baseToken; // Silence warning
 
+        // CRITICAL FIX #1: Check deadline BEFORE any swaps
         if (block.timestamp > deadline) revert DeadlineExpired();
 
         uint256 cursor = 60;
         for (uint8 i = 0; i < stepCount; i++) {
-            cursor = _executeStep(plan, cursor, i);
+            cursor = _executeStep(plan, cursor, i, deadline);  // Pass deadline to steps
         }
 
         uint256 endBal = IERC20(loanToken).balanceOf(address(this));
@@ -324,7 +335,8 @@ contract FlashArbExecutor {
     function _executeStep(
         bytes memory plan,
         uint256 cursor,
-        uint8 stepIndex
+        uint8 stepIndex,
+        uint40 deadline  // CRITICAL FIX #1: Accept deadline parameter
     ) internal returns (uint256 newCursor) {
         if (cursor + 108 > plan.length) revert InvalidPlan();
 
@@ -379,7 +391,8 @@ contract FlashArbExecutor {
             tokenOut,
             amountIn,
             minOut,
-            auxData
+            auxData,
+            deadline  // CRITICAL FIX #1: Pass deadline to swap functions
         );
 
         emit StepExecuted(stepIndex, dexId, tokenIn, tokenOut, amountIn, amountOut);
@@ -397,12 +410,13 @@ contract FlashArbExecutor {
         address tokenOut,
         uint256 amountIn,
         uint256 minOut,
-        bytes memory auxData
+        bytes memory auxData,
+        uint40 deadline  // CRITICAL FIX #1: Accept deadline parameter
     ) internal returns (uint256 amountOut) {
         if (dexId == DEX_UNIV2_QUICKSWAP || dexId == DEX_UNIV2_SUSHISWAP) {
-            return _swapUniV2(dexId, tokenIn, tokenOut, amountIn, minOut, auxData);
+            return _swapUniV2(dexId, tokenIn, tokenOut, amountIn, minOut, auxData, deadline);
         } else if (dexId == DEX_UNIV3) {
-            return _swapUniV3(tokenIn, tokenOut, amountIn, minOut, auxData);
+            return _swapUniV3(tokenIn, tokenOut, amountIn, minOut, auxData, deadline);
         } else {
             revert InvalidDex(dexId);
         }
@@ -414,7 +428,8 @@ contract FlashArbExecutor {
         address tokenOut,
         uint256 amountIn,
         uint256 minOut,
-        bytes memory auxData
+        bytes memory auxData,
+        uint40 deadline  // CRITICAL FIX #1: Accept deadline parameter
     ) internal returns (uint256 amountOut) {
         address router = dexRouter[dexId];
         if (router == address(0)) revert InvalidDex(dexId);
@@ -423,15 +438,23 @@ contract FlashArbExecutor {
         if (path.length < 2) revert InvalidPlan();
         if (path[0] != tokenIn || path[path.length - 1] != tokenOut) revert InvalidPlan();
 
-        IERC20(tokenIn).approve(router, amountIn);
+        // CRITICAL FIX #3: Optimize approvals - check existing allowance first
+        uint256 currentAllowance = IERC20(tokenIn).allowance(address(this), router);
+        if (currentAllowance < amountIn) {
+            // Some tokens require resetting to 0 first
+            if (currentAllowance > 0) {
+                IERC20(tokenIn).approve(router, 0);
+            }
+            IERC20(tokenIn).approve(router, amountIn);
+        }
 
-        // FIX 2: Removed redundant manual check. The router enforces minOut.
+        // CRITICAL FIX #1: Use actual deadline instead of block.timestamp
         uint256[] memory amounts = IUniswapV2Router(router).swapExactTokensForTokens(
             amountIn,
             minOut,
             path,
             address(this),
-            block.timestamp
+            deadline  // Use plan deadline, not block.timestamp
         );
 
         return amounts[amounts.length - 1];
@@ -442,21 +465,30 @@ contract FlashArbExecutor {
         address tokenOut,
         uint256 amountIn,
         uint256 minOut,
-        bytes memory auxData
+        bytes memory auxData,
+        uint40 deadline  // CRITICAL FIX #1: Accept deadline parameter
     ) internal returns (uint256 amountOut) {
         address router = dexRouter[DEX_UNIV3];
         if (router == address(0)) revert InvalidDex(DEX_UNIV3);
 
         (uint24 fee, uint160 sqrtPriceLimitX96) = abi.decode(auxData, (uint24, uint160));
 
-        IERC20(tokenIn).approve(router, amountIn);
+        // CRITICAL FIX #3: Optimize approvals - check existing allowance first
+        uint256 currentAllowance = IERC20(tokenIn).allowance(address(this), router);
+        if (currentAllowance < amountIn) {
+            // Some tokens require resetting to 0 first
+            if (currentAllowance > 0) {
+                IERC20(tokenIn).approve(router, 0);
+            }
+            IERC20(tokenIn).approve(router, amountIn);
+        }
 
         IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router.ExactInputSingleParams({
             tokenIn: tokenIn,
             tokenOut: tokenOut,
             fee: fee,
             recipient: address(this),
-            deadline: block.timestamp,
+            deadline: deadline,  // CRITICAL FIX #1: Use plan deadline, not block.timestamp
             amountIn: amountIn,
             amountOutMinimum: minOut,
             sqrtPriceLimitX96: sqrtPriceLimitX96

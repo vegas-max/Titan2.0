@@ -1,3 +1,4 @@
+import asyncio
 import time
 import logging
 import json
@@ -124,6 +125,7 @@ class OmniBrain:
         self.MAX_SLIPPAGE_BPS = 100  # Maximum 1% slippage allowed
         self.consecutive_failures = 0
         self.MAX_CONSECUTIVE_FAILURES = 10  # Circuit breaker threshold
+        self.scan_interval = 1  # CRITICAL FIX #9: Dynamic scan interval for graceful degradation
         
     def _cleanup_old_signals(self):
         """Clean up old signal files (keep last 100)"""
@@ -616,7 +618,11 @@ class OmniBrain:
         except Exception as e:
             logger.error(f"Failed to write signal file: {e}")
 
-    def scan_loop(self):
+    async def scan_loop(self):
+        """
+        CRITICAL FIX #5: Async scan loop with non-blocking sleep
+        Replaced synchronous time.sleep() with async asyncio.sleep() to prevent blocking
+        """
         logger.info("🚀 Titan Brain: Engaging Hyper-Parallel Scan Loop...")
         
         # Print header in terminal display
@@ -637,14 +643,17 @@ class OmniBrain:
         
         while True:
             try:
-                # Circuit breaker check
+                # CRITICAL FIX #9: Graceful degradation instead of full stop
                 if self.consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
-                    logger.error(f"🛑 CIRCUIT BREAKER TRIGGERED: {self.consecutive_failures} consecutive failures")
-                    logger.info("⏸️ Pausing for 60 seconds before retry...")
-                    self.display.log_error("BRAIN", "Circuit breaker triggered",
-                                          f"{self.consecutive_failures} consecutive failures")
-                    time.sleep(60)
+                    # Slow down instead of stopping completely
+                    self.scan_interval = min(self.scan_interval * 2, 30)  # Cap at 30 seconds
+                    logger.error(f"🛑 HIGH FAILURE RATE: {self.consecutive_failures} consecutive failures")
+                    logger.info(f"⏸️ Reducing scan frequency to {self.scan_interval}s for stability...")
+                    self.display.log_error("BRAIN", "High failure rate detected",
+                                          f"{self.consecutive_failures} consecutive failures - slowing down")
+                    await asyncio.sleep(self.scan_interval)  # CRITICAL FIX #5: Non-blocking sleep
                     self.consecutive_failures = 0  # Reset after cooldown
+                    self.scan_interval = 1  # Reset to normal speed
                     continue
                 
                 # Print stats every 60 seconds
@@ -678,12 +687,12 @@ class OmniBrain:
                             
                     if not chain_gas_map:
                         logger.warning("No gas prices available, waiting before retry")
-                        time.sleep(5)
+                        await asyncio.sleep(5)  # CRITICAL FIX #5: Non-blocking sleep
                         continue
                         
                 except Exception as e:
                     logger.error(f"Gas check failed: {e}")
-                    time.sleep(5)
+                    await asyncio.sleep(5)  # CRITICAL FIX #5: Non-blocking sleep
                     continue
 
                 # 2. FORECAST GUARD with validation
@@ -693,13 +702,13 @@ class OmniBrain:
                         # Check if gas price is within acceptable range
                         if poly_gas > float(self.MAX_GAS_PRICE_GWEI):
                             logger.warning(f"⚠️ Polygon gas price {poly_gas} exceeds maximum, waiting...")
-                            time.sleep(10)
+                            await asyncio.sleep(10)  # CRITICAL FIX #5: Non-blocking sleep
                             continue
                             
                         self.forecaster.ingest_gas(poly_gas)
                         if self.forecaster.should_wait():
                             logger.info("⏳ AI HOLD: Gas trend unfavorable.")
-                            time.sleep(2)
+                            await asyncio.sleep(2)  # CRITICAL FIX #5: Non-blocking sleep
                             continue
                 except Exception as e:
                     logger.warning(f"Gas forecast check failed: {e}")
@@ -710,13 +719,13 @@ class OmniBrain:
                     candidates = self._find_opportunities()
                     if not candidates:
                         logger.debug("No opportunities found in this cycle")
-                        time.sleep(5)
+                        await asyncio.sleep(5)  # CRITICAL FIX #5: Non-blocking sleep
                         continue
                     
                     logger.info(f"🔍 Found {len(candidates)} potential opportunities")
                 except Exception as e:
                     logger.error(f"Opportunity discovery failed: {e}")
-                    time.sleep(5)
+                    await asyncio.sleep(5)  # CRITICAL FIX #5: Non-blocking sleep
                     continue
 
                 # 4. PARALLEL EVALUATION with error handling
@@ -742,8 +751,8 @@ class OmniBrain:
                 except Exception as e:
                     logger.error(f"Parallel evaluation failed: {e}")
 
-                # Sleep between cycles
-                time.sleep(1)
+                # CRITICAL FIX #5: Non-blocking sleep between cycles
+                await asyncio.sleep(self.scan_interval)
                 
             except KeyboardInterrupt:
                 logger.info("🛑 Shutting down gracefully...")
@@ -751,9 +760,10 @@ class OmniBrain:
                 break
             except Exception as e:
                 logger.error(f"Unexpected error in scan loop: {e}")
-                time.sleep(5)
+                await asyncio.sleep(5)  # CRITICAL FIX #5: Non-blocking sleep
 
 if __name__ == "__main__":
     brain = OmniBrain()
     brain.initialize()
-    brain.scan_loop()
+    # CRITICAL FIX #5: Run async scan loop
+    asyncio.run(brain.scan_loop())
