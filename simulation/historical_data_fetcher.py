@@ -335,6 +335,48 @@ class HistoricalDataFetcher:
                    f"liquidity={len(snapshot['liquidity'])}")
         
         return snapshot
+    
+    def get_pair_reserves(
+        self, 
+        pair_address: str, 
+        block_number: int
+    ) -> Optional[Dict]:
+        """
+        Get pair reserves (wrapper for get_historical_pair_price).
+        
+        Args:
+            pair_address: DEX pair address
+            block_number: Block number
+            
+        Returns:
+            Dictionary with reserve data
+        """
+        price_data = self.get_historical_pair_price(pair_address, block_number)
+        if price_data:
+            return {
+                'token0_price': price_data[0],
+                'token1_price': price_data[1]
+            }
+        return None
+    
+    def get_token_balance(
+        self,
+        token_address: str,
+        holder_address: str,
+        block_number: int
+    ) -> Optional[float]:
+        """
+        Get token balance (wrapper for get_historical_token_balance).
+        
+        Args:
+            token_address: Token contract address
+            holder_address: Holder address
+            block_number: Block number
+            
+        Returns:
+            Token balance
+        """
+        return self.get_historical_token_balance(token_address, holder_address, block_number)
 
 
 def fetch_90_day_data(
