@@ -263,7 +263,8 @@
       "enabled": true,
       "providers": ["aave", "balancer", "dydx"],
       "max_loan_amount_usd": 1000000,
-      "safety_margin": 1.5
+      "safety_margin": 1.5,
+      "_comment": "CRITICAL: All arbitrage execution uses flash loans for zero-capital operation. This system requires NO working capital, only gas fees. Flash loans are borrowed and repaid within a single transaction."
     },
     "cross_chain_arbitrage": {
       "enabled": true,

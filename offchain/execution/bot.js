@@ -16,6 +16,12 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 // TITAN_EXECUTION_MODE takes precedence (set by orchestrator), fallback to EXECUTION_MODE (.env)
 const EXECUTION_MODE = (process.env.TITAN_EXECUTION_MODE || process.env.EXECUTION_MODE || 'PAPER').toUpperCase();
 
+// CRITICAL: Flash loan configuration - ensures 100% flash-funded execution
+// This system is designed to operate with ZERO capital requirements (only gas fees)
+// All arbitrage trades MUST use flash loans to maintain capital efficiency
+const FLASH_LOAN_ENABLED = process.env.FLASH_LOAN_ENABLED !== 'false'; // Default: true
+const FLASH_LOAN_PROVIDER = parseInt(process.env.FLASH_LOAN_PROVIDER || '1'); // 1=Balancer, 2=Aave
+
 const RPC_MAP = {
     1: process.env.RPC_ETHEREUM,
     137: process.env.RPC_POLYGON,
@@ -83,6 +89,27 @@ class TitanBot {
             console.log("🔴 LIVE MODE: Real blockchain execution enabled");
             console.log("   ⚠️  WARNING: Real funds will be used!");
         }
+        console.log("");
+        
+        // CRITICAL: Validate flash loan configuration
+        if (!FLASH_LOAN_ENABLED) {
+            console.error('❌ CRITICAL: Flash loans are DISABLED');
+            console.error('   This system requires 100% flash-funded execution!');
+            console.error('   Set FLASH_LOAN_ENABLED=true in .env file');
+            process.exit(1);
+        }
+        
+        if (FLASH_LOAN_PROVIDER !== 1 && FLASH_LOAN_PROVIDER !== 2) {
+            console.error('❌ CRITICAL: Invalid flash loan provider');
+            console.error(`   FLASH_LOAN_PROVIDER=${FLASH_LOAN_PROVIDER} is not valid`);
+            console.error('   Must be 1 (Balancer) or 2 (Aave)');
+            process.exit(1);
+        }
+        
+        console.log("⚡ Flash Loan Configuration:");
+        console.log(`   • Flash loans: ENABLED (mandatory for zero-capital operation)`);
+        console.log(`   • Provider: ${FLASH_LOAN_PROVIDER === 1 ? 'Balancer V3' : 'Aave V3'}`);
+        console.log(`   • Capital requirement: ZERO (only gas fees needed)`);
         console.log("");
         
         // Validate configuration (only required for LIVE mode)
@@ -377,7 +404,16 @@ class TitanBot {
             // 2. Build TX with validation
             let txRequest;
             try {
+                // CRITICAL: Always use flash loans for zero-capital execution
+                // This ensures 100% flash-funded operation (no wallet capital needed)
                 const contract = new ethers.Contract(EXECUTOR_ADDR, ["function execute(uint8,address,uint256,bytes) external"], wallet);
+                
+                // Validate flash loan is enabled (double-check at execution time)
+                if (!FLASH_LOAN_ENABLED) {
+                    console.error('❌ CRITICAL: Attempted execution without flash loans enabled');
+                    console.error('   This violates the zero-capital requirement');
+                    return;
+                }
                 
                 // Get gas fees with strategy based on signal priority
                 const gasStrategy = signal.ai_params?.priority > 50 ? 'RAPID' : 'STANDARD';
@@ -392,9 +428,13 @@ class TitanBot {
                     return;
                 }
                 
+                // Build transaction using configured flash loan provider
+                // flashSource: 1=Balancer, 2=Aave (from FLASH_LOAN_PROVIDER env var)
                 txRequest = await contract.execute.populateTransaction(
-                    1, signal.token, signal.amount, routeData, { ...fees }
+                    FLASH_LOAN_PROVIDER, signal.token, signal.amount, routeData, { ...fees }
                 );
+                
+                console.log(`   Flash Loan Provider: ${FLASH_LOAN_PROVIDER === 1 ? 'Balancer V3' : 'Aave V3'}`);
                 
                 // Create route info object for intelligent gas estimation
                 const routeInfo = {
