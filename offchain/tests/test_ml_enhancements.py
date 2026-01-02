@@ -6,18 +6,17 @@ Tests the enhanced machine learning components including:
 - Market Forecaster with advanced features
 - RL Optimizer with experience replay
 - Feature Store with analytics
+
+Note: Run with PYTHONPATH set to repository root:
+    PYTHONPATH=/path/to/Titan2.0 python3 -m unittest offchain.tests.test_ml_enhancements
 """
 
 import unittest
-import sys
 import os
 import json
 import tempfile
 import shutil
 from pathlib import Path
-
-# Add parent directory to path
-sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from offchain.ml.cortex.forecaster import MarketForecaster
 from offchain.ml.cortex.rl_optimizer import QLearningAgent

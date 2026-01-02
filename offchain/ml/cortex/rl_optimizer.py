@@ -19,6 +19,10 @@ class QLearningAgent:
     METRICS_PATH = "data/rl_metrics.json"
     REPLAY_BUFFER_PATH = "data/replay_buffer.json"
     
+    # Configurable gas price thresholds (in Gwei)
+    GAS_LOW_THRESHOLD = 20
+    GAS_NORMAL_THRESHOLD = 50
+    
     def __init__(self, buffer_size=10000):
         self.q_table = self.load_q_table()
         self.learning_rate = 0.1
@@ -119,9 +123,9 @@ class QLearningAgent:
     
     def _discretize_gas(self, gas_gwei):
         """Convert gas price to discrete level"""
-        if gas_gwei < 20:
+        if gas_gwei < self.GAS_LOW_THRESHOLD:
             return "LOW"
-        elif gas_gwei < 50:
+        elif gas_gwei < self.GAS_NORMAL_THRESHOLD:
             return "NORMAL"
         else:
             return "HIGH"
