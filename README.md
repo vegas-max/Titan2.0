@@ -117,6 +117,34 @@ cd Titan2.0
 
 ---
 
+## 📊 Robust 90-Day Live Simulation
+
+**NEW!** Validate the complete Titan system with a comprehensive 90-day simulation using **REAL LIVE MODE** and **REAL DEX DATA**:
+
+```bash
+# Quick 7-day test (PAPER mode)
+./run_simulation.sh
+
+# Quick 7-day test (LIVE mode)
+./run_simulation.sh live
+
+# Full 90-day simulation (LIVE mode)
+./run_simulation.sh full
+
+# Full 90-day simulation (PAPER mode)
+./run_simulation.sh full paper
+```
+
+**Features:**
+- ✅ Real DEX data fetched directly from blockchain
+- ✅ All Titan components (OmniBrain, DexPricer, RL Agent, etc.)
+- ✅ LIVE and PAPER execution modes
+- ✅ Comprehensive error handling and retry logic
+- ✅ Detailed CSV, JSON, and Markdown reports
+- ✅ Progress tracking and logging
+
+**[📖 Full Simulation Documentation](ROBUST_SIMULATION_README.md)**
+
 ---
 
 ## 📋 Table of Contents

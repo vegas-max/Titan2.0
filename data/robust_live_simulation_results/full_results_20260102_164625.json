@@ -1,0 +1,105 @@
+{
+  "simulation_config": {
+    "mode": "PAPER",
+    "chain_id": 137,
+    "days_simulated": 7,
+    "start_time": "2026-01-02T16:46:24.477425",
+    "end_time": "2026-01-02T16:46:25.070110"
+  },
+  "metrics": {
+    "start_time": "2026-01-02T16:46:24.477425",
+    "elapsed_seconds": 0.592689,
+    "total_opportunities": 332,
+    "executed_trades": 0,
+    "successful_trades": 0,
+    "failed_trades": 0,
+    "success_rate": 0,
+    "total_profit_usd": 0.0,
+    "total_gas_cost_usd": 0.0,
+    "total_bridge_fees_usd": 0.0,
+    "net_profit_usd": 0.0,
+    "avg_profit_per_trade": 0,
+    "data_fetch_errors": 0,
+    "execution_errors": 0
+  },
+  "daily_results": [
+    {
+      "date": "2025-12-26",
+      "day_number": 1,
+      "opportunities": 50,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2025-12-27",
+      "day_number": 2,
+      "opportunities": 45,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2025-12-28",
+      "day_number": 3,
+      "opportunities": 48,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2025-12-29",
+      "day_number": 4,
+      "opportunities": 45,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2025-12-30",
+      "day_number": 5,
+      "opportunities": 48,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2025-12-31",
+      "day_number": 6,
+      "opportunities": 48,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    },
+    {
+      "date": "2026-01-01",
+      "day_number": 7,
+      "opportunities": 48,
+      "executed": 0,
+      "successful": 0,
+      "profit_usd": 0.0,
+      "gas_cost_usd": 0.0,
+      "net_profit_usd": 0.0,
+      "success_rate": 0
+    }
+  ],
+  "trade_results": []
+}

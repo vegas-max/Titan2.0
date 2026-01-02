@@ -1,0 +1,16 @@
+{
+  "start_time": "2026-01-02T16:46:24.477425",
+  "elapsed_seconds": 0.592689,
+  "total_opportunities": 332,
+  "executed_trades": 0,
+  "successful_trades": 0,
+  "failed_trades": 0,
+  "success_rate": 0,
+  "total_profit_usd": 0.0,
+  "total_gas_cost_usd": 0.0,
+  "total_bridge_fees_usd": 0.0,
+  "net_profit_usd": 0.0,
+  "avg_profit_per_trade": 0,
+  "data_fetch_errors": 0,
+  "execution_errors": 0
+}
