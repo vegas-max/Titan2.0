@@ -19,7 +19,7 @@ const EXECUTION_MODE = (process.env.TITAN_EXECUTION_MODE || process.env.EXECUTIO
 // CRITICAL: Flash loan configuration - ensures 100% flash-funded execution
 // This system is designed to operate with ZERO capital requirements (only gas fees)
 // All arbitrage trades MUST use flash loans to maintain capital efficiency
-const FLASH_LOAN_ENABLED = process.env.FLASH_LOAN_ENABLED !== 'false'; // Default: true
+const FLASH_LOAN_ENABLED = process.env.FLASH_LOAN_ENABLED === 'true' || process.env.FLASH_LOAN_ENABLED === undefined; // Default: true if not set
 const FLASH_LOAN_PROVIDER = parseInt(process.env.FLASH_LOAN_PROVIDER || '1'); // 1=Balancer, 2=Aave
 
 const RPC_MAP = {

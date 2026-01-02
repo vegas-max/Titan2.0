@@ -186,6 +186,45 @@ async function testAcceptsAaveProvider() {
     });
 }
 
+async function testDefaultsToFlashLoansEnabled() {
+    return new Promise((resolve, reject) => {
+        // Don't set FLASH_LOAN_ENABLED - should default to true
+        const env = Object.assign({}, process.env, {
+            EXECUTION_MODE: 'PAPER'
+        });
+        
+        // Remove FLASH_LOAN_ENABLED if it exists
+        delete env.FLASH_LOAN_ENABLED;
+        
+        const child = spawn('node', [botPath], {
+            env: env,
+            stdio: 'pipe'
+        });
+        
+        let output = '';
+        
+        child.stdout.on('data', (data) => {
+            output += data.toString();
+        });
+        
+        child.stderr.on('data', (data) => {
+            output += data.toString();
+        });
+        
+        setTimeout(() => {
+            child.kill();
+            
+            if (output.includes('Flash Loan Configuration') && 
+                output.includes('ENABLED') &&
+                !output.includes('Flash loans are DISABLED')) {
+                resolve();
+            } else {
+                reject(new Error('Bot did not default to flash loans enabled: ' + output.substring(0, 300)));
+            }
+        }, 2000);
+    });
+}
+
 // Run all tests
 async function runAllTests() {
     console.log('═══════════════════════════════════════════════════════');
@@ -196,6 +235,7 @@ async function runAllTests() {
     await runTest('Rejects when FLASH_LOAN_PROVIDER is invalid', testRejectsInvalidProvider);
     await runTest('Accepts when FLASH_LOAN_PROVIDER=1 (Balancer)', testAcceptsBalancerProvider);
     await runTest('Accepts when FLASH_LOAN_PROVIDER=2 (Aave)', testAcceptsAaveProvider);
+    await runTest('Defaults to flash loans ENABLED when not set', testDefaultsToFlashLoansEnabled);
     
     console.log('\n═══════════════════════════════════════════════════════');
     console.log(`     TEST RESULTS: ${passedTests} passed, ${failedTests} failed`);
