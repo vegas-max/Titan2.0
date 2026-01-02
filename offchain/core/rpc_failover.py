@@ -3,6 +3,7 @@ CRITICAL FIX #10: RPC Failover Provider
 Provides automatic failover between multiple RPC endpoints for robust mainnet operations
 """
 import logging
+import threading
 from web3 import Web3
 from typing import List, Optional
 
@@ -66,18 +67,22 @@ class FailoverWeb3Provider:
     - Automatic failover on connection failures
     - Health monitoring and recovery
     - Round-robin load balancing
+    - Thread-safe operations
     """
     
-    def __init__(self, chain_id: int, custom_endpoints: Optional[List[str]] = None):
+    def __init__(self, chain_id: int, custom_endpoints: Optional[List[str]] = None, 
+                 timeout: int = 10):
         """
         Initialize failover provider for a specific chain.
         
         Args:
             chain_id: The blockchain chain ID
             custom_endpoints: Optional list of custom RPC endpoints to use instead of defaults
+            timeout: RPC request timeout in seconds (default: 10 for HFT operations)
         """
         self.chain_id = chain_id
         self.endpoints = custom_endpoints or RPC_ENDPOINTS.get(chain_id, [])
+        self.timeout = timeout  # Configurable timeout
         
         if not self.endpoints:
             raise ValueError(f"No RPC endpoints configured for chain {chain_id}")
@@ -85,6 +90,7 @@ class FailoverWeb3Provider:
         self.current_idx = 0
         self.failed_endpoints = set()
         self.web3 = None
+        self._lock = threading.Lock()  # Thread safety for multi-threaded operations
         self._connect()
     
     def _connect(self) -> bool:
@@ -94,47 +100,48 @@ class FailoverWeb3Provider:
         Returns:
             bool: True if connection successful, False otherwise
         """
-        attempts = 0
-        max_attempts = len(self.endpoints)
-        
-        while attempts < max_attempts:
-            endpoint = self.endpoints[self.current_idx]
+        with self._lock:  # Thread-safe endpoint selection
+            attempts = 0
+            max_attempts = len(self.endpoints)
             
-            # Skip recently failed endpoints (but retry eventually)
-            if endpoint in self.failed_endpoints and attempts < max_attempts - 1:
-                self.current_idx = (self.current_idx + 1) % len(self.endpoints)
-                attempts += 1
-                continue
+            while attempts < max_attempts:
+                endpoint = self.endpoints[self.current_idx]
+                
+                # Skip recently failed endpoints (but retry eventually)
+                if endpoint in self.failed_endpoints and attempts < max_attempts - 1:
+                    self.current_idx = (self.current_idx + 1) % len(self.endpoints)
+                    attempts += 1
+                    continue
+                
+                try:
+                    provider = Web3.HTTPProvider(
+                        endpoint,
+                        request_kwargs={'timeout': self.timeout}
+                    )
+                    test_web3 = Web3(provider)
+                    
+                    # Test connectivity by getting block number
+                    block_number = test_web3.eth.block_number
+                    
+                    # Connection successful
+                    self.web3 = test_web3
+                    logger.info(f"✅ Connected to chain {self.chain_id} via {endpoint} (block: {block_number})")
+                    
+                    # Remove from failed set if it was there (endpoint recovered)
+                    if endpoint in self.failed_endpoints:
+                        self.failed_endpoints.discard(endpoint)  # Thread-safe remove
+                        logger.info(f"🔄 RPC endpoint {endpoint} recovered")
+                    
+                    return True
+                    
+                except Exception as e:
+                    logger.warning(f"⚠️ Failed to connect to {endpoint}: {str(e)[:100]}")
+                    self.failed_endpoints.add(endpoint)
+                    self.current_idx = (self.current_idx + 1) % len(self.endpoints)
+                    attempts += 1
             
-            try:
-                provider = Web3.HTTPProvider(
-                    endpoint,
-                    request_kwargs={'timeout': 30}
-                )
-                test_web3 = Web3(provider)
-                
-                # Test connectivity by getting block number
-                block_number = test_web3.eth.block_number
-                
-                # Connection successful
-                self.web3 = test_web3
-                logger.info(f"✅ Connected to chain {self.chain_id} via {endpoint} (block: {block_number})")
-                
-                # Remove from failed set if it was there (endpoint recovered)
-                if endpoint in self.failed_endpoints:
-                    self.failed_endpoints.remove(endpoint)
-                    logger.info(f"🔄 RPC endpoint {endpoint} recovered")
-                
-                return True
-                
-            except Exception as e:
-                logger.warning(f"⚠️ Failed to connect to {endpoint}: {str(e)[:100]}")
-                self.failed_endpoints.add(endpoint)
-                self.current_idx = (self.current_idx + 1) % len(self.endpoints)
-                attempts += 1
-        
-        logger.error(f"❌ All RPC endpoints failed for chain {self.chain_id}")
-        return False
+            logger.error(f"❌ All RPC endpoints failed for chain {self.chain_id}")
+            return False
     
     def get_web3(self) -> Optional[Web3]:
         """
@@ -164,30 +171,36 @@ class FailoverWeb3Provider:
             return True
         except Exception as e:
             logger.warning(f"Health check failed: {e}")
-            # Try to reconnect
-            current_endpoint = self.endpoints[self.current_idx]
-            self.failed_endpoints.add(current_endpoint)
-            self.current_idx = (self.current_idx + 1) % len(self.endpoints)
+            # Try to reconnect with thread safety
+            with self._lock:
+                current_endpoint = self.endpoints[self.current_idx]
+                self.failed_endpoints.add(current_endpoint)
+                self.current_idx = (self.current_idx + 1) % len(self.endpoints)
             return self._connect()
     
     def switch_endpoint(self):
         """Manually switch to next RPC endpoint (useful for load balancing)"""
-        self.current_idx = (self.current_idx + 1) % len(self.endpoints)
+        with self._lock:  # Thread-safe switching
+            self.current_idx = (self.current_idx + 1) % len(self.endpoints)
         self._connect()
 
 
-def get_failover_web3(chain_id: int, custom_endpoints: Optional[List[str]] = None) -> Optional[Web3]:
+def get_failover_web3(chain_id: int, custom_endpoints: Optional[List[str]] = None,
+                      timeout: int = 10) -> Optional[Web3]:
+def get_failover_web3(chain_id: int, custom_endpoints: Optional[List[str]] = None,
+                      timeout: int = 10) -> Optional[Web3]:
     """
     Convenience function to get a Web3 instance with failover support.
     
     Args:
         chain_id: The blockchain chain ID
         custom_endpoints: Optional list of custom RPC endpoints
+        timeout: RPC request timeout in seconds (default: 10 for HFT)
         
     Returns:
         Web3 instance or None if all endpoints failed
     """
-    provider = FailoverWeb3Provider(chain_id, custom_endpoints)
+    provider = FailoverWeb3Provider(chain_id, custom_endpoints, timeout)
     return provider.get_web3()
 
 

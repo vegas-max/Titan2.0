@@ -125,7 +125,10 @@ class OmniBrain:
         self.MAX_SLIPPAGE_BPS = 100  # Maximum 1% slippage allowed
         self.consecutive_failures = 0
         self.MAX_CONSECUTIVE_FAILURES = 10  # Circuit breaker threshold
-        self.scan_interval = 1  # CRITICAL FIX #9: Dynamic scan interval for graceful degradation
+        self.scan_interval = 1  # Dynamic scan interval for graceful degradation
+        self.min_scan_interval = 1  # Minimum scan interval
+        self.max_scan_interval = 30  # Maximum scan interval
+        self.backoff_start_time = None  # Track when backoff started
         
     def _cleanup_old_signals(self):
         """Clean up old signal files (keep last 100)"""
@@ -645,15 +648,24 @@ class OmniBrain:
             try:
                 # CRITICAL FIX #9: Graceful degradation instead of full stop
                 if self.consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
+                    # Track backoff period
+                    if self.backoff_start_time is None:
+                        self.backoff_start_time = time.time()
+                    
                     # Slow down instead of stopping completely
-                    self.scan_interval = min(self.scan_interval * 2, 30)  # Cap at 30 seconds
+                    self.scan_interval = min(self.scan_interval * 2, self.max_scan_interval)
                     logger.error(f"🛑 HIGH FAILURE RATE: {self.consecutive_failures} consecutive failures")
                     logger.info(f"⏸️ Reducing scan frequency to {self.scan_interval}s for stability...")
                     self.display.log_error("BRAIN", "High failure rate detected",
                                           f"{self.consecutive_failures} consecutive failures - slowing down")
-                    await asyncio.sleep(self.scan_interval)  # CRITICAL FIX #5: Non-blocking sleep
-                    self.consecutive_failures = 0  # Reset after cooldown
-                    self.scan_interval = 1  # Reset to normal speed
+                    await asyncio.sleep(self.scan_interval)
+                    
+                    # Only reset after minimum recovery period (30 seconds)
+                    if time.time() - self.backoff_start_time > 30:
+                        self.consecutive_failures = 0
+                        # Gradually restore normal speed
+                        self.scan_interval = max(self.scan_interval / 2, self.min_scan_interval)
+                        self.backoff_start_time = None
                     continue
                 
                 # Print stats every 60 seconds

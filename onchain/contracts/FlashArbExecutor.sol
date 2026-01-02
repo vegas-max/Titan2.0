@@ -2,6 +2,7 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
+import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
 /*//////////////////////////////////////////////////////////////
                             INTERFACES
@@ -65,6 +66,7 @@ interface IUniswapV3Router {
 //////////////////////////////////////////////////////////////*/
 
 contract FlashArbExecutor is ReentrancyGuard {
+    using SafeERC20 for IERC20;
     /*//////////////////////////////////////////////////////////////
                                 ERRORS
     //////////////////////////////////////////////////////////////*/
@@ -312,7 +314,7 @@ contract FlashArbExecutor is ReentrancyGuard {
 
         uint256 cursor = 60;
         for (uint8 i = 0; i < stepCount; i++) {
-            cursor = _executeStep(plan, cursor, i, deadline);  // Pass deadline to steps
+            cursor = _executeStep(plan, cursor, i, deadline);
         }
 
         uint256 endBal = IERC20(loanToken).balanceOf(address(this));
@@ -438,17 +440,10 @@ contract FlashArbExecutor is ReentrancyGuard {
         if (path.length < 2) revert InvalidPlan();
         if (path[0] != tokenIn || path[path.length - 1] != tokenOut) revert InvalidPlan();
 
-        // CRITICAL FIX #3: Optimize approvals - check existing allowance first
-        uint256 currentAllowance = IERC20(tokenIn).allowance(address(this), router);
-        if (currentAllowance < amountIn) {
-            // Some tokens require resetting to 0 first
-            if (currentAllowance > 0) {
-                IERC20(tokenIn).approve(router, 0);
-            }
-            IERC20(tokenIn).approve(router, amountIn);
-        }
+        // Use SafeERC20 for robust approval handling across all token types
+        IERC20(tokenIn).safeApprove(router, 0);  // Reset first
+        IERC20(tokenIn).safeApprove(router, amountIn);
 
-        // CRITICAL FIX #1: Use actual deadline instead of block.timestamp
         uint256[] memory amounts = IUniswapV2Router(router).swapExactTokensForTokens(
             amountIn,
             minOut,
@@ -473,15 +468,9 @@ contract FlashArbExecutor is ReentrancyGuard {
 
         (uint24 fee, uint160 sqrtPriceLimitX96) = abi.decode(auxData, (uint24, uint160));
 
-        // CRITICAL FIX #3: Optimize approvals - check existing allowance first
-        uint256 currentAllowance = IERC20(tokenIn).allowance(address(this), router);
-        if (currentAllowance < amountIn) {
-            // Some tokens require resetting to 0 first
-            if (currentAllowance > 0) {
-                IERC20(tokenIn).approve(router, 0);
-            }
-            IERC20(tokenIn).approve(router, amountIn);
-        }
+        // Use SafeERC20 for robust approval handling across all token types
+        IERC20(tokenIn).safeApprove(router, 0);  // Reset first
+        IERC20(tokenIn).safeApprove(router, amountIn);
 
         IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router.ExactInputSingleParams({
             tokenIn: tokenIn,
