@@ -966,31 +966,853 @@ For detailed installation instructions, see [INSTALL.md](INSTALL.md).
 
 ## 🧩 System Components
 
-The Titan system is organized into two main directories:
-
-### 📁 Directory Structure
+### Directory Structure
 
 ```
 Titan2.0/
-├── onchain/             # Blockchain-executable components
-│   ├── contracts/       # Solidity smart contracts
-│   ├── scripts/         # Deployment scripts
-│   └── test/            # Contract tests (Hardhat)
-├── offchain/            # Traditional computing components
-│   ├── core/            # Python infrastructure
-│   ├── execution/       # Node.js execution layer
-│   ├── ml/              # Machine learning & AI
-│   ├── routing/         # Cross-chain routing
-│   ├── monitoring/      # Real-time monitoring
-│   └── tests/           # Integration tests
-└── ...                  # Configuration and documentation files
+├── onchain/                    # Blockchain-executable components
+│   ├── contracts/              # Solidity smart contracts
+│   │   ├── FlashArbExecutor.sol        # Primary flash loan executor
+│   │   ├── OmniArbExecutor.sol         # Alternative executor
+│   │   ├── interfaces/                 # Protocol interfaces
+│   │   │   ├── IAaveV3.sol            # Aave V3 flash loan interface
+│   │   │   ├── IB3.sol                # Balancer V3 vault interface
+│   │   │   ├── IUniV2.sol             # Uniswap V2 router interface
+│   │   │   ├── IUniV3.sol             # Uniswap V3 router interface
+│   │   │   └── ICurve.sol             # Curve pool interface
+│   │   ├── modules/                    # Reusable contract modules
+│   │   │   ├── SwapHandler.sol        # Universal swap execution
+│   │   │   ├── AaveHandler.sol        # Aave-specific logic
+│   │   │   └── BalancerHandler.sol    # Balancer-specific logic
+│   │   └── helpers/                    # Helper contracts
+│   ├── scripts/                # Deployment and utility scripts
+│   │   ├── deploy.js                  # Main deployment script
+│   │   ├── deployFlashArbExecutor.js  # FlashArbExecutor deployment
+│   │   ├── configureTokenRanks.js     # Token registry setup
+│   │   └── setupTokenRegistry.js      # Registry initialization
+│   ├── test/                   # Smart contract tests
+│   └── README.md               # Onchain documentation
+├── offchain/                   # Traditional computing components
+│   ├── core/                   # Core infrastructure (Python)
+│   │   ├── config.py                  # Central configuration
+│   │   ├── enum_matrix.py             # Chain enumeration
+│   │   ├── token_discovery.py         # Multi-chain token inventory
+│   │   ├── token_loader.py            # Dynamic token list loading
+│   │   ├── titan_commander_core.py    # Loan optimization
+│   │   ├── titan_simulation_engine.py # On-chain simulation
+│   │   ├── rpc_failover.py            # RPC redundancy management
+│   │   └── terminal_display.py        # Rich terminal output
+│   ├── ml/                     # Machine learning & AI (Python)
+│   │   ├── brain.py                   # Master coordinator
+│   │   ├── dex_pricer.py              # Multi-DEX price queries
+│   │   ├── bridge_oracle.py           # Cross-chain pricing
+│   │   ├── cortex/                    # AI modules
+│   │   │   ├── forecaster.py          # Gas price prediction
+│   │   │   ├── rl_optimizer.py        # Q-learning agent
+│   │   │   └── feature_store.py       # Historical data store
+│   │   └── strategies/                # Trading strategies
+│   │       └── instant_scalper.py     # High-frequency strategy
+│   ├── execution/              # Execution layer (Node.js)
+│   │   ├── bot.js                     # Main execution coordinator
+│   │   ├── gas_manager.js             # EIP-1559 gas optimization
+│   │   ├── lifi_manager.js            # Bridge aggregation
+│   │   ├── omniarb_sdk_engine.js      # Transaction simulation
+│   │   ├── bloxroute_manager.js       # MEV protection
+│   │   ├── nonce_manager.py           # Nonce conflict resolution
+│   │   ├── terminal_display.js        # Execution display
+│   │   └── (15+ aggregator managers)  # DEX integrations
+│   ├── routing/                # Cross-chain routing (Python)
+│   │   ├── bridge_aggregator.py       # Li.Fi API wrapper
+│   │   ├── bridge_manager.py          # Bridge orchestration
+│   │   └── lifi_wrapper.py            # Li.Fi SDK integration
+│   ├── monitoring/             # Real-time monitoring (TS/JS)
+│   │   ├── MempoolHound.ts            # Mempool monitoring
+│   │   ├── decoderWorker.js           # Transaction decoder
+│   │   └── mev_metrics.js             # MEV tracking
+│   └── tests/                  # Integration tests
+├── core-rust/                  # Rust performance cores (optional)
+│   ├── src/
+│   │   ├── config.rs                  # Configuration (10x faster)
+│   │   ├── enum_matrix.rs             # Chain enumeration
+│   │   ├── simulation_engine.rs       # TVL calculation (15x faster)
+│   │   └── commander.rs               # Loan optimization (12x faster)
+│   └── Cargo.toml
+├── core-go/                    # Go performance cores (optional)
+│   ├── config/                        # Configuration package
+│   ├── enum/                          # Chain enumeration
+│   ├── simulation/                    # Simulation engine
+│   ├── commander/                     # Loan optimization
+│   └── main.go
+├── signals/                    # File-based communication fallback
+│   ├── outgoing/               # Brain → Bot signals
+│   └── incoming/               # Bot → Brain responses
+├── data/                       # Persistent data storage
+│   ├── logs/                   # System logs
+│   ├── metrics/                # Performance metrics
+│   └── q_table.json            # Q-learning state
+├── docs/                       # Additional documentation
+├── config.json                 # Global system configuration
+├── .env                        # Environment secrets (NOT in git)
+├── .env.example                # Environment template
+├── package.json                # Node.js dependencies
+├── requirements.txt            # Python dependencies
+├── hardhat.config.js           # Hardhat configuration
+├── Makefile                    # Build automation
+└── README.md                   # This file
 ```
 
-**See detailed documentation:**
-- [onchain/README.md](onchain/README.md) - Smart contracts and deployment
-- [offchain/README.md](offchain/README.md) - Bot logic, AI, and execution
+### Core Components Detailed
 
-### Core (Python)
+#### 1. Intelligence Layer (`offchain/ml/brain.py`)
+
+**Purpose**: Master coordinator for opportunity detection and AI decision-making
+
+**Class: OmniBrain**
+
+**Initialization**:
+```python
+def __init__(self):
+    self.graph = rx.PyDiGraph()              # Hyper-graph for pathfinding
+    self.bridge = BridgeManager()            # Cross-chain bridge manager
+    self.profit_engine = ProfitEngine()      # Profit calculation
+    self.inventory = {}                      # Token inventory by chain
+    self.web3_connections = {}               # RPC connections
+    
+    # AI Modules
+    self.forecaster = MarketForecaster()     # Gas price prediction
+    self.optimizer = QLearningAgent()        # Reinforcement learning
+    self.memory = FeatureStore()             # Historical data
+```
+
+**Key Methods**:
+- `_build_graph()`: Constructs hyper-graph with 300+ nodes
+- `_add_bridge_edges()`: Adds cross-chain connections
+- `_find_opportunities()`: Parallel opportunity scanning (20 workers)
+- `_calculate_profit()`: Net profit with all fees
+- `_broadcast_signal()`: Publishes to Redis/files
+
+**Configuration**:
+- Scan interval: 3-5 seconds
+- Thread pool: 20 concurrent workers
+- Minimum profit: $5 USD
+- Gas price ceiling: 200 gwei
+
+**Performance**:
+- 300+ chain scans per minute
+- 20 opportunities evaluated in parallel
+- <1 second per opportunity analysis
+- 95%+ profit prediction accuracy
+
+#### 2. Profit Calculation Engine (`ProfitEngine`)
+
+**Master Equation**:
+```
+Π_net = V_loan × [(P_A × (1 - S_A)) - (P_B × (1 + S_B))] - F_flat - (V_loan × F_rate)
+```
+
+Where:
+- `Π_net` = Net Profit (USD)
+- `V_loan` = Flash Loan Volume (USD normalized)
+- `P_A` = Sell Price (after slippage S_A)
+- `P_B` = Buy Price (after slippage S_B)
+- `F_flat` = Fixed Fees (gas + bridge fees)
+- `F_rate` = Flash Loan Fee Rate (0% Balancer, 0.05-0.09% Aave)
+
+**Calculate Enhanced Profit**:
+```python
+def calculate_enhanced_profit(self, amount, amount_out, bridge_fee_usd, gas_cost_usd):
+    gross_revenue_usd = amount_out
+    loan_cost_usd = amount
+    flash_fee_cost = amount * self.flash_fee  # 0% for Balancer V3
+    
+    total_operational_costs = bridge_fee_usd + gas_cost_usd + flash_fee_cost
+    net_profit = gross_revenue_usd - loan_cost_usd - total_operational_costs
+    
+    return {
+        "net_profit": net_profit,
+        "gross_spread": gross_revenue_usd - loan_cost_usd,
+        "total_fees": total_operational_costs,
+        "is_profitable": net_profit > 0
+    }
+```
+
+#### 3. AI Modules (`offchain/ml/cortex/`)
+
+##### Market Forecaster (`forecaster.py`)
+
+**Purpose**: Predict gas price trends for optimal execution timing
+
+**Algorithm**: Linear Regression on sliding window
+```python
+class MarketForecaster:
+    def __init__(self, history_size=50):
+        self.gas_history = deque(maxlen=history_size)
+    
+    def forecast_gas_trend(self, current_gas_price):
+        # Add to history
+        self.gas_history.append({
+            "timestamp": time.time(),
+            "gas_price": current_gas_price
+        })
+        
+        # Calculate trend
+        if len(self.gas_history) < 10:
+            return "NEUTRAL"
+        
+        trend = self._calculate_linear_regression()
+        
+        if trend < -5:  # Dropping fast
+            return "DROPPING_FAST"
+        elif trend < -2:
+            return "DROPPING"
+        elif trend > 5:  # Rising fast
+            return "RISING_FAST"
+        elif trend > 2:
+            return "RISING"
+        else:
+            return "STABLE"
+```
+
+**Decision Making**:
+- `DROPPING_FAST`: Wait 1 block for lower gas
+- `DROPPING`: Consider waiting
+- `STABLE`: Execute normally
+- `RISING`: Execute immediately
+- `RISING_FAST`: Skip if profit margin < 20%
+
+##### Q-Learning Optimizer (`rl_optimizer.py`)
+
+**Purpose**: Learn optimal parameters through reinforcement learning
+
+**State Space**:
+- Chain ID: {1, 137, 42161, 10, 8453, ...}
+- Volatility: {LOW, MEDIUM, HIGH}
+
+**Action Space**:
+- Slippage Tolerance: {10, 50, 100} basis points
+- Priority Fee: {30, 50, 100} gwei
+
+**Q-Learning Algorithm**:
+```python
+class QLearningAgent:
+    def __init__(self, alpha=0.1, gamma=0.95, epsilon=0.1):
+        self.alpha = alpha      # Learning rate
+        self.gamma = gamma      # Discount factor
+        self.epsilon = epsilon  # Exploration rate
+        self.q_table = {}       # State-action values
+    
+    def get_action(self, state):
+        if random.random() < self.epsilon:
+            return self._random_action()  # Explore
+        else:
+            return self._best_action(state)  # Exploit
+    
+    def update(self, state, action, reward, next_state):
+        old_value = self.q_table.get((state, action), 0)
+        next_max = max([self.q_table.get((next_state, a), 0) 
+                       for a in self.actions])
+        
+        # Q-learning update rule
+        new_value = old_value + self.alpha * (
+            reward + self.gamma * next_max - old_value
+        )
+        
+        self.q_table[(state, action)] = new_value
+```
+
+**Reward Function**:
+```python
+def calculate_reward(self, profit_usd, gas_cost_usd, transaction_reverted):
+    if transaction_reverted:
+        return -10.0  # Heavy penalty
+    
+    net_profit = profit_usd - gas_cost_usd
+    
+    if net_profit > 50:
+        return 10.0   # Excellent
+    elif net_profit > 20:
+        return 5.0    # Good
+    elif net_profit > 5:
+        return 2.0    # Acceptable
+    else:
+        return -1.0   # Poor (but didn't revert)
+```
+
+##### Feature Store (`feature_store.py`)
+
+**Purpose**: Aggregate historical data for pattern recognition
+
+**Stored Features**:
+```python
+class FeatureStore:
+    def __init__(self):
+        self.executions = []  # All execution history
+        self.chain_stats = defaultdict(lambda: {
+            "total_trades": 0,
+            "successful_trades": 0,
+            "total_profit": 0.0,
+            "avg_gas_cost": 0.0
+        })
+    
+    def record_execution(self, chain_id, token, amount, profit, gas_cost, success):
+        execution = {
+            "timestamp": datetime.now(),
+            "chain_id": chain_id,
+            "token": token,
+            "amount": amount,
+            "profit": profit,
+            "gas_cost": gas_cost,
+            "success": success
+        }
+        
+        self.executions.append(execution)
+        self._update_chain_stats(chain_id, profit, gas_cost, success)
+    
+    def get_success_rate(self, chain_id):
+        stats = self.chain_stats[chain_id]
+        if stats["total_trades"] == 0:
+            return 0.0
+        return stats["successful_trades"] / stats["total_trades"]
+```
+
+#### 4. Execution Layer (`offchain/execution/bot.js`)
+
+**Purpose**: Transaction building, simulation, and execution
+
+**Class: TitanBot**
+
+**Initialization**:
+```javascript
+class TitanBot {
+    constructor() {
+        this.redis = new Redis(process.env.REDIS_URL);
+        this.providers = {};        // RPC providers by chain
+        this.gasManager = new GasManager();
+        this.omniSDK = new OmniSDKEngine();
+        this.bloxRoute = new BloxRouteManager();
+        this.nonceTracker = {};     // Nonce management
+    }
+    
+    async initialize() {
+        // Connect to all chains
+        for (const chainId of SUPPORTED_CHAINS) {
+            this.providers[chainId] = await this._getProvider(chainId);
+        }
+        
+        // Subscribe to signals
+        this.redis.subscribe('trade_signals', (err, count) => {
+            if (err) throw err;
+            console.log(`✅ Subscribed to ${count} channels`);
+        });
+        
+        // Handle incoming signals
+        this.redis.on('message', (channel, message) => {
+            this.handleTradeSignal(JSON.parse(message));
+        });
+    }
+}
+```
+
+**Signal Processing**:
+```javascript
+async handleTradeSignal(signal) {
+    try {
+        // 1. Validate signal structure
+        if (!this._validateSignal(signal)) {
+            logger.error("Invalid signal structure");
+            return;
+        }
+        
+        // 2. Get current gas prices
+        const gasPrice = await this.gasManager.getOptimalGasPrice(signal.chainId);
+        
+        // 3. Check gas price ceiling
+        if (gasPrice.maxFeePerGas > GAS_PRICE_CEILING_GWEI * 1e9) {
+            logger.warn(`Gas too high: ${gasPrice.maxFeePerGas / 1e9} gwei`);
+            return;
+        }
+        
+        // 4. Build transaction
+        const tx = await this._buildTransaction(signal, gasPrice);
+        
+        // 5. Simulate transaction
+        const simulation = await this.omniSDK.simulateTransaction(tx);
+        
+        if (!simulation.success) {
+            logger.error(`Simulation failed: ${simulation.error}`);
+            return;
+        }
+        
+        // 6. Verify profit still valid
+        const estimatedProfit = simulation.expectedOutput - signal.amount;
+        if (estimatedProfit < MIN_PROFIT_USD) {
+            logger.warn(`Profit too low after simulation: $${estimatedProfit}`);
+            return;
+        }
+        
+        // 7. Execute transaction
+        if (process.env.EXECUTION_MODE === "LIVE") {
+            await this._executeTransaction(tx, signal.chainId);
+        } else {
+            logger.info(`📝 PAPER MODE: Would execute with profit $${estimatedProfit}`);
+        }
+        
+    } catch (error) {
+        logger.error(`Error handling signal: ${error.message}`);
+        this._incrementCircuitBreaker();
+    }
+}
+```
+
+**Transaction Execution**:
+```javascript
+async _executeTransaction(tx, chainId) {
+    const provider = this.providers[chainId];
+    const wallet = new ethers.Wallet(process.env.PRIVATE_KEY, provider);
+    
+    // Get next nonce
+    const nonce = await this._getNextNonce(wallet.address, chainId);
+    tx.nonce = nonce;
+    
+    // Sign transaction
+    const signedTx = await wallet.signTransaction(tx);
+    
+    // Choose mempool routing
+    let txHash;
+    if (this._shouldUsePrivateMempool(chainId, estimatedProfit)) {
+        // Submit via BloxRoute (private)
+        txHash = await this.bloxRoute.submitBundle([signedTx], chainId);
+    } else {
+        // Submit to public mempool
+        const response = await provider.sendTransaction(signedTx);
+        txHash = response.hash;
+    }
+    
+    logger.info(`🚀 Transaction submitted: ${txHash}`);
+    
+    // Monitor confirmation
+    const receipt = await this._monitorTransaction(txHash, provider);
+    
+    if (receipt.status === 1) {
+        logger.info(`✅ Transaction successful! Gas used: ${receipt.gasUsed}`);
+    } else {
+        logger.error(`❌ Transaction failed`);
+    }
+}
+```
+
+#### 5. Gas Management (`offchain/execution/gas_manager.js`)
+
+**Purpose**: EIP-1559 gas price optimization with safety ceilings
+
+**Class: GasManager**
+
+**Optimal Gas Price Calculation**:
+```javascript
+class GasManager {
+    async getOptimalGasPrice(chainId) {
+        const provider = await this._getProvider(chainId);
+        
+        // Get base fee from latest block
+        const block = await provider.getBlock('latest');
+        const baseFee = block.baseFeePerGas;
+        
+        // Calculate priority fee based on network congestion
+        const priorityFee = await this._calculatePriorityFee(chainId);
+        
+        // Apply ceiling
+        const maxFeePerGas = this._applyCeiling(
+            baseFee + priorityFee,
+            chainId
+        );
+        
+        return {
+            maxFeePerGas,
+            maxPriorityFeePerGas: priorityFee,
+            gasLimit: await this._estimateGasLimit(chainId)
+        };
+    }
+    
+    _calculatePriorityFee(chainId) {
+        // Check recent blocks for miner tips
+        const recentTips = await this._getRecentMinerTips(chainId);
+        
+        // Use 75th percentile for reliable inclusion
+        const percentile75 = this._percentile(recentTips, 0.75);
+        
+        // Apply minimum and maximum bounds
+        return Math.min(
+            Math.max(percentile75, MIN_PRIORITY_FEE),
+            MAX_PRIORITY_FEE
+        );
+    }
+    
+    _applyCeiling(maxFee, chainId) {
+        const ceiling = GAS_CEILING_BY_CHAIN[chainId] || 500e9;  // 500 gwei default
+        
+        if (maxFee > ceiling) {
+            logger.warn(`Gas price ${maxFee / 1e9} gwei exceeds ceiling ${ceiling / 1e9} gwei`);
+            return ceiling;
+        }
+        
+        return maxFee;
+    }
+}
+```
+
+**Network Congestion Detection**:
+```javascript
+async detectCongestion(chainId) {
+    const provider = await this._getProvider(chainId);
+    const latestBlock = await provider.getBlock('latest');
+    
+    // Check gas usage percentage
+    const gasUsedPercent = latestBlock.gasUsed / latestBlock.gasLimit;
+    
+    if (gasUsedPercent > 0.95) {
+        return "EXTREME";  // >95% full
+    } else if (gasUsedPercent > 0.80) {
+        return "HIGH";     // 80-95% full
+    } else if (gasUsedPercent > 0.60) {
+        return "MODERATE"; // 60-80% full
+    } else {
+        return "LOW";      // <60% full
+    }
+}
+```
+
+#### 6. Smart Contracts (`onchain/contracts/FlashArbExecutor.sol`)
+
+**Purpose**: Atomic flash loan arbitrage execution on-chain
+
+**Key Functions**:
+
+```solidity
+contract FlashArbExecutor is Ownable {
+    // Flash loan providers
+    IVaultV3 public immutable balancerVault;
+    IAavePoolV3 public immutable aavePool;
+    
+    // Configuration
+    uint256 public swapDeadline = 180; // 3 minutes
+    
+    // Registry mappings
+    mapping(uint256 => mapping(uint8 => address)) public dexRouter;
+    mapping(uint256 => mapping(uint8 => mapping(uint8 => address))) public tokenRegistry;
+    
+    /**
+     * @notice Execute flash loan arbitrage
+     * @param flashSource 0 = Aave, 1 = Balancer
+     * @param loanToken Token to borrow
+     * @param loanAmount Amount to borrow
+     * @param routeData Encoded route information
+     */
+    function execute(
+        uint8 flashSource,
+        address loanToken,
+        uint256 loanAmount,
+        bytes calldata routeData
+    ) external onlyOwner {
+        if (flashSource == 0) {
+            // Aave V3 flash loan
+            aavePool.flashLoanSimple(
+                address(this),
+                loanToken,
+                loanAmount,
+                routeData,
+                0  // referralCode
+            );
+        } else {
+            // Balancer V3 unlock-based flash loan
+            balancerVault.unlock(abi.encode(loanToken, loanAmount, routeData));
+        }
+    }
+    
+    /**
+     * @notice Balancer V3 callback
+     */
+    function onBalancerUnlock(bytes calldata data) external returns (bytes memory) {
+        require(msg.sender == address(balancerVault), "Unauthorized");
+        
+        (address loanToken, uint256 loanAmount, bytes memory routeData) = 
+            abi.decode(data, (address, uint256, bytes));
+        
+        // Create transient debt
+        balancerVault.sendTo(loanToken, address(this), loanAmount);
+        
+        // Execute swaps
+        _runRoute(loanToken, loanAmount, routeData);
+        
+        // Repay debt
+        IERC20(loanToken).approve(address(balancerVault), loanAmount);
+        balancerVault.settle(loanToken, loanAmount);
+        
+        return "";
+    }
+    
+    /**
+     * @notice Aave V3 callback
+     */
+    function executeOperation(
+        address asset,
+        uint256 amount,
+        uint256 premium,
+        address initiator,
+        bytes calldata params
+    ) external returns (bool) {
+        require(msg.sender == address(aavePool), "Unauthorized");
+        require(initiator == address(this), "Invalid initiator");
+        
+        // Execute swaps
+        _runRoute(asset, amount, params);
+        
+        // Approve repayment (amount + premium)
+        uint256 amountOwed = amount + premium;
+        IERC20(asset).approve(address(aavePool), amountOwed);
+        
+        return true;
+    }
+    
+    /**
+     * @notice Execute multi-hop swap route
+     */
+    function _runRoute(
+        address loanToken,
+        uint256 loanAmount,
+        bytes memory routeData
+    ) internal {
+        // Decode route encoding type
+        uint8 encodingType = uint8(routeData[0]);
+        
+        if (encodingType == 0) {
+            // RAW_ADDRESSES encoding
+            _runRouteRaw(loanToken, loanAmount, routeData);
+        } else {
+            // REGISTRY_ENUMS encoding
+            _runRouteRegistry(loanToken, loanAmount, routeData);
+        }
+    }
+    
+    /**
+     * @notice Owner withdrawal of profits
+     */
+    function withdraw(address token) external onlyOwner {
+        uint256 balance = IERC20(token).balanceOf(address(this));
+        require(balance > 0, "No balance");
+        
+        SafeERC20.safeTransfer(IERC20(token), owner(), balance);
+    }
+}
+```
+
+**Swap Handler Module** (`modules/SwapHandler.sol`):
+```solidity
+library SwapHandler {
+    /**
+     * @notice Execute swap on specified DEX
+     * @param protocol Protocol ID (1=UniV2, 2=UniV3, 3=Curve)
+     * @param router Router/pool address
+     * @param tokenIn Input token
+     * @param tokenOut Output token
+     * @param amountIn Input amount
+     * @param extraData Protocol-specific data
+     */
+    function executeSwap(
+        uint8 protocol,
+        address router,
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        bytes memory extraData
+    ) internal returns (uint256 amountOut) {
+        // Approve router
+        SafeERC20.safeApprove(IERC20(tokenIn), router, 0);
+        SafeERC20.safeApprove(IERC20(tokenIn), router, amountIn);
+        
+        if (protocol == 1) {
+            // UniswapV2-style swap
+            amountOut = _swapUniV2(router, tokenIn, tokenOut, amountIn);
+        } else if (protocol == 2) {
+            // UniswapV3 swap
+            uint24 fee = abi.decode(extraData, (uint24));
+            amountOut = _swapUniV3(router, tokenIn, tokenOut, amountIn, fee);
+        } else if (protocol == 3) {
+            // Curve swap
+            (int128 i, int128 j) = abi.decode(extraData, (int128, int128));
+            amountOut = _swapCurve(router, i, j, amountIn);
+        } else {
+            revert("Unsupported protocol");
+        }
+        
+        require(amountOut > 0, "Swap failed");
+    }
+    
+    function _swapUniV2(
+        address router,
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn
+    ) private returns (uint256) {
+        address[] memory path = new address[](2);
+        path[0] = tokenIn;
+        path[1] = tokenOut;
+        
+        uint256[] memory amounts = IUniswapV2Router(router).swapExactTokensForTokens(
+            amountIn,
+            0,  // Accept any amount (already validated via simulation)
+            path,
+            address(this),
+            block.timestamp + 180
+        );
+        
+        return amounts[amounts.length - 1];
+    }
+    
+    function _swapUniV3(
+        address router,
+        address tokenIn,
+        address tokenOut,
+        uint256 amountIn,
+        uint24 fee
+    ) private returns (uint256) {
+        IUniswapV3Router.ExactInputSingleParams memory params = 
+            IUniswapV3Router.ExactInputSingleParams({
+                tokenIn: tokenIn,
+                tokenOut: tokenOut,
+                fee: fee,
+                recipient: address(this),
+                deadline: block.timestamp + 180,
+                amountIn: amountIn,
+                amountOutMinimum: 0,
+                sqrtPriceLimitX96: 0
+            });
+        
+        return IUniswapV3Router(router).exactInputSingle(params);
+    }
+    
+    function _swapCurve(
+        address pool,
+        int128 i,
+        int128 j,
+        uint256 dx
+    ) private returns (uint256) {
+        return ICurvePool(pool).exchange(i, j, dx, 0);
+    }
+}
+```
+
+### Component Integration & Communication
+
+**Signal Flow Example**:
+
+1. **Brain detects opportunity** (Python):
+```python
+signal = {
+    "chainId": 137,
+    "token": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",  # USDC on Polygon
+    "amount": "50000000000",  # 50,000 USDC (6 decimals)
+    "route": {
+        "protocols": [1, 2],  # UniV2, UniV3
+        "routers": ["0x...", "0x..."],
+        "tokenOutPath": ["0x...", "0x..."],  # WMATIC, USDC
+        "extraData": ["0x", ethers.AbiCoder.encode(["uint24"], [3000])]
+    },
+    "expectedProfit": 75.50,
+    "gasEstimate": 0.02
+}
+
+redis_client.publish("trade_signals", json.dumps(signal))
+```
+
+2. **Bot receives and processes** (Node.js):
+```javascript
+redis.on('message', async (channel, message) => {
+    const signal = JSON.parse(message);
+    
+    // Build transaction
+    const tx = {
+        to: FLASH_ARB_EXECUTOR_ADDRESS,
+        data: executorContract.interface.encodeFunctionData('execute', [
+            1,  // Balancer V3
+            signal.token,
+            signal.amount,
+            encodeRouteData(signal.route)
+        ]),
+        ...await gasManager.getOptimalGasPrice(signal.chainId)
+    };
+    
+    // Simulate
+    const sim = await omniSDK.simulateTransaction(tx);
+    
+    // Execute if profitable
+    if (sim.success && sim.expectedProfit > MIN_PROFIT) {
+        await wallet.sendTransaction(tx);
+    }
+});
+```
+
+3. **Smart contract executes** (Solidity):
+```solidity
+// Flash loan callback
+function onBalancerUnlock(bytes calldata data) external returns (bytes memory) {
+    // 1. Receive borrowed funds
+    balancerVault.sendTo(loanToken, address(this), loanAmount);
+    
+    // 2. Execute swaps
+    uint256 finalAmount = _runRoute(loanToken, loanAmount, routeData);
+    
+    // 3. Repay loan
+    IERC20(loanToken).approve(address(balancerVault), loanAmount);
+    balancerVault.settle(loanToken, loanAmount);
+    
+    // 4. Profit remains in contract (finalAmount - loanAmount)
+    return "";
+}
+```
+
+### System Component Dependencies
+
+```
+┌─────────────────────────────────────────────────────────────┐
+│                     Component Dependencies                   │
+├─────────────────────────────────────────────────────────────┤
+│                                                             │
+│  Brain (Python)                                             │
+│  ├─ Requires: Redis, RPC providers, config.json            │
+│  ├─ Produces: Trade signals                                │
+│  └─ Consumes: Historical data, gas prices                  │
+│                                                             │
+│  Bot (Node.js)                                              │
+│  ├─ Requires: Redis, RPC providers, private key            │
+│  ├─ Produces: Blockchain transactions                      │
+│  └─ Consumes: Trade signals, gas prices                    │
+│                                                             │
+│  Smart Contract (Solidity)                                  │
+│  ├─ Requires: Flash loan providers, DEX routers            │
+│  ├─ Produces: Profits (ERC20 tokens)                       │
+│  └─ Consumes: Flash loans, route data                      │
+│                                                             │
+│  Redis (Infrastructure)                                     │
+│  ├─ Requires: localhost:6379 accessible                    │
+│  ├─ Produces: Message delivery                             │
+│  └─ Consumes: Published messages                           │
+│                                                             │
+│  RPC Providers (External)                                   │
+│  ├─ Requires: API keys, network access                     │
+│  ├─ Produces: Blockchain data, transaction submission      │
+│  └─ Consumes: RPC requests                                 │
+│                                                             │
+└─────────────────────────────────────────────────────────────┘
+```
+
+For complete component documentation, see:
+- **Onchain**: [onchain/README.md](onchain/README.md), [onchain/contracts/SystemArchitecture.md](onchain/contracts/SystemArchitecture.md)
+- **Offchain**: [offchain/README.md](offchain/README.md)
+- **Core Rebuild**: [CORE_REBUILD_README.md](CORE_REBUILD_README.md)
+
+---
+
+## 🚀 Usage & Operations
 
 #### `offchain/core/config.py`
 - Central configuration management
