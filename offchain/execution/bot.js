@@ -466,63 +466,141 @@ class TitanBot {
                 return;
             }
 
-            // 3. Simulate with retry
+            // 3. Comprehensive Pre-Broadcast Simulation
+            console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('🧪 PRE-BROADCAST SIMULATION & VALIDATION');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            
+            let simulationResult = null;
             let isSafe = false;
+            
             try {
-                isSafe = await simulator.simulateExecution(EXECUTOR_ADDR, txRequest.data, wallet.address);
-                if (!isSafe) {
-                    console.log('🛑 SIMULATION FAILED - Transaction would revert');
+                console.log('   Step 1: Simulating transaction execution...');
+                
+                // Perform full transaction simulation
+                simulationResult = await simulator.simulateTransaction(txRequest);
+                
+                if (!simulationResult.success) {
+                    console.log('   ❌ Simulation FAILED - Transaction would revert on-chain');
+                    console.log(`   Reason: ${simulationResult.error}`);
+                    console.log('   ⚠️  Aborting transaction to prevent wasted gas fees');
                     executionStatus = 'SIMULATION_FAILED';
                     return;
                 }
-                console.log('✅ Simulation passed');
+                
+                console.log('   ✅ Step 1: Transaction simulation PASSED');
+                console.log(`   Estimated gas usage: ${simulationResult.gasUsed.toString()}`);
+                
+                // Additional validation step
+                console.log('   Step 2: Validating simulation results...');
+                isSafe = await simulator.simulateExecution(EXECUTOR_ADDR, txRequest.data, wallet.address);
+                
+                if (!isSafe) {
+                    console.log('   ❌ Validation FAILED - Secondary check detected issues');
+                    executionStatus = 'VALIDATION_FAILED';
+                    return;
+                }
+                
+                console.log('   ✅ Step 2: Simulation validation PASSED');
+                
+                // Final safety checks before broadcast
+                console.log('   Step 3: Final pre-broadcast checks...');
+                
+                // Check if gas estimate is reasonable
+                const gasLimit = txRequest.gasLimit || 0n;
+                const estimatedGas = simulationResult.gasUsed || 0n;
+                
+                if (estimatedGas > gasLimit) {
+                    console.log(`   ⚠️  Warning: Estimated gas (${estimatedGas}) exceeds limit (${gasLimit})`);
+                    console.log('   Adjusting gas limit to prevent out-of-gas failure...');
+                    txRequest.gasLimit = estimatedGas * 120n / 100n; // 20% buffer
+                }
+                
+                console.log('   ✅ Step 3: Pre-broadcast checks COMPLETE');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('✅ ALL SIMULATIONS PASSED - Transaction ready for broadcast');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+                
             } catch (e) {
-                console.error('❌ Simulation error:', e.message);
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.error('   ❌ Simulation error:', e.message);
+                console.log('   Stack:', e.stack);
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                 executionStatus = 'SIMULATION_ERROR';
                 return;
             }
 
-            // 4. Execute with proper error handling
+            // 4. Execute with proper error handling (only if simulation passed)
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log('📡 TRANSACTION BROADCAST');
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+            console.log(`   Chain ID: ${chainId}`);
+            console.log(`   Token: ${signal.token}`);
+            console.log(`   Amount: ${signal.amount}`);
+            console.log(`   Expected Profit: $${signal.metrics?.profit_usd?.toFixed(2) || 'N/A'}`);
+            console.log(`   Gas Limit: ${txRequest.gasLimit?.toString() || 'N/A'}`);
+            console.log(`   Estimated Cost: $${estimatedCostUSD.toFixed(2)}`);
+            console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+            
             executionStatus = 'EXECUTING';
             try {
                 if (chainId === 137 || chainId === 56) {
                     // Use BloxRoute for MEV protection
+                    console.log('🔐 Using BloxRoute for MEV-protected broadcast...');
                     try {
                         const signedTx = await wallet.signTransaction(txRequest);
                         const blockNumber = await provider.getBlockNumber();
+                        console.log(`   Submitting bundle for block ${blockNumber + 1}...`);
+                        
                         const res = await this.bloxRoute.submitBundle([signedTx], blockNumber);
                         
                         if (res && res.result) {
-                            console.log(`🚀 BloxRoute bundle submitted:`, res.result);
+                            console.log(`\n🚀 BloxRoute bundle submitted successfully!`);
+                            console.log(`   Bundle Hash: ${res.result}`);
                             executionStatus = 'BLOXROUTE_SUBMITTED';
                         } else {
                             console.log('⚠️ BloxRoute submission uncertain, falling back to public mempool');
+                            console.log('📡 Broadcasting to public mempool...');
                             const tx = await wallet.sendTransaction(txRequest);
-                            console.log(`✅ TX (fallback): ${tx.hash}`);
+                            console.log(`\n✅ Transaction broadcast successfully!`);
+                            console.log(`   TX Hash: ${tx.hash}`);
                             executionStatus = 'PUBLIC_MEMPOOL';
                             
                             // Monitor transaction
                             this._monitorTransaction(tx, provider, signal);
                         }
                     } catch (bloxError) {
-                        console.error('⚠️ BloxRoute failed:', bloxError.message, '- Using public mempool');
+                        console.error('⚠️ BloxRoute failed:', bloxError.message);
+                        console.log('📡 Falling back to public mempool broadcast...');
                         const tx = await wallet.sendTransaction(txRequest);
-                        console.log(`✅ TX (fallback): ${tx.hash}`);
+                        console.log(`\n✅ Transaction broadcast successfully!`);
+                        console.log(`   TX Hash: ${tx.hash}`);
                         executionStatus = 'PUBLIC_MEMPOOL';
                         
                         // Monitor transaction
                         this._monitorTransaction(tx, provider, signal);
                     }
                 } else {
+                    // Standard public mempool broadcast
+                    console.log('📡 Broadcasting to public mempool...');
                     const tx = await wallet.sendTransaction(txRequest);
-                    console.log(`✅ TX: ${tx.hash}`);
+                    console.log(`\n✅ Transaction broadcast successfully!`);
+                    console.log(`   TX Hash: ${tx.hash}`);
+                    console.log(`   Explorer: ${this._getExplorerUrl(chainId, tx.hash)}`);
                     executionStatus = 'PUBLIC_MEMPOOL';
                     
                     // Monitor transaction
                     this._monitorTransaction(tx, provider, signal);
                 }
+                
+                console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.log('✅ BROADCAST COMPLETE - Monitoring for confirmation...');
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+                
             } catch (e) {
-                console.error('❌ Transaction execution failed:', e.message);
+                console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+                console.error('❌ Transaction broadcast failed:', e.message);
+                console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                 if (e.code === 'NONCE_EXPIRED' || e.code === 'REPLACEMENT_UNDERPRICED') {
                     console.log('⚠️ Nonce conflict detected, signal may be stale');
                     executionStatus = 'NONCE_CONFLICT';
@@ -698,6 +776,34 @@ class TitanBot {
             console.log('⚠️ Transaction monitoring failed:', e.message);
             console.log('   Transaction may still succeed, check explorer');
         }
+    }
+    
+    /**
+     * Get block explorer URL for a transaction hash
+     * @param {number} chainId - The chain ID
+     * @param {string} txHash - The transaction hash
+     * @returns {string} Block explorer URL
+     */
+    _getExplorerUrl(chainId, txHash) {
+        const explorers = {
+            1: 'https://etherscan.io/tx/',
+            137: 'https://polygonscan.com/tx/',
+            42161: 'https://arbiscan.io/tx/',
+            10: 'https://optimistic.etherscan.io/tx/',
+            8453: 'https://basescan.org/tx/',
+            56: 'https://bscscan.com/tx/',
+            43114: 'https://snowtrace.io/tx/',
+            250: 'https://ftmscan.com/tx/',
+            59144: 'https://lineascan.build/tx/',
+            534352: 'https://scrollscan.com/tx/',
+            5000: 'https://explorer.mantle.xyz/tx/',
+            324: 'https://explorer.zksync.io/tx/',
+            81457: 'https://blastscan.io/tx/',
+            42220: 'https://celoscan.io/tx/',
+            204: 'https://opbnbscan.com/tx/'
+        };
+        
+        return (explorers[chainId] || 'https://etherscan.io/tx/') + txHash;
     }
 }
 

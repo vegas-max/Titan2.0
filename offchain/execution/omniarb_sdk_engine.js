@@ -189,6 +189,39 @@ class OmniSDKEngine {
     }
 
     /**
+     * Simulates execution of a contract method to verify it will succeed.
+     * This is the method called by bot.js during pre-broadcast validation.
+     * 
+     * @param {string} contractAddress - The contract address to call
+     * @param {string} calldata - The encoded function call data
+     * @param {string} fromAddress - The address that will send the transaction
+     * @returns {Promise<boolean>} True if simulation succeeds, false otherwise
+     */
+    async simulateExecution(contractAddress, calldata, fromAddress) {
+        console.log("🧪 Simulating contract execution...");
+        
+        try {
+            // Build transaction object for simulation
+            const txRequest = {
+                to: contractAddress,
+                from: fromAddress,
+                data: calldata,
+                value: "0x0"
+            };
+            
+            // Use the existing simulateTransaction method
+            const result = await this.simulateTransaction(txRequest);
+            
+            // Return boolean for backward compatibility
+            return result.success;
+            
+        } catch (error) {
+            console.error('❌ Simulation execution error:', error.message);
+            return false;
+        }
+    }
+
+    /**
      * Utilities to parse cryptic EVM revert errors into readable text.
      */
     _extractRevertReason(error) {
