@@ -491,6 +491,7 @@
             <button class="nav-tab" data-page="market-scanner">🔍 Market Scanner</button>
             <button class="nav-tab" data-page="executable-txs">⚡ Executable TXs</button>
             <button class="nav-tab" data-page="live-execution">🎯 Live Execution</button>
+            <button class="nav-tab" data-page="ml-analytics">🤖 ML Analytics</button>
             <button class="nav-tab" data-page="analytics">📈 Analytics</button>
         </div>
         <div class="status-indicator">
@@ -658,7 +659,160 @@
             </div>
         </div>
 
-        <!-- Page 5: Analytics -->
+        <!-- Page 5: ML Analytics -->
+        <div id="ml-analytics" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">🤖 Machine Learning Model Performance</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>REAL-TIME</span>
+                    </div>
+                </div>
+
+                <!-- Forecaster Metrics -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">📊 Market Forecaster</h4>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">🎯 Prediction Accuracy</div>
+                            <div class="metric-value positive" id="mlForecasterAccuracy">0%</div>
+                            <div class="metric-change">Model confidence</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🔮 Total Predictions</div>
+                            <div class="metric-value neutral" id="mlForecasterPredictions">0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">📈 Current Trend</div>
+                            <div class="metric-value neutral" id="mlForecasterTrend">STABLE</div>
+                            <div class="metric-change">Gas price trend</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⚡ Market Volatility</div>
+                            <div class="metric-value" id="mlForecasterVolatility">LOW</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⛽ Predicted Gas Price</div>
+                            <div class="metric-value neutral" id="mlForecasterPredictedGas">0 Gwei</div>
+                            <div class="metric-change">Next block estimate</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- RL Optimizer Metrics -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">🧠 Reinforcement Learning Optimizer</h4>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">🎓 Training Episodes</div>
+                            <div class="metric-value neutral" id="mlRLEpisodes">0</div>
+                            <div class="metric-change">Learning iterations</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">💰 Average Reward</div>
+                            <div class="metric-value" id="mlRLAvgReward">$0.00</div>
+                            <div class="metric-change">Per episode</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">✅ Success Rate</div>
+                            <div class="metric-value positive" id="mlRLSuccessRate">0%</div>
+                            <div class="metric-change">Optimal action selection</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🔍 Exploration Rate</div>
+                            <div class="metric-value neutral" id="mlRLEpsilon">0.10</div>
+                            <div class="metric-change">Epsilon (ε)</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🗺️ States Explored</div>
+                            <div class="metric-value neutral" id="mlRLStatesExplored">0</div>
+                            <div class="metric-change">Unique market states</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Feature Store Metrics -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">💾 Feature Store & Data Analytics</h4>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">📊 Total Observations</div>
+                            <div class="metric-value neutral" id="mlFSTotalObs">0</div>
+                            <div class="metric-change">Market snapshots logged</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">💚 Profitable Trades</div>
+                            <div class="metric-value positive" id="mlFSProfitableTrades">0</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">💵 Average Profit</div>
+                            <div class="metric-value" id="mlFSAvgProfit">$0.00</div>
+                            <div class="metric-change">Per profitable trade</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⛓️ Best Chain</div>
+                            <div class="metric-value neutral" id="mlFSBestChain">-</div>
+                            <div class="metric-change">Most profitable</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🪙 Best Token</div>
+                            <div class="metric-value neutral" id="mlFSBestToken">-</div>
+                            <div class="metric-change">Top performer</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Model Status -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">⚙️ Model Status & Health</h4>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Model Component</th>
+                                <th>Status</th>
+                                <th>Version</th>
+                                <th>Last Updated</th>
+                                <th>Performance</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>🔮 Market Forecaster</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td>v2.0</td>
+                                <td id="mlForecasterLastUpdate">-</td>
+                                <td><span class="profit-positive" id="mlForecasterPerf">Excellent</span></td>
+                            </tr>
+                            <tr>
+                                <td>🧠 RL Optimizer</td>
+                                <td><span class="status-badge success">Learning</span></td>
+                                <td>v2.0</td>
+                                <td id="mlRLLastUpdate">-</td>
+                                <td><span class="profit-positive" id="mlRLPerf">Improving</span></td>
+                            </tr>
+                            <tr>
+                                <td>💾 Feature Store</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td>v2.0</td>
+                                <td id="mlFSLastUpdate">-</td>
+                                <td><span class="profit-positive" id="mlFSPerf">Healthy</span></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 6: Analytics -->
         <div id="analytics" class="page">
             <div class="card">
                 <div class="card-header">
@@ -706,6 +860,7 @@
         let executableTxs = [];
         let recentExecs = [];
         let metrics = {};
+        let mlMetrics = {};
 
         // Connect to WebSocket
         function connectWebSocket() {
@@ -745,6 +900,7 @@
             switch (type) {
                 case 'initial_state':
                     metrics = data.metrics || {};
+                    mlMetrics = data.ml_metrics || {};
                     marketOpps = data.market_opportunities || [];
                     executableTxs = data.executable_txs || [];
                     recentExecs = data.recent_executions || [];
@@ -754,6 +910,11 @@
                 case 'metrics_update':
                     metrics = data;
                     updateMetrics();
+                    break;
+                
+                case 'ml_metrics_update':
+                    mlMetrics = data;
+                    updateMLMetrics();
                     break;
 
                 case 'market_opportunity':
@@ -810,6 +971,7 @@
         // Update all displays
         function updateAllDisplays() {
             updateMetrics();
+            updateMLMetrics();
             updateMarketOpportunities();
             updateExecutableTxs();
             updateRecentExecutions();
@@ -854,6 +1016,118 @@
                 ? (metrics.txs_executed / metrics.opportunities_found * 100) 
                 : 0;
             document.getElementById('conversionRate').textContent = `${conversionRate.toFixed(2)}%`;
+        }
+
+        // Update ML metrics
+        function updateMLMetrics() {
+            if (!mlMetrics || Object.keys(mlMetrics).length === 0) return;
+            
+            // Forecaster metrics
+            const forecaster = mlMetrics.forecaster || {};
+            const accuracy = forecaster.accuracy || 0;
+            const accuracyEl = document.getElementById('mlForecasterAccuracy');
+            if (accuracyEl) {
+                accuracyEl.textContent = `${accuracy.toFixed(1)}%`;
+                accuracyEl.className = 'metric-value ' + (accuracy >= 80 ? 'positive' : accuracy >= 60 ? 'warning' : 'negative');
+            }
+            
+            const predictions = forecaster.predictions_made || 0;
+            if (document.getElementById('mlForecasterPredictions')) {
+                document.getElementById('mlForecasterPredictions').textContent = predictions;
+            }
+            
+            const trend = forecaster.current_trend || 'STABLE';
+            const trendEl = document.getElementById('mlForecasterTrend');
+            if (trendEl) {
+                trendEl.textContent = trend;
+                trendEl.className = 'metric-value ' + 
+                    (trend === 'DROPPING_FAST' ? 'positive' : trend === 'RISING_FAST' ? 'negative' : 'neutral');
+            }
+            
+            const volatility = forecaster.volatility || 'LOW';
+            const volEl = document.getElementById('mlForecasterVolatility');
+            if (volEl) {
+                volEl.textContent = volatility;
+                volEl.className = 'metric-value ' + 
+                    (volatility === 'LOW' ? 'positive' : volatility === 'HIGH' ? 'negative' : 'warning');
+            }
+            
+            const predictedGas = forecaster.predicted_gas || 0;
+            const predictedGasEl = document.getElementById('mlForecasterPredictedGas');
+            if (predictedGasEl) {
+                predictedGasEl.textContent = `${predictedGas.toFixed(2)} Gwei`;
+                predictedGasEl.className = 'metric-value ' + 
+                    (predictedGas < 100 ? 'positive' : predictedGas < 150 ? 'warning' : 'negative');
+            }
+            
+            // RL Optimizer metrics
+            const rlOptimizer = mlMetrics.rl_optimizer || {};
+            if (document.getElementById('mlRLEpisodes')) {
+                document.getElementById('mlRLEpisodes').textContent = rlOptimizer.total_episodes || 0;
+            }
+            
+            const avgReward = rlOptimizer.avg_reward || 0;
+            const avgRewardEl = document.getElementById('mlRLAvgReward');
+            if (avgRewardEl) {
+                avgRewardEl.textContent = `$${avgReward.toFixed(2)}`;
+                avgRewardEl.className = 'metric-value ' + (avgReward >= 0 ? 'positive' : 'negative');
+            }
+            
+            const rlSuccessRate = rlOptimizer.success_rate || 0;
+            const rlSuccessRateEl = document.getElementById('mlRLSuccessRate');
+            if (rlSuccessRateEl) {
+                rlSuccessRateEl.textContent = `${rlSuccessRate.toFixed(1)}%`;
+                rlSuccessRateEl.className = 'metric-value ' + 
+                    (rlSuccessRate >= 70 ? 'positive' : rlSuccessRate >= 50 ? 'warning' : 'negative');
+            }
+            
+            const epsilon = rlOptimizer.epsilon || 0.1;
+            if (document.getElementById('mlRLEpsilon')) {
+                document.getElementById('mlRLEpsilon').textContent = epsilon.toFixed(3);
+            }
+            
+            if (document.getElementById('mlRLStatesExplored')) {
+                document.getElementById('mlRLStatesExplored').textContent = rlOptimizer.states_explored || 0;
+            }
+            
+            // Feature Store metrics
+            const featureStore = mlMetrics.feature_store || {};
+            if (document.getElementById('mlFSTotalObs')) {
+                document.getElementById('mlFSTotalObs').textContent = featureStore.total_observations || 0;
+            }
+            
+            if (document.getElementById('mlFSProfitableTrades')) {
+                document.getElementById('mlFSProfitableTrades').textContent = featureStore.profitable_trades || 0;
+            }
+            
+            const avgProfit = featureStore.avg_profit || 0;
+            const avgProfitEl = document.getElementById('mlFSAvgProfit');
+            if (avgProfitEl) {
+                avgProfitEl.textContent = `$${avgProfit.toFixed(2)}`;
+                avgProfitEl.className = 'metric-value ' + (avgProfit >= 0 ? 'positive' : 'negative');
+            }
+            
+            const bestChain = featureStore.best_chain;
+            if (document.getElementById('mlFSBestChain')) {
+                document.getElementById('mlFSBestChain').textContent = bestChain ? `Chain ${bestChain}` : '-';
+            }
+            
+            const bestToken = featureStore.best_token;
+            if (document.getElementById('mlFSBestToken')) {
+                document.getElementById('mlFSBestToken').textContent = bestToken || '-';
+            }
+            
+            // Update last update times
+            const now = new Date().toLocaleTimeString();
+            if (document.getElementById('mlForecasterLastUpdate')) {
+                document.getElementById('mlForecasterLastUpdate').textContent = now;
+            }
+            if (document.getElementById('mlRLLastUpdate')) {
+                document.getElementById('mlRLLastUpdate').textContent = now;
+            }
+            if (document.getElementById('mlFSLastUpdate')) {
+                document.getElementById('mlFSLastUpdate').textContent = now;
+            }
         }
 
         // Update market opportunities

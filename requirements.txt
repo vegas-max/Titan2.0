@@ -12,3 +12,6 @@ colorama>=0.4.6
 aiohttp>=3.9.0
 aiohttp-cors>=0.7.0
 rich>=13.0.0
+scikit-learn>=1.4.0
+xgboost>=2.0.0
+lightgbm>=4.3.0
