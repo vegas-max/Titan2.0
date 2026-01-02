@@ -441,8 +441,7 @@ contract FlashArbExecutor is ReentrancyGuard {
         if (path[0] != tokenIn || path[path.length - 1] != tokenOut) revert InvalidPlan();
 
         // Use SafeERC20 for robust approval handling across all token types
-        IERC20(tokenIn).safeApprove(router, 0);  // Reset first
-        IERC20(tokenIn).safeApprove(router, amountIn);
+        IERC20(tokenIn).forceApprove(router, amountIn);
 
         uint256[] memory amounts = IUniswapV2Router(router).swapExactTokensForTokens(
             amountIn,
