@@ -78,6 +78,34 @@ class DashboardServer:
         }
         self.chain_status = {}
         
+        # ML Metrics
+        self.ml_metrics = {
+            "forecaster": {
+                "predictions_made": 0,
+                "accuracy": 0.0,
+                "current_trend": "STABLE",
+                "volatility": "LOW",
+                "predicted_gas": 30.0
+            },
+            "rl_optimizer": {
+                "total_episodes": 0,
+                "avg_reward": 0.0,
+                "success_rate": 0.0,
+                "epsilon": 0.1,
+                "states_explored": 0
+            },
+            "feature_store": {
+                "total_observations": 0,
+                "profitable_trades": 0,
+                "avg_profit": 0.0,
+                "best_chain": None,
+                "best_token": None
+            }
+        }
+        
+        # ML models (lazy initialization)
+        self._ml_models = None
+        
         # Start time
         self.start_time = datetime.now()
         
@@ -107,6 +135,70 @@ class DashboardServer:
             logger.warning(f"Failed to connect to Redis: {e}. Running in simulation mode.")
             self.redis_client = None
     
+    def _get_ml_models(self):
+        """Lazy load ML models"""
+        if self._ml_models is None:
+            try:
+                from offchain.ml.cortex.forecaster import MarketForecaster
+                from offchain.ml.cortex.rl_optimizer import QLearningAgent
+                from offchain.ml.cortex.feature_store import FeatureStore
+                
+                self._ml_models = {
+                    'forecaster': MarketForecaster(),
+                    'optimizer': QLearningAgent(),
+                    'feature_store': FeatureStore()
+                }
+            except Exception as e:
+                logger.warning(f"Could not load ML models: {e}")
+                self._ml_models = {}
+        
+        return self._ml_models
+    
+    async def get_ml_metrics(self):
+        """Get current ML model metrics"""
+        models = self._get_ml_models()
+        
+        if not models:
+            return self.ml_metrics
+        
+        try:
+            # Update forecaster metrics
+            if 'forecaster' in models:
+                forecaster_metrics = models['forecaster'].get_metrics()
+                self.ml_metrics['forecaster'].update({
+                    'predictions_made': forecaster_metrics.get('predictions_made', 0),
+                    'accuracy': forecaster_metrics.get('accuracy', 0.0),
+                    'current_trend': forecaster_metrics.get('trend', 'STABLE'),
+                    'volatility': forecaster_metrics.get('volatility', 'LOW'),
+                    'predicted_gas': forecaster_metrics.get('predicted_gas', 30.0)
+                })
+            
+            # Update RL optimizer metrics
+            if 'optimizer' in models:
+                rl_metrics = models['optimizer'].get_metrics()
+                self.ml_metrics['rl_optimizer'].update({
+                    'total_episodes': rl_metrics.get('total_episodes', 0),
+                    'avg_reward': rl_metrics.get('avg_reward', 0.0),
+                    'success_rate': rl_metrics.get('success_rate', 0.0),
+                    'epsilon': rl_metrics.get('current_epsilon', 0.1),
+                    'states_explored': rl_metrics.get('states_explored', 0)
+                })
+            
+            # Update feature store metrics
+            if 'feature_store' in models:
+                fs_summary = models['feature_store'].get_summary()
+                self.ml_metrics['feature_store'].update({
+                    'total_observations': fs_summary.get('total_observations', 0),
+                    'profitable_trades': fs_summary.get('profitable_trades', 0),
+                    'avg_profit': fs_summary.get('avg_profit', 0.0),
+                    'best_chain': fs_summary.get('best_chain'),
+                    'best_token': fs_summary.get('best_token')
+                })
+        except Exception as e:
+            logger.error(f"Error getting ML metrics: {e}")
+        
+        return self.ml_metrics
+    
     async def websocket_handler(self, request):
         """Handle WebSocket connections for real-time updates"""
         ws = web.WebSocketResponse()
@@ -121,6 +213,7 @@ class DashboardServer:
                 "type": "initial_state",
                 "data": {
                     "metrics": self.system_metrics,
+                    "ml_metrics": await self.get_ml_metrics(),
                     "market_opportunities": list(self.market_opportunities),
                     "executable_txs": list(self.executable_txs),
                     "recent_executions": list(self.recent_executions),
@@ -320,8 +413,25 @@ class DashboardServer:
             self.system_metrics["current_gas_price"] = round(random.uniform(20, 180), 2)
             self.system_metrics["status"] = "OPERATIONAL"
             
+            # Simulate ML metrics updates
+            self.ml_metrics["forecaster"]["predictions_made"] += random.randint(1, 5)
+            self.ml_metrics["forecaster"]["accuracy"] = round(random.uniform(75, 95), 1)
+            self.ml_metrics["forecaster"]["current_trend"] = random.choice(["STABLE", "RISING_FAST", "DROPPING_FAST"])
+            self.ml_metrics["forecaster"]["volatility"] = random.choice(["LOW", "MEDIUM", "HIGH"])
+            self.ml_metrics["forecaster"]["predicted_gas"] = round(random.uniform(20, 150), 2)
+            
+            self.ml_metrics["rl_optimizer"]["total_episodes"] += random.randint(0, 2)
+            self.ml_metrics["rl_optimizer"]["avg_reward"] = round(random.uniform(-5, 50), 2)
+            self.ml_metrics["rl_optimizer"]["success_rate"] = round(random.uniform(70, 90), 1)
+            self.ml_metrics["rl_optimizer"]["epsilon"] = max(0.01, self.ml_metrics["rl_optimizer"]["epsilon"] * 0.999)
+            
+            self.ml_metrics["feature_store"]["total_observations"] += random.randint(5, 15)
+            if random.random() < 0.3:
+                self.ml_metrics["feature_store"]["profitable_trades"] += 1
+            
             # Broadcast metrics update
             await self.broadcast_update("metrics_update", self.system_metrics)
+            await self.broadcast_update("ml_metrics_update", self.ml_metrics)
             
             await asyncio.sleep(2)  # Update every 2 seconds
     
@@ -332,6 +442,35 @@ class DashboardServer:
             return web.FileResponse(html_path)
         else:
             return web.Response(text="Dashboard HTML not found", status=404)
+    
+    async def ml_metrics_handler(self, request):
+        """API endpoint for ML metrics"""
+        ml_metrics = await self.get_ml_metrics()
+        return web.json_response(ml_metrics)
+    
+    async def feature_importance_handler(self, request):
+        """API endpoint for feature importance"""
+        models = self._get_ml_models()
+        if 'feature_store' in models:
+            importance = models['feature_store'].get_feature_importance()
+            return web.json_response(importance)
+        return web.json_response({})
+    
+    async def chain_performance_handler(self, request):
+        """API endpoint for chain performance metrics"""
+        models = self._get_ml_models()
+        if 'feature_store' in models:
+            performance = models['feature_store'].get_performance_by_chain()
+            return web.json_response(performance)
+        return web.json_response({})
+    
+    async def token_performance_handler(self, request):
+        """API endpoint for token performance metrics"""
+        models = self._get_ml_models()
+        if 'feature_store' in models:
+            performance = models['feature_store'].get_performance_by_token()
+            return web.json_response(performance)
+        return web.json_response({})
     
     async def start(self):
         """Start the dashboard server"""
@@ -357,6 +496,10 @@ class DashboardServer:
         # Add routes
         self.app.router.add_get('/', self.index_handler)
         self.app.router.add_get('/ws', self.websocket_handler)
+        self.app.router.add_get('/api/ml-metrics', self.ml_metrics_handler)
+        self.app.router.add_get('/api/feature-importance', self.feature_importance_handler)
+        self.app.router.add_get('/api/chain-performance', self.chain_performance_handler)
+        self.app.router.add_get('/api/token-performance', self.token_performance_handler)
         
         # Add static file serving for the dashboard
         dashboard_dir = Path(__file__).parent
