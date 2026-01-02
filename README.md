@@ -147,87 +147,79 @@ cd Titan2.0
 - [Disclaimer](#-disclaimer)
 - [License](#-license)
 
-## 📚 Additional Documentation
+## 📚 Documentation Index
 
-### Validation & Deployment
-- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ⚡ **NEW!** Oracle Cloud 15-minute quick start
-- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud Always Free deployment guide
-- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ **NEW!** Step-by-step deployment checklist
-- **[ORACLE_QUICK_REFERENCE.md](ORACLE_QUICK_REFERENCE.md)** - 📋 One-page command reference for Oracle Cloud
-- **[ORACLE_TROUBLESHOOTING.md](ORACLE_TROUBLESHOOTING.md)** - 🔧 Oracle Cloud troubleshooting guide
-- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Master validation checklist for deployment readiness
-- **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Full-scale mainnet deployment validation checklist
-- **[CHECKLIST_VALIDATION_SUMMARY.md](CHECKLIST_VALIDATION_SUMMARY.md)** - Executive validation summary
-- **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - Comprehensive testing procedures
+Titan 2.0 includes extensive documentation organized by use case and experience level.
 
-### 📊 Interactive Dashboard **NEW!**
-- **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - ⚡ **NEW!** 5-minute dashboard setup guide
-- **[INTERACTIVE_DASHBOARD_README.md](INTERACTIVE_DASHBOARD_README.md)** - 📊 **NEW!** Complete dashboard documentation
-- **Multi-Page Real-Time Dashboard Features:**
-  - ✅ 5 interactive pages (Overview, Market Scanner, Executable TXs, Live Execution, Analytics)
-  - ✅ WebSocket real-time updates (<1 second latency)
-  - ✅ Interactive control buttons (Pause/Resume/Emergency Stop)
-  - ✅ Real-time market opportunity scanner
-  - ✅ Executable transaction queue display
-  - ✅ Live transaction execution monitor
-  - ✅ Advanced filtering and search
-  - ✅ Beautiful responsive UI
+### 🚀 Quick Start (New Users)
+- **[QUICKSTART.md](QUICKSTART.md)** - ⚡ 15-minute setup guide
+- **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - 🎯 Simplest installation method
+- **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - 📊 Interactive dashboard in 5 minutes
+- **[MAINNET_QUICKSTART.md](MAINNET_QUICKSTART.md)** - 🚀 5-minute mainnet paper mode setup
 
-**Quick Start Dashboard:**
-```bash
-# One command to launch
-./launch_interactive_dashboard.sh
+### 📦 Installation & Deployment
+- **[INSTALL.md](INSTALL.md)** - 📦 Platform-specific installation
+- **[FULL_INSTALLATION_GUIDE.md](FULL_INSTALLATION_GUIDE.md)** - 🛠️ Complete installation guide
+- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ☁️ Oracle Cloud deployment (15 min)
+- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud guide
+- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ Deployment checklist
 
-# Or with npm
-npm run dashboard:interactive
+### 📘 Operations & Management
+- **[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)** - 📘 Comprehensive operations manual
+- **[MAINNET_MODES.md](MAINNET_MODES.md)** - 🔄 Paper vs live trading modes
+- **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Mainnet deployment validation
+- **[SUPER_AGENT_GUIDE.md](SUPER_AGENT_GUIDE.md)** - 🤖 Autonomous agent system
+- **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
-# Open browser to http://localhost:8080
-```
+### 🏗️ Architecture & Development
+- **[onchain/README.md](onchain/README.md)** - 📜 Smart contracts documentation
+- **[onchain/contracts/SystemArchitecture.md](onchain/contracts/SystemArchitecture.md)** - 🏛️ Contract architecture
+- **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
+- **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
-### Installation & Setup
-- **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - ⚡ One-click installation guide (simplest way!)
-- **[FULL_INSTALLATION_GUIDE.md](FULL_INSTALLATION_GUIDE.md)** - Complete one-command installation guide
-- **[QUICKSTART.md](QUICKSTART.md)** - 15-minute setup guide
-- **[INSTALL.md](INSTALL.md)** - Detailed installation for all platforms
+### 🔒 Security & Validation
+- **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - 🛡️ Security features
+- **[AUDIT_REPORT.md](AUDIT_REPORT.md)** - 📋 Security audit report
+- **[MAINNET_SAFETY_IMPROVEMENTS.md](MAINNET_SAFETY_IMPROVEMENTS.md)** - ✅ Safety enhancements
+- **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - ✔️ Testing procedures
+- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Validation checklist
 
-### Operations
-- **[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)** - Comprehensive operations manual
-- **[MAINNET_QUICKSTART.md](MAINNET_QUICKSTART.md)** - 5-minute mainnet paper mode setup
-- **[MAINNET_MODES.md](MAINNET_MODES.md)** - Paper trading vs live trading modes
+### 📊 Dashboard & Monitoring
+- **[INTERACTIVE_DASHBOARD_README.md](INTERACTIVE_DASHBOARD_README.md)** - 🎨 Complete dashboard docs
+- **[DASHBOARD_GUIDE.md](DASHBOARD_GUIDE.md)** - 📈 Dashboard user guide
 
-### Performance & Optimization
-- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 ARM architecture optimizations (4 cores, 24GB RAM)
-- **[LIGHTWEIGHT_MODE_GUIDE.md](LIGHTWEIGHT_MODE_GUIDE.md)** - ⚡ **NEW!** Ultra-lightweight mode (75% memory, 3x faster)
+### 🚀 Features & Integrations
+- **[LIFI_INTEGRATION_GUIDE.md](LIFI_INTEGRATION_GUIDE.md)** - 🌉 Li.Fi bridge integration
+- **[MULTI_AGGREGATOR_IMPLEMENTATION.md](MULTI_AGGREGATOR_IMPLEMENTATION.md)** - 🔄 Multi-aggregator support
+- **[MEV_PROTECTION_IMPLEMENTATION.md](MEV_PROTECTION_IMPLEMENTATION.md)** - 🛡️ MEV protection
+- **[ML_ENHANCEMENTS_GUIDE.md](ML_ENHANCEMENTS_GUIDE.md)** - 🧠 ML enhancements
 
-### Reference
-- **[CHANGELOG.md](CHANGELOG.md)** - Version history and changes
-- **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - Current release details
-- **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - Security features and best practices
+### 📈 Performance & Optimization
+- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 ARM optimizations
+- **[LIGHTWEIGHT_MODE_GUIDE.md](LIGHTWEIGHT_MODE_GUIDE.md)** - ⚡ Lightweight mode
+- **[MARKET_COVERAGE_ANALYSIS.md](MARKET_COVERAGE_ANALYSIS.md)** - 📊 Market coverage
 
-### 🤖 Super Agent System **NEW!**
-- **[SUPER_AGENT_GUIDE.md](SUPER_AGENT_GUIDE.md)** - 🤖 Complete guide to the creative super agent system
-- **[SUPER_AGENT_QUICKREF.md](SUPER_AGENT_QUICKREF.md)** - ⚡ Quick reference for super agent commands
+### 📋 Quick References
+- **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - 📋 One-page command reference
+- **[ORACLE_QUICK_REFERENCE.md](ORACLE_QUICK_REFERENCE.md)** - ☁️ Oracle Cloud commands
+- **[SUPER_AGENT_QUICKREF.md](SUPER_AGENT_QUICKREF.md)** - 🤖 Super agent reference
+- **[INSTALLATION_QUICKREF.md](INSTALLATION_QUICKREF.md)** - 📋 Installation commands
 
-The **Super Agent System** is an autonomous, intelligent agent framework that manages and runs the entire TITAN repository. It provides:
+### 📝 Reference & History
+- **[CHANGELOG.md](CHANGELOG.md)** - 📜 Version history
+- **[RELEASE_NOTES.md](RELEASE_NOTES.md)** - 📰 Current release
+- **[EXECUTIVE_SUMMARY.md](EXECUTIVE_SUMMARY.md)** - 📝 Mainnet readiness
+- **[DEPENDENCIES.md](DEPENDENCIES.md)** - 📦 Dependencies
 
-- ✅ **Automated System Management**: Start, stop, restart, and monitor all TITAN components
-- ✅ **Self-Healing Capabilities**: Automatic detection and recovery from failures
-- ✅ **Health Monitoring**: Comprehensive system health checks
-- ✅ **Intelligent Task Scheduling**: Priority-based task queue with multi-agent coordination
-- ✅ **Build & Test Automation**: Automated compilation and testing
-- ✅ **Interactive CLI**: Easy-to-use command interface
+### 🔧 Troubleshooting
+- **[ORACLE_TROUBLESHOOTING.md](ORACLE_TROUBLESHOOTING.md)** - 🔍 Oracle Cloud troubleshooting
+- **[NO_REDIS_QUICKSTART.md](NO_REDIS_QUICKSTART.md)** - 📁 Run without Redis
 
-**Quick Start:**
-```bash
-# Interactive mode
-./start_super_agent.sh
-
-# Run health check
-./start_super_agent.sh once health
-
-# Start TITAN in paper mode
-./start_super_agent.sh once start paper
-```
+> 💡 **Recommended Reading Path**: 
+> 1. New Users → QUICKSTART.md → MAINNET_MODES.md → SECURITY_SUMMARY.md
+> 2. Developers → SystemArchitecture.md → offchain/README.md → CORE_REBUILD_README.md
+> 3. Operators → OPERATIONS_GUIDE.md → GO_LIVE_CHECKLIST.md → MONITORING_ALERTING.md
+> 4. Cloud Deployers → ORACLE_QUICKSTART.md → ORACLE_DEPLOYMENT_CHECKLIST.md
 
 ---
 
