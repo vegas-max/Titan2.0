@@ -1,10 +1,10 @@
 {
-  "total_observations": 12,
-  "profitable_trades": 8,
-  "unprofitable_trades": 4,
-  "avg_profit": 6.416666666666667,
-  "avg_gas_cost": 52.56666666666666,
-  "best_chain": 1,
+  "total_observations": 1,
+  "profitable_trades": 1,
+  "unprofitable_trades": 0,
+  "avg_profit": 15.5,
+  "avg_gas_cost": 25.0,
+  "best_chain": 137,
   "best_token": "USDC",
-  "last_updated": "2026-01-02T10:36:14.119429"
+  "last_updated": "2026-01-02T23:30:46.093661"
 }
