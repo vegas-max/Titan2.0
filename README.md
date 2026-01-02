@@ -183,6 +183,7 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[MAINNET_SAFETY_IMPROVEMENTS.md](MAINNET_SAFETY_IMPROVEMENTS.md)** - ✅ Safety enhancements
 - **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - ✔️ Testing procedures
 - **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Validation checklist
+- **[docs/TRANSACTION_SIMULATION.md](docs/TRANSACTION_SIMULATION.md)** - 🧪 Transaction simulation guide
 
 ### 📊 Dashboard & Monitoring
 - **[INTERACTIVE_DASHBOARD_README.md](INTERACTIVE_DASHBOARD_README.md)** - 🎨 Complete dashboard docs
