@@ -51,9 +51,9 @@ deadline: deadline  // ✅ CORRECT - Uses actual plan deadline
 - Added OpenZeppelin `ReentrancyGuard` import
 - Contract now inherits `ReentrancyGuard`
 - Added `nonReentrant` modifier to:
-  - `executeFlashArb()` (line 164)
-  - `receiveFlashLoan()` (line 224)
-  - `executeOperation()` (line 251)
+  - `executeFlashArb()` (line 166)
+  - `receiveFlashLoan()` (line 228)
+  - `executeOperation()` (line 258)
 
 **Code Changes**:
 ```solidity
