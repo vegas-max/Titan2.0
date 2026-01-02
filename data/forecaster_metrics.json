@@ -1,9 +1,9 @@
 {
-  "predictions_made": 1,
-  "predictions_correct": 2,
-  "accuracy": 200.0,
+  "predictions_made": 2,
+  "predictions_correct": 1,
+  "accuracy": 100.0,
   "mse": 0.0,
   "mae": 0.0,
-  "last_updated": "2026-01-02T10:35:10.034603",
+  "last_updated": "2026-01-02T10:36:14.120258",
   "model_version": "2.0"
 }

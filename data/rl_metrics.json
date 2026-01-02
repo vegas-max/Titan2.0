@@ -1,14 +1,14 @@
 {
-  "total_episodes": 10,
-  "total_rewards": 45.0,
+  "total_episodes": 20,
+  "total_rewards": 90.0,
   "avg_reward": 4.5,
   "best_reward": 9.0,
   "worst_reward": 0.0,
-  "epsilon": 0.09511101304657718,
+  "epsilon": 0.09046104802746176,
   "states_explored": 1,
-  "actions_taken": 1,
-  "successful_trades": 9,
-  "failed_trades": 1,
+  "actions_taken": 2,
+  "successful_trades": 18,
+  "failed_trades": 2,
   "success_rate": 90.0,
-  "last_updated": "2026-01-02T10:32:26.413188"
+  "last_updated": "2026-01-02T10:36:14.077487"
 }
