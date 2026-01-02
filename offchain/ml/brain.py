@@ -17,6 +17,12 @@ from routing.bridge_manager import BridgeManager
 from offchain.core.titan_commander_core import TitanCommander
 from offchain.core.terminal_display import get_terminal_display
 
+# Advanced Features
+from offchain.core.dynamic_price_oracle import DynamicPriceOracle
+from offchain.core.parallel_simulation_engine import ParallelSimulationEngine
+from offchain.core.mev_detector import MEVDetector
+from offchain.core.direct_dex_query import DirectDEXQuery
+
 # The Cortex (AI Layer)
 from offchain.ml.cortex.forecaster import MarketForecaster
 from offchain.ml.cortex.rl_optimizer import QLearningAgent
@@ -95,13 +101,19 @@ class OmniBrain:
         self.optimizer = QLearningAgent()
         self.memory = FeatureStore()
         
-        # 3. Communication (File-based signals)
+        # 3. Advanced Features (initialized later with web3 connections)
+        self.price_oracle = None
+        self.parallel_simulator = None
+        self.mev_detector = None
+        self.dex_query = None
+        
+        # 4. Communication (File-based signals)
         from pathlib import Path
         self.signals_dir = Path('signals/outgoing')
         self.signals_dir.mkdir(parents=True, exist_ok=True)
         logger.info(f"Signal output directory: {self.signals_dir}")
         
-        # 4. Terminal Display
+        # 5. Terminal Display
         self.display = get_terminal_display()
         
         # 4. Wallet Configuration
@@ -115,11 +127,11 @@ class OmniBrain:
             # Use a valid Ethereum address for API calls (Vitalik's address as placeholder)
             self.wallet_address = "0xd8dA6BF26964aF9D7eEd9e03E53415D37aA96045"
         
-        # 5. State
+        # 6. State
         self.node_indices = {} 
         self.executor = ThreadPoolExecutor(max_workers=20)
         
-        # 5. Safety Limits
+        # 7. Safety Limits
         self.MAX_GAS_PRICE_GWEI = Decimal("200.0")  # Maximum gas price ceiling
         self.MIN_PROFIT_THRESHOLD_USD = Decimal("1.0")  # Minimum $1 profit to execute
         self.MAX_SLIPPAGE_BPS = 100  # Maximum 1% slippage allowed
@@ -129,6 +141,12 @@ class OmniBrain:
         self.min_scan_interval = 1  # Minimum scan interval
         self.max_scan_interval = 30  # Maximum scan interval
         self.backoff_start_time = None  # Track when backoff started
+        
+        # 8. Advanced Features Configuration
+        self.use_dynamic_pricing = True  # Use Chainlink price feeds
+        self.use_parallel_simulation = True  # Simulate multiple routes in parallel
+        self.use_mev_detection = True  # Detect sandwich attacks
+        self.use_direct_dex_query = True  # Query pools directly
         
     def _cleanup_old_signals(self):
         """Clean up old signal files (keep last 100)"""
@@ -184,8 +202,43 @@ class OmniBrain:
                     logger.debug(f"Web3 connection established for chain {cid}")
                 except Exception as e:
                     logger.warning(f"Failed to initialize Web3 for chain {cid}: {e}")
+        
+        # C. Initialize Advanced Features with web3 connections
+        logger.info("⚡ Initializing advanced features...")
+        
+        if self.use_dynamic_pricing:
+            try:
+                self.price_oracle = DynamicPriceOracle(self.web3_connections)
+                logger.info("✅ Dynamic Price Oracle initialized (Chainlink + TWAP)")
+            except Exception as e:
+                logger.error(f"Failed to initialize price oracle: {e}")
+                self.use_dynamic_pricing = False
+        
+        if self.use_parallel_simulation:
+            try:
+                self.parallel_simulator = ParallelSimulationEngine(max_workers=20)
+                logger.info("✅ Parallel Simulation Engine initialized (20 workers)")
+            except Exception as e:
+                logger.error(f"Failed to initialize parallel simulator: {e}")
+                self.use_parallel_simulation = False
+        
+        if self.use_mev_detection:
+            try:
+                self.mev_detector = MEVDetector(self.web3_connections)
+                logger.info("✅ MEV Detector initialized (Sandwich & Frontrun detection)")
+            except Exception as e:
+                logger.error(f"Failed to initialize MEV detector: {e}")
+                self.use_mev_detection = False
+        
+        if self.use_direct_dex_query:
+            try:
+                self.dex_query = DirectDEXQuery(self.web3_connections)
+                logger.info("✅ Direct DEX Query initialized (UniV2/V3, Curve, Balancer)")
+            except Exception as e:
+                logger.error(f"Failed to initialize DEX query: {e}")
+                self.use_direct_dex_query = False
 
-        # C. Build Graph
+        # D. Build Graph
         self._build_graph_nodes()
         self._build_bridge_edges()
         

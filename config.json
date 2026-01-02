@@ -3,6 +3,49 @@
   "name": "Multi-Chain Arbitrage Bot",
   "description": "Production-ready arbitrage bot with multi-DEX and cross-chain support",
   
+  "advanced_features": {
+    "private_relay": {
+      "enabled": true,
+      "auto_select": true,
+      "min_value_usd": 50,
+      "description": "Use private relays (Flashbots, BloxRoute) for MEV protection"
+    },
+    "custom_rpc": {
+      "enabled": true,
+      "latency_monitoring": true,
+      "auto_failover": true,
+      "health_check_interval": 30000,
+      "description": "Multi-tier RPC with automatic failover"
+    },
+    "dynamic_pricing": {
+      "enabled": true,
+      "prefer_chainlink": true,
+      "twap_fallback": true,
+      "cache_duration": 10,
+      "description": "Real-time price feeds via Chainlink and DEX TWAPs"
+    },
+    "parallel_simulation": {
+      "enabled": true,
+      "max_workers": 20,
+      "max_routes_per_scan": 10,
+      "cache_duration": 5,
+      "description": "Simulate multiple routes simultaneously"
+    },
+    "mev_detection": {
+      "enabled": true,
+      "sandwich_detection": true,
+      "frontrun_detection": true,
+      "min_safety_score": 70,
+      "description": "Detect and avoid MEV attacks"
+    },
+    "direct_dex_query": {
+      "enabled": true,
+      "bypass_aggregators": false,
+      "query_batch_size": 10,
+      "description": "Query pool state directly without aggregators"
+    }
+  },
+  
   "networks": {
     "polygon": {
       "chainId": 137,

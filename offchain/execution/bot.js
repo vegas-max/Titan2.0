@@ -45,6 +45,8 @@ class TitanBot {
         this.signalsDir = SIGNALS_DIR;
         this.processedDir = PROCESSED_DIR;
         this.bloxRoute = new BloxRouteManager();
+        this.privateRelay = new PrivateRelayManager();
+        this.rpcManager = new CustomRPCManager();
         this.activeProviders = {};
         this.crossChainEnabled = this._parseBooleanEnv(process.env.ENABLE_CROSS_CHAIN);
         this.executionMode = EXECUTION_MODE;
@@ -52,6 +54,10 @@ class TitanBot {
         this.paperTradeCount = 0;
         this.processedSignals = new Set();
         this.display = terminalDisplay;
+        
+        // Advanced features configuration
+        this.usePrivateRelay = this._parseBooleanEnv(process.env.USE_PRIVATE_RELAY || 'true');
+        this.useMEVDetection = this._parseBooleanEnv(process.env.USE_MEV_DETECTION || 'true');
         
         // Ensure directories exist
         if (!fs.existsSync(this.signalsDir)) {
