@@ -11,7 +11,7 @@ call npm install >nul
 pip install -r requirements.txt >nul
 
 echo [2] Running Li.Fi Discovery (Building Map)...
-node execution/lifi_discovery.js
+node offchain/execution/lifi_discovery.js
 if %errorlevel% neq 0 (
     echo [ERROR] Discovery Failed. Check API Key.
     pause

@@ -403,7 +403,7 @@ class FullScaleTestSuite:
         logger.info("TEST 10: JAVASCRIPT BOT")
         logger.info("="*70)
         
-        bot_file = Path('execution/bot.js')
+        bot_file = Path('offchain/execution/bot.js')
         self.log_test("Bot file exists", bot_file.exists())
         
         # Check other execution components
