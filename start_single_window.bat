@@ -18,7 +18,7 @@ set EXECUTION_MODE=PAPER
 
 REM Start Bot in background
 echo [32mStarting Bot in background...[0m
-start /b node execution\bot.js > bot_output.log 2>&1
+start /b node offchain\execution\bot.js > bot_output.log 2>&1
 
 REM Wait a moment
 timeout /t 3 /nobreak >nul

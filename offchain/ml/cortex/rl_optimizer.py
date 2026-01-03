@@ -5,6 +5,18 @@ import numpy as np
 from datetime import datetime
 from collections import deque
 
+# Import AI & Scoring configuration
+try:
+    from offchain.core.config import (
+        SELF_LEARNING_ENABLED, ROUTE_INTELLIGENCE_ENABLED,
+        ML_CONFIDENCE_THRESHOLD
+    )
+except ImportError:
+    # Fallback defaults if config not available
+    SELF_LEARNING_ENABLED = True
+    ROUTE_INTELLIGENCE_ENABLED = True
+    ML_CONFIDENCE_THRESHOLD = 0.75
+
 class QLearningAgent:
     """
     Enhanced Reinforcement Learning Agent with Experience Replay.
@@ -24,7 +36,14 @@ class QLearningAgent:
     GAS_NORMAL_THRESHOLD = 50
     
     def __init__(self, buffer_size=10000):
+        # AI & Scoring Configuration
+        self.self_learning_enabled = SELF_LEARNING_ENABLED
+        self.route_intelligence_enabled = ROUTE_INTELLIGENCE_ENABLED
+        self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
+        
         self.q_table = self.load_q_table()
+        # Learning rate is kept constant; when self_learning_enabled is False,
+        # Q-table updates are skipped entirely instead of zeroing the learning rate
         self.learning_rate = 0.1
         self.discount_factor = 0.95
         self.epsilon = 0.1  # Exploration rate
@@ -48,7 +67,9 @@ class QLearningAgent:
             "successful_trades": 0,
             "failed_trades": 0,
             "success_rate": 0.0,
-            "last_updated": None
+            "last_updated": None,
+            "self_learning_enabled": self.self_learning_enabled,
+            "route_intelligence_enabled": self.route_intelligence_enabled
         }
         self._load_metrics()
 
@@ -162,6 +183,7 @@ class QLearningAgent:
     def learn(self, chain_id, volatility, action_taken, reward, gas_gwei=30, next_state_data=None):
         """
         Enhanced Q-Learning with experience replay.
+        Respects self_learning_enabled flag - if disabled, only updates metrics.
         
         Args:
             chain_id: Chain identifier
@@ -175,7 +197,7 @@ class QLearningAgent:
         state = self.get_state_key(chain_id, volatility, gas_level)
         action_key = f"{action_taken['slippage']}_{action_taken['priority']}"
         
-        # Store experience in replay buffer
+        # Store experience in replay buffer (always track experiences)
         experience = {
             "state": state,
             "action": action_key,
@@ -184,23 +206,43 @@ class QLearningAgent:
         }
         self.replay_buffer.append(experience)
         
-        # Initialize state if new
-        if state not in self.q_table:
-            self.q_table[state] = {}
-        if action_key not in self.q_table[state]:
-            self.q_table[state][action_key] = 0.0
+        # Only update Q-table if self-learning is enabled
+        if self.self_learning_enabled:
+            # Initialize state if new
+            if state not in self.q_table:
+                self.q_table[state] = {}
+            if action_key not in self.q_table[state]:
+                self.q_table[state][action_key] = 0.0
 
-        # Q-Learning Update
-        old_value = self.q_table[state][action_key]
-        next_max = max(self.q_table[state].values()) if self.q_table[state] else 0
+            # Q-Learning Update
+            old_value = self.q_table[state][action_key]
+            next_max = max(self.q_table[state].values()) if self.q_table[state] else 0
+            
+            # Temporal Difference Learning
+            new_value = old_value + self.learning_rate * (
+                reward + self.discount_factor * next_max - old_value
+            )
+            self.q_table[state][action_key] = new_value
+            
+            # Decay epsilon (explore less over time) - only when learning
+            if self.epsilon > self.epsilon_min:
+                self.epsilon *= self.epsilon_decay
         
-        # Temporal Difference Learning
-        new_value = old_value + self.learning_rate * (
-            reward + self.discount_factor * next_max - old_value
-        )
-        self.q_table[state][action_key] = new_value
+        # Always update metrics and state tracking
+        self._update_metrics_without_learning(reward)
         
-        # Update metrics
+        # Periodically save (always save to maintain state consistency)
+        if self.metrics["total_episodes"] % 10 == 0:
+            if self.self_learning_enabled:
+                self._save_q_table()
+            self._save_metrics()
+            self._save_replay_buffer()
+    
+    def _update_metrics_without_learning(self, reward):
+        """
+        Update performance metrics without modifying Q-table.
+        Used when self-learning is disabled to track performance without updating the model.
+        """
         self.metrics["total_episodes"] += 1
         self.metrics["total_rewards"] += reward
         self.metrics["avg_reward"] = self.metrics["total_rewards"] / self.metrics["total_episodes"]
@@ -218,16 +260,6 @@ class QLearningAgent:
         total_trades = self.metrics["successful_trades"] + self.metrics["failed_trades"]
         if total_trades > 0:
             self.metrics["success_rate"] = (self.metrics["successful_trades"] / total_trades) * 100
-        
-        # Decay epsilon (explore less over time)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-        
-        # Periodically save
-        if self.metrics["total_episodes"] % 10 == 0:
-            self._save_q_table()
-            self._save_metrics()
-            self._save_replay_buffer()
     
     def batch_replay_learning(self, batch_size=32):
         """

@@ -171,7 +171,7 @@ echo    TITAN SYSTEM IS NOW RUNNING!
 echo ================================================================
 echo.
 echo Components started:
-echo   - Brain (AI Engine): Python offchain/ml/brain.py
+echo   - Brain (AI Engine): Python ml/brain.py
 echo   - Executor (Trading Bot): Node offchain/execution/bot.js
 echo.
 echo Monitor the separate windows to see system activity.

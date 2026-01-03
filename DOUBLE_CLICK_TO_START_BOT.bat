@@ -14,6 +14,6 @@ echo ========================================================================
 echo.
 
 set EXECUTION_MODE=PAPER
-node execution\bot.js
+node offchain\execution\bot.js
 
 pause

@@ -87,7 +87,7 @@ check_file "requirements.txt" "requirements.txt exists"
 check_file "hardhat.config.js" "hardhat.config.js exists"
 check_file ".env" ".env configuration file exists"
 check_file "contracts/OmniArbExecutor.sol" "Main smart contract exists"
-check_file "offchain/ml/brain.py" "AI Brain module exists"
+check_file "ml/brain.py" "AI Brain module exists"
 check_file "offchain/execution/bot.js" "Execution bot exists"
 echo ""
 

@@ -82,6 +82,13 @@ class SimulationMetrics:
         self.executed_trades = 0
         self.successful_trades = 0
         self.failed_trades = 0
+        
+        # Add rejection tracking
+        self.rejected_low_profit = 0
+        self.rejected_high_slippage = 0
+        self.rejected_low_spread = 0
+        self.rejected_zero_loan = 0
+        
         self.total_profit_usd = 0.0
         self.total_gas_cost_usd = 0.0
         self.total_bridge_fees_usd = 0.0
@@ -101,6 +108,15 @@ class SimulationMetrics:
             'successful_trades': self.successful_trades,
             'failed_trades': self.failed_trades,
             'success_rate': self.successful_trades / self.executed_trades if self.executed_trades > 0 else 0,
+            
+            # Add rejection metrics
+            'rejected_low_profit': self.rejected_low_profit,
+            'rejected_high_slippage': self.rejected_high_slippage,
+            'rejected_low_spread': self.rejected_low_spread,
+            'rejected_zero_loan': self.rejected_zero_loan,
+            'total_rejected': (self.rejected_low_profit + self.rejected_high_slippage + 
+                              self.rejected_low_spread + self.rejected_zero_loan),
+            
             'total_profit_usd': self.total_profit_usd,
             'total_gas_cost_usd': self.total_gas_cost_usd,
             'total_bridge_fees_usd': self.total_bridge_fees_usd,
@@ -542,6 +558,12 @@ class RobustLiveSimulation:
             logger.info(f"   ✅ Executed: {day_executed}, Successful: {day_successful}")
             logger.info(f"   💰 Day Profit: ${day_profit:.2f}, Gas: ${day_gas_cost:.2f}")
             
+            # Add rejection summary
+            logger.info(f"   📊 Rejections: Low Profit: {self.metrics.rejected_low_profit}, "
+                        f"Low Spread: {self.metrics.rejected_low_spread}, "
+                        f"High Slippage: {self.metrics.rejected_high_slippage}, "
+                        f"Zero Loan: {self.metrics.rejected_zero_loan}")
+            
             return {
                 'date': day_data['date'],
                 'day_number': day_idx + 1,
@@ -602,6 +624,8 @@ class RobustLiveSimulation:
                 safe_amount = target_raw * 0.1
             
             if safe_amount == 0:
+                self.metrics.rejected_zero_loan += 1
+                logger.debug(f"  ❌ Rejected: safe_amount is 0")
                 return None
             
             loan_usd = safe_amount / (10 ** decimals)
@@ -630,6 +654,10 @@ class RobustLiveSimulation:
             except Exception:
                 slippage_bps = 50
             
+            # Add detailed logging before execution decision
+            logger.debug(f"Evaluating opportunity: chain={chain_id}, token={opp.get('token', 'unknown')}")
+            logger.debug(f"  Spread: {spread*100:.3f}%, Net Profit: ${net_profit:.2f}, Slippage: {slippage_bps} bps")
+            
             # Execution decision (LIVE mode criteria)
             should_execute = (
                 net_profit > 5.0 and
@@ -638,6 +666,24 @@ class RobustLiveSimulation:
             )
             
             if not should_execute:
+                # Track specific rejection reasons
+                if net_profit <= 5.0:
+                    self.metrics.rejected_low_profit += 1
+                if slippage_bps > 100:
+                    self.metrics.rejected_high_slippage += 1
+                if spread <= 0.015:
+                    self.metrics.rejected_low_spread += 1
+                
+                # Log detailed rejection reasons
+                rejection_reasons = []
+                if net_profit <= 5.0:
+                    rejection_reasons.append(f"profit=${net_profit:.2f}")
+                if slippage_bps > 100:
+                    rejection_reasons.append(f"slippage={slippage_bps}bps")
+                if spread <= 0.015:
+                    rejection_reasons.append(f"spread={spread*100:.2f}%")
+                
+                logger.debug(f"  ❌ Rejected: {', '.join(rejection_reasons)}")
                 return None
             
             # Simulate execution (with higher success rate for LIVE mode)
@@ -707,7 +753,7 @@ class RobustLiveSimulation:
         
         # Export summary
         summary_file = output_dir / f'summary_{timestamp}.json'
-        with open(summary_file, 'w') as f:
+        with open(summary_file, 'w', encoding='utf-8') as f:
             json.dump(results['metrics'], f, indent=2)
         logger.info(f"✅ Summary exported: {summary_file}")
         
@@ -727,7 +773,7 @@ class RobustLiveSimulation:
         
         # Export full results
         full_file = output_dir / f'full_results_{timestamp}.json'
-        with open(full_file, 'w') as f:
+        with open(full_file, 'w', encoding='utf-8') as f:
             json.dump(results, f, indent=2, default=str)
         logger.info(f"✅ Full results exported: {full_file}")
         
@@ -767,6 +813,13 @@ class RobustLiveSimulation:
 - **Data Fetch Errors**: {metrics['data_fetch_errors']}
 - **Execution Errors**: {metrics['execution_errors']}
 
+### Rejection Analysis
+- **Total Rejected**: {metrics.get('total_rejected', 0):,}
+- **Rejected (Low Profit)**: {metrics.get('rejected_low_profit', 0):,}
+- **Rejected (Low Spread)**: {metrics.get('rejected_low_spread', 0):,}
+- **Rejected (High Slippage)**: {metrics.get('rejected_high_slippage', 0):,}
+- **Rejected (Zero Loan)**: {metrics.get('rejected_zero_loan', 0):,}
+
 ## System Components Used
 - ✅ OmniBrain (opportunity detection)
 - ✅ ProfitEngine (profit calculations)
@@ -784,7 +837,7 @@ class RobustLiveSimulation:
 *Generated by Titan Robust 90-Day Live Simulation*
 """
         
-        with open(output_file, 'w') as f:
+        with open(output_file, 'w', encoding='utf-8') as f:
             f.write(report)
         
         logger.info(f"✅ Report generated: {output_file}")
