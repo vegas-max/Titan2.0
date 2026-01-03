@@ -266,7 +266,7 @@ class SystemIntegrationManager:
             logger.error(f"   ❌ TitanCommander import failed: {e}")
         
         # 4. Check JavaScript Bot
-        bot_path = Path('execution/bot.js')
+        bot_path = Path('offchain/execution/bot.js')
         component_status['TitanBot'] = bot_path.exists()
         if component_status['TitanBot']:
             logger.info("   ✅ TitanBot found")
@@ -279,7 +279,7 @@ class SystemIntegrationManager:
             'aggregator_selector.js',
             'lifi_manager.js',
         ]
-        all_present = all((Path('execution') / mod).exists() for mod in execution_modules)
+        all_present = all((Path('offchain/execution') / mod).exists() for mod in execution_modules)
         component_status['ExecutionManagers'] = all_present
         if all_present:
             logger.info("   ✅ Execution managers found")

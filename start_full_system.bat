@@ -24,7 +24,7 @@ timeout /t 5 /nobreak >nul
 
 REM Start Bot in new window
 echo [32mStarting Bot (JavaScript)...[0m
-start "Titan Bot - PAPER MODE" cmd /k "set EXECUTION_MODE=PAPER && node execution\bot.js"
+start "Titan Bot - PAPER MODE" cmd /k "set EXECUTION_MODE=PAPER && node offchain\execution\bot.js"
 
 echo.
 echo [32m====================================================[0m
