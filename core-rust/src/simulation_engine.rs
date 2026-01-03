@@ -1,9 +1,8 @@
 use ethers::prelude::*;
 use std::sync::Arc;
 use anyhow::Result;
-use log::{info, warn, debug};
+use log::{warn, debug};
 
-/// Minimum ABI for ERC20 balance checking
 abigen!(
     ERC20,
     r#"[
@@ -12,11 +11,10 @@ abigen!(
     ]"#,
 );
 
-/// Uniswap V3 Quoter V2 interface
 abigen!(
-    UniswapV3Quoter,
+    UniswapV3QuoterV2,
     r#"[
-        function quoteExactInputSingle((address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96)) external returns (uint256 amountOut, uint160 sqrtPriceX96After, uint32 initializedTicksCrossed, uint256 gasEstimate)
+        function quoteExactInputSingle(address tokenIn, address tokenOut, uint256 amountIn, uint24 fee, uint160 sqrtPriceLimitX96) external returns (uint256 amountOut)
     ]"#,
 );
 
@@ -64,12 +62,10 @@ impl TitanSimulationEngine {
         fee: u32,
         quoter_address: Address,
     ) -> Result<U256> {
-        let quoter = UniswapV3Quoter::new(quoter_address, Arc::clone(&self.provider));
+        let quoter = UniswapV3QuoterV2::new(quoter_address, Arc::clone(&self.provider));
         
-        let params = (token_in, token_out, amount, fee, U256::zero());
-        
-        match quoter.quote_exact_input_single(params).call().await {
-            Ok((amount_out, _, _, _)) => {
+        match quoter.quote_exact_input_single(token_in, token_out, amount, fee, U256::zero()).call().await {
+            Ok(amount_out) => {
                 debug!("Price impact simulation: {} in -> {} out", amount, amount_out);
                 Ok(amount_out)
             }
