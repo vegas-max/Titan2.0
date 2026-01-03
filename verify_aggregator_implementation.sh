@@ -25,14 +25,14 @@ echo ""
 # Check 2: New aggregator files exist
 echo "2️⃣  Checking aggregator manager files..."
 REQUIRED_FILES=(
-    "execution/oneinch_manager.js"
-    "execution/zerox_manager.js"
-    "execution/jupiter_manager.js"
-    "execution/cowswap_manager.js"
-    "execution/rango_manager.js"
-    "execution/openocean_manager.js"
-    "execution/kyberswap_manager.js"
-    "execution/aggregator_selector.js"
+    "offchain/execution/oneinch_manager.js"
+    "offchain/execution/zerox_manager.js"
+    "offchain/execution/jupiter_manager.js"
+    "offchain/execution/cowswap_manager.js"
+    "offchain/execution/rango_manager.js"
+    "offchain/execution/openocean_manager.js"
+    "offchain/execution/kyberswap_manager.js"
+    "offchain/execution/aggregator_selector.js"
 )
 
 ALL_EXIST=true

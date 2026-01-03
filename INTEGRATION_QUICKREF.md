@@ -24,7 +24,7 @@
 
 3. **Advanced Gas Optimization** ✅
    - **What:** Strategy-specific gas calculations
-   - **Where:** `execution/gas_manager.js`
+   - **Where:** `offchain/execution/gas_manager.js`
    - **Effort:** 4-6 hours dev + 4-6 hours testing
    - **Value:** 15-30% gas cost reduction, $900-3k/month
    - **Risk:** LOW

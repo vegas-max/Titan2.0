@@ -99,7 +99,7 @@ redis-server
 python3 mainnet_orchestrator.py
 
 # Terminal 3: Start Bot (execution engine)
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 **Option 2: Background Mode (for production)**
@@ -113,7 +113,7 @@ nohup python3 mainnet_orchestrator.py > logs/brain.log 2>&1 &
 echo $! > .orchestrator.pid
 
 # Start Bot in background
-nohup node execution/bot.js > logs/bot.log 2>&1 &
+nohup node offchain/execution/bot.js > logs/bot.log 2>&1 &
 echo $! > .executor.pid
 ```
 
@@ -150,7 +150,7 @@ EXECUTION_MODE=LIVE
 ```bash
 # Check processes are running
 ps aux | grep mainnet_orchestrator
-ps aux | grep "node execution/bot.js"
+ps aux | grep "node offchain/execution/bot.js"
 
 # Check logs for errors
 tail -f logs/brain.log
@@ -343,7 +343,7 @@ redis-cli DEL circuit_breaker_timestamp
 # Restart bot
 kill -SIGTERM $(cat .executor.pid)
 sleep 2
-node execution/bot.js &
+node offchain/execution/bot.js &
 echo $! > .executor.pid
 ```
 
@@ -879,7 +879,7 @@ npx hardhat compile
 
 # Testing
 ./test_mainnet_modes.py
-node execution/bot.js --dry-run
+node offchain/execution/bot.js --dry-run
 ```
 
 ---

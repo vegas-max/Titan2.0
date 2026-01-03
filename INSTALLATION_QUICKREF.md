@@ -89,7 +89,7 @@ kill <ORCHESTRATOR_PID> <EXECUTOR_PID>
 
 # Or:
 pkill -f mainnet_orchestrator.py
-pkill -f "node execution/bot.js"
+pkill -f "node offchain/execution/bot.js"
 ```
 
 ### Restart System

@@ -137,7 +137,7 @@ redis-server
 
 **Terminal 2 - Brain (AI Engine):**
 ```bash
-python3 ml/brain.py
+python3 offchain/ml/brain.py
 ```
 
 Expected output:
@@ -150,7 +150,7 @@ Expected output:
 
 **Terminal 3 - Executor (Trading Bot):**
 ```bash
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 Expected output:
@@ -301,8 +301,8 @@ make stop
 # Or press Ctrl+C in each terminal
 
 # Or kill processes manually
-pkill -f "python3 ml/brain.py"
-pkill -f "node execution/bot.js"
+pkill -f "python3 offchain/ml/brain.py"
+pkill -f "node offchain/execution/bot.js"
 ```
 
 ## Useful Commands

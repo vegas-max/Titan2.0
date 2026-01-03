@@ -6,12 +6,12 @@ The Titan system now works **WITHOUT Redis** using file-based signal communicati
 
 ### Architecture Changes:
 1. **Python Brain (`ml/brain.py`)**: Writes signals to `signals/outgoing/*.json`
-2. **Node.js Bot (`execution/bot.js`)**: Monitors and processes signals from files
+2. **Node.js Bot (`offchain/execution/bot.js`)**: Monitors and processes signals from files
 3. **Signal Flow**: `signals/outgoing/` → `signals/processed/`
 
 ### Files Modified:
 - `ml/brain.py` - Removed Redis dependency, added JSON file writing
-- `execution/bot.js` - Removed Redis subscription, added file watcher
+- `offchain/execution/bot.js` - Removed Redis subscription, added file watcher
 - `mainnet_orchestrator.py` - Updated comments to reflect file-based signals
 - `package.json` - Removed `redis` dependency
 - `start_titan_integrated.bat` - New Windows launcher
@@ -47,7 +47,7 @@ python mainnet_orchestrator.py
 
 **Terminal 2 - Node.js Bot:**
 ```batch
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 ---

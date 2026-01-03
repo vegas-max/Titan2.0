@@ -2444,7 +2444,7 @@ redis-server
 
 #### Terminal 2: Start the Brain (AI Engine)
 ```bash
-python ml/brain.py
+python offchain/ml/brain.py
 ```
 
 Expected output:
@@ -2458,7 +2458,7 @@ Expected output:
 
 #### Terminal 3: Start the Executor (Trading Bot)
 ```bash
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 Expected output:
@@ -4022,7 +4022,7 @@ CHAINS = {
 }
 ```
 
-3. **Update `execution/bot.js`:**
+3. **Update `offchain/execution/bot.js`:**
 ```javascript
 const RPC_MAP = {
     999999: process.env.RPC_NEWCHAIN
@@ -4124,8 +4124,8 @@ npx hardhat test
 
 1. Start components in test mode:
 ```bash
-python ml/brain.py --test-mode
-node execution/bot.js --test-mode
+python offchain/ml/brain.py --test-mode
+node offchain/execution/bot.js --test-mode
 ```
 
 2. Inject test signal:

@@ -580,7 +580,7 @@ sudo update-alternatives --install /usr/bin/python3 python3 /usr/bin/python3.11 
 
 2. **Run in debug mode**:
    ```bash
-   LOG_LEVEL=DEBUG python3 ml/brain.py
+   LOG_LEVEL=DEBUG python3 offchain/ml/brain.py
    ```
 
 3. **Clean and rebuild**:

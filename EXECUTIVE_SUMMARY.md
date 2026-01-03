@@ -170,11 +170,11 @@ A comprehensive analysis of the Titan codebase revealed **13 critical gaps** in 
 
 ### Core Logic
 - `ml/brain.py` - Enhanced AI decision engine with safety limits
-- `execution/bot.js` - Hardened transaction execution pipeline
+- `offchain/execution/bot.js` - Hardened transaction execution pipeline
 - `contracts/OmniArbExecutor.sol` - Strengthened smart contract safety
 
 ### Infrastructure
-- `execution/gas_manager.js` - Added configurable gas price ceiling
+- `offchain/execution/gas_manager.js` - Added configurable gas price ceiling
 - `execution/nonce_manager.py` - Enhanced nonce conflict recovery
 - `.env` - Added new configuration parameters
 

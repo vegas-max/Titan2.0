@@ -54,7 +54,7 @@ class MainnetOrchestrator:
     ┌─────────────────────────────────────────────────────────────┐
     │                   MAINNET ORCHESTRATOR                       │
     ├─────────────────────────────────────────────────────────────┤
-    │  Real-Time Data       → OmniBrain (ml/brain.py)            │
+    │  Real-Time Data       → OmniBrain (offchain/ml/brain.py)   │
     │  Arbitrage Calc       → ProfitEngine + DexPricer           │
     │  Execution            → Paper Mode OR Live Bot (bot.js)     │
     │  ML Training          → Real-time model updates             │

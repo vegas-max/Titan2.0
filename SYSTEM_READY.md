@@ -15,7 +15,7 @@
 2. **Core System Components**
    - `mainnet_orchestrator.py` - Master controller
    - `ml/brain.py` - Arbitrage scanning engine  
-   - `execution/bot.js` - Trade executor
+   - `offchain/execution/bot.js` - Trade executor
    - `system_wiring.py` - Integration validator
    - `production_deployment.py` - Production checker
 
@@ -46,7 +46,7 @@
 python mainnet_orchestrator.py
 
 # Terminal 2 - Start Bot  
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 ### What You'll See When Running:

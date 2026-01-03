@@ -160,7 +160,7 @@ EXECUTION_MODE=LIVE python3 mainnet_orchestrator.py
 - Thread-safe training updates
 - Circuit breaker integration
 
-### 2. Execution Engine (`execution/bot.js`)
+### 2. Execution Engine (`offchain/execution/bot.js`)
 
 **Role:** Execute trades based on signals from orchestrator
 
@@ -394,7 +394,7 @@ redis-cli ping
 ps aux | grep mainnet_orchestrator
 
 # Check Node processes
-ps aux | grep "execution/bot.js"
+ps aux | grep "offchain/execution/bot.js"
 ```
 
 ## Troubleshooting
@@ -444,8 +444,8 @@ REDIS_URL=redis://localhost:6379
 echo $EXECUTION_MODE
 
 # Restart bot
-pkill -f "node execution/bot.js"
-node execution/bot.js
+pkill -f "node offchain/execution/bot.js"
+node offchain/execution/bot.js
 
 # Check Redis subscription
 redis-cli monitor

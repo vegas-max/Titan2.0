@@ -248,7 +248,7 @@ make start-mainnet-paper    # Makefile line 93-96
 **Automated Launch:** `start_mainnet.sh` - Lines 110-116
 ```bash
 # Command:
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 **Features:**
@@ -388,7 +388,7 @@ python3 mainnet_health_monitor.py
 nohup python3 mainnet_orchestrator.py > logs/brain.log 2>&1 &
 echo $! > .orchestrator.pid
 
-nohup node execution/bot.js > logs/bot.log 2>&1 &
+nohup node offchain/execution/bot.js > logs/bot.log 2>&1 &
 echo $! > .executor.pid
 ```
 
@@ -598,7 +598,7 @@ make start-mainnet-live
 - [x] `emergency_shutdown.sh` - Emergency shutdown procedure
 - [x] `mainnet_orchestrator.py` - Main orchestrator
 - [x] `mainnet_health_monitor.py` - Health monitoring
-- [x] `execution/bot.js` - Execution engine
+- [x] `offchain/execution/bot.js` - Execution engine
 - [x] `core/token_loader.py` - Dynamic token loading
 - [x] `core/config.py` - Chain and DEX configuration
 - [x] `ml/brain.py` - Arbitrage detection engine

@@ -1169,7 +1169,7 @@ The system is **production-ready** for deployment with the following caveats:
 - execution/bot.js
 - execution/gas_manager.js
 - execution/omniarb_sdk_engine.js
-- execution/aggregator_selector.js
+- offchain/execution/aggregator_selector.js
 - execution/lifi_manager.js
 - execution/paraswap_manager.js
 - execution/oneinch_manager.js

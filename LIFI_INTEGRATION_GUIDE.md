@@ -84,7 +84,7 @@ User deposits → Across sees it → Solver on Arbitrum advances funds (30-120 s
 
 **Code Example**:
 ```javascript
-const { LifiExecutionEngine } = require('./execution/lifi_manager');
+const { LifiExecutionEngine } = require('./offchain/execution/lifi_manager');
 
 // Bridge 10,000 USDC from Polygon to Arbitrum for arbitrage
 const result = await LifiExecutionEngine.bridgeAssets(
@@ -385,7 +385,7 @@ APEX-OMEGA TITAN
 
 ### Key Components
 
-#### 1. `execution/lifi_manager.js`
+#### 1. `offchain/execution/lifi_manager.js`
 **Purpose**: Execute bridge transactions using Li.Fi SDK
 
 **Key Methods**:
@@ -398,7 +398,7 @@ APEX-OMEGA TITAN
 - Integrates with ethers.js for wallet management
 - Automatically handles token approvals
 
-#### 2. `execution/lifi_discovery.js`
+#### 2. `offchain/execution/lifi_discovery.js`
 **Purpose**: Discover available routes and validate connections
 
 **Key Methods**:
@@ -450,7 +450,7 @@ if bridge_cost:
 ### LifiExecutionEngine API
 
 ```javascript
-const { LifiExecutionEngine } = require('./execution/lifi_manager');
+const { LifiExecutionEngine } = require('./offchain/execution/lifi_manager');
 
 // Execute bridge transaction
 const result = await LifiExecutionEngine.bridgeAssets(
@@ -472,7 +472,7 @@ const result = await LifiExecutionEngine.bridgeAssets(
 ### LifiDiscovery API
 
 ```javascript
-const { LifiDiscovery } = require('./execution/lifi_discovery');
+const { LifiDiscovery } = require('./offchain/execution/lifi_discovery');
 
 const discovery = new LifiDiscovery();
 
@@ -724,4 +724,4 @@ The Li.Fi integration enables APEX-OMEGA TITAN to execute cross-chain arbitrage 
 
 **Remember**: Intent-based bridging reduces latency but does NOT eliminate the need for capital. Flash loans cannot span chains, so Titan must hold its own liquidity for cross-chain operations. However, flash loans CAN be used on the destination chain for leveraged arbitrage after bridging.
 
-For questions or support, consult the Li.Fi documentation at https://docs.li.fi/ or review the integration code in `execution/lifi_manager.js`.
+For questions or support, consult the Li.Fi documentation at https://docs.li.fi/ or review the integration code in `offchain/execution/lifi_manager.js`.

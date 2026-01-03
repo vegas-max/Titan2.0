@@ -67,14 +67,14 @@ try {
         
         // Start Brain in background
         const { spawn } = require('child_process');
-        const brain = spawn('python', ['ml/brain.py'], {
+        const brain = spawn('python', ['offchain/ml/brain.py'], {
             stdio: 'inherit',
             detached: false
         });
         
         // Wait a bit then start executor
         setTimeout(() => {
-            const executor = spawn('node', ['execution/bot.js'], {
+            const executor = spawn('node', ['offchain/execution/bot.js'], {
                 stdio: 'inherit',
                 detached: false
             });

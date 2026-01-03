@@ -35,7 +35,7 @@ Created 7 new manager classes for DEX aggregators:
 
 ### 3. Intelligent Routing System
 
-Created `execution/aggregator_selector.js` with smart routing logic:
+Created `offchain/execution/aggregator_selector.js` with smart routing logic:
 
 ```javascript
 // Example routing scenarios:
@@ -57,7 +57,7 @@ Default               → 1inch
 
 ### 4. Core Bot Updates
 
-Updated `execution/bot.js`:
+Updated `offchain/execution/bot.js`:
 - Replaced `ParaSwapManager` with `AggregatorSelector`
 - Added backward compatibility for `use_paraswap` flag
 - Enhanced error handling for multiple aggregators
