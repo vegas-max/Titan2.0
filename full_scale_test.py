@@ -408,9 +408,9 @@ class FullScaleTestSuite:
         
         # Check other execution components
         components = [
-            'execution/gas_manager.js',
-            'execution/aggregator_selector.js',
-            'execution/lifi_manager.js',
+            'offchain/execution/gas_manager.js',
+            'offchain/execution/aggregator_selector.js',
+            'offchain/execution/lifi_manager.js',
         ]
         
         for component in components:

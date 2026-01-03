@@ -119,7 +119,7 @@ fi
 
 # Step 4: Kill any remaining Node.js processes (bot)
 echo -e "${YELLOW}[4/6]${NC} Checking for orphaned bot processes..."
-BOT_PIDS=$(pgrep -f "execution/bot.js" 2>/dev/null)
+BOT_PIDS=$(pgrep -f "offchain/execution/bot.js" 2>/dev/null)
 if [ ! -z "$BOT_PIDS" ]; then
     while read -r pid; do
         kill -SIGTERM "$pid" 2>/dev/null
@@ -127,7 +127,7 @@ if [ ! -z "$BOT_PIDS" ]; then
     done <<< "$BOT_PIDS"
     sleep 1
     # Force kill if still running
-    BOT_PIDS=$(pgrep -f "execution/bot.js" 2>/dev/null)
+    BOT_PIDS=$(pgrep -f "offchain/execution/bot.js" 2>/dev/null)
     if [ ! -z "$BOT_PIDS" ]; then
         while read -r pid; do
             kill -SIGKILL "$pid" 2>/dev/null

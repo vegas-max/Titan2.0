@@ -8,19 +8,19 @@ REQUIRED_FILES = [
     ".env",
     "package.json",
     "requirements.txt",
-    "core/config.py",
-    "core/enum_matrix.py",
-    "core/token_discovery.py",
-    "core/token_equivalence.py",
-    "ml/brain.py",
-    "ml/bridge_oracle.py",
-    "ml/cortex/feature_store.py",
-    "ml/cortex/forecaster.py",
-    "ml/cortex/rl_optimizer.py",
-    "execution/bot.js",
-    "execution/lifi_discovery.js",
-    "execution/lifi_manager.js",
-    "execution/gas_manager.js", # The new file
+    "offchain/core/config.py",
+    "offchain/core/enum_matrix.py",
+    "offchain/core/token_discovery.py",
+    "offchain/core/token_equivalence.py",
+    "offchain/ml/brain.py",
+    "offchain/ml/bridge_oracle.py",
+    "offchain/ml/cortex/feature_store.py",
+    "offchain/ml/cortex/forecaster.py",
+    "offchain/ml/cortex/rl_optimizer.py",
+    "offchain/execution/bot.js",
+    "offchain/execution/lifi_discovery.js",
+    "offchain/execution/lifi_manager.js",
+    "offchain/execution/gas_manager.js", # The new file
     "contracts/OmniArbExecutor.sol"
 ]
 

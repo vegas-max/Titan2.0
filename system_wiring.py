@@ -21,7 +21,7 @@ SYSTEM ARCHITECTURE:
 │  ┌───────────────────────────────────────────────────────────────┐ │
 │  │ LAYER 1: DATA INGESTION (Python)                              │ │
 │  ├───────────────────────────────────────────────────────────────┤ │
-│  │  • OmniBrain (ml/brain.py)                                    │ │
+│  │  • OmniBrain (offchain/ml/brain.py)                           │ │
 │  │    - Multi-chain RPC connections                              │ │
 │  │    - Real-time price data                                     │ │
 │  │    - Gas price monitoring                                     │ │
@@ -32,15 +32,15 @@ SYSTEM ARCHITECTURE:
 │  ┌───────────────────────────────────────────────────────────────┐ │
 │  │ LAYER 2: ARBITRAGE CALCULATION (Python)                       │ │
 │  ├───────────────────────────────────────────────────────────────┤ │
-│  │  • ProfitEngine (ml/brain.py)                                 │ │
+│  │  • ProfitEngine (offchain/ml/brain.py)                        │ │
 │  │    - Master profit equation                                   │ │
 │  │    - Multi-hop route optimization                             │ │
 │  │    - Cross-chain bridge integration                           │ │
-│  │  • TitanCommander (core/titan_commander_core.py)              │ │
+│  │  • TitanCommander (offchain/core/titan_commander_core.py)     │ │
 │  │    - Loan size optimization                                   │ │
 │  │    - TVL safety checks                                        │ │
 │  │    - Slippage simulation                                      │ │
-│  │  • DexPricer (ml/dex_pricer.py)                               │ │
+│  │  • DexPricer (offchain/ml/dex_pricer.py)                      │ │
 │  │    - Real-time price quotes                                   │ │
 │  │    - Route discovery                                          │ │
 │  └───────────────────────────────────────────────────────────────┘ │
@@ -58,16 +58,16 @@ SYSTEM ARCHITECTURE:
 │  ┌───────────────────────────────────────────────────────────────┐ │
 │  │ LAYER 4: EXECUTION ENGINE (JavaScript)                        │ │
 │  ├───────────────────────────────────────────────────────────────┤ │
-│  │  • TitanBot (execution/bot.js)                                │ │
+│  │  • TitanBot (offchain/execution/bot.js)                       │ │
 │  │    - Signal file monitoring                                   │ │
 │  │    - Execution mode routing (PAPER/LIVE)                      │ │
-│  │  • GasManager (execution/gas_manager.js)                      │ │
+│  │  • GasManager (offchain/execution/gas_manager.js)             │ │
 │  │    - EIP-1559 optimization                                    │ │
-│  │  • AggregatorSelector (execution/aggregator_selector.js)      │ │
+│  │  • AggregatorSelector (offchain/execution/aggregator_selector.js) │ │
 │  │    - Multi-aggregator routing                                 │ │
-│  │  • LifiManager (execution/lifi_manager.js)                    │ │
+│  │  • LifiManager (offchain/execution/lifi_manager.js)           │ │
 │  │    - Cross-chain execution                                    │ │
-│  │  • BloxRouteManager (execution/bloxroute_manager.js)          │ │
+│  │  • BloxRouteManager (offchain/execution/bloxroute_manager.js) │ │
 │  │    - MEV protection                                           │ │
 │  └───────────────────────────────────────────────────────────────┘ │
 │                              ↓                                        │

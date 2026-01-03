@@ -214,11 +214,11 @@ class ProductionDeploymentManager:
         
         # JavaScript components
         js_components = [
-            'execution/bot.js',
-            'execution/gas_manager.js',
-            'execution/aggregator_selector.js',
-            'execution/lifi_manager.js',
-            'execution/bloxroute_manager.js',
+            'offchain/execution/bot.js',
+            'offchain/execution/gas_manager.js',
+            'offchain/execution/aggregator_selector.js',
+            'offchain/execution/lifi_manager.js',
+            'offchain/execution/bloxroute_manager.js',
         ]
         
         for component in js_components:

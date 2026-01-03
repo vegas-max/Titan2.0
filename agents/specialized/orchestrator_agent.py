@@ -249,7 +249,7 @@ class OrchestratorAgent(BaseAgent):
     def _start_brain(self, mode: str) -> Dict[str, Any]:
         """Start the AI brain component"""
         try:
-            cmd = ["python3", "ml/brain.py"]
+            cmd = ["python3", "offchain/ml/brain.py"]
             if mode:
                 cmd.extend(["--mode", mode])
             
@@ -268,7 +268,7 @@ class OrchestratorAgent(BaseAgent):
     def _start_executor(self, mode: str) -> Dict[str, Any]:
         """Start the executor component"""
         try:
-            cmd = ["node", "execution/bot.js"]
+            cmd = ["node", "offchain/execution/bot.js"]
             
             process = subprocess.Popen(
                 cmd,

@@ -55,7 +55,7 @@ echo [OK] Environment ready
 echo.
 echo Starting both processes...
 echo   - Python Brain: mainnet_orchestrator.py
-echo   - Node.js Bot: execution/bot.js
+echo   - Node.js Bot: offchain/execution/bot.js
 echo.
 echo Press Ctrl+C to stop both processes
 echo.
