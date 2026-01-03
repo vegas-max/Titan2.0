@@ -3962,44 +3962,59 @@ except Exception as e:
 ### Project Structure
 
 ```
-Titan/
-├── contracts/              # Solidity smart contracts
-│   ├── OmniArbExecutor.sol
-│   ├── interfaces/
-│   └── modules/
-├── core/                   # Core Python infrastructure
-│   ├── config.py
-│   ├── enum_matrix.py
-│   ├── token_discovery.py
-│   ├── titan_commander_core.py
-│   └── titan_simulation_engine.py
-├── execution/              # Node.js execution layer
-│   ├── bot.js
-│   ├── gas_manager.js
-│   ├── lifi_manager.js
-│   ├── omniarb_sdk_engine.js
-│   └── bloxroute_manager.js
-├── ml/                     # Machine learning & strategies
-│   ├── brain.py
-│   ├── dex_pricer.py
-│   ├── cortex/
-│   │   ├── forecaster.py
-│   │   ├── rl_optimizer.py
-│   │   └── feature_store.py
-│   └── strategies/
-│       └── instant_scalper.py
-├── monitoring/             # Real-time monitoring
-│   ├── MempoolHound.ts
-│   └── decoderWorker.js
-├── routing/                # Cross-chain routing
-│   └── bridge_aggregator.py
-├── scripts/                # Deployment & utilities
-│   └── deploy.js
-├── .env                    # Environment configuration
-├── package.json            # Node.js dependencies
-├── requirements.txt        # Python dependencies
-├── hardhat.config.js       # Hardhat configuration
-└── README.md               # This file
+Titan2.0/
+├── onchain/                    # Blockchain-executable components
+│   ├── contracts/              # Solidity smart contracts
+│   │   ├── FlashArbExecutor.sol
+│   │   ├── OmniArbExecutor.sol
+│   │   ├── interfaces/
+│   │   └── modules/
+│   ├── scripts/                # Deployment scripts
+│   │   └── deploy.js
+│   └── test/                   # Smart contract tests
+├── offchain/                   # Traditional computing components
+│   ├── core/                   # Core Python infrastructure
+│   │   ├── config.py
+│   │   ├── enum_matrix.py
+│   │   ├── token_discovery.py
+│   │   ├── titan_commander_core.py
+│   │   └── titan_simulation_engine.py
+│   ├── ml/                     # Machine learning & strategies
+│   │   ├── brain.py
+│   │   ├── dex_pricer.py
+│   │   ├── cortex/
+│   │   │   ├── forecaster.py
+│   │   │   ├── rl_optimizer.py
+│   │   │   └── feature_store.py
+│   │   └── strategies/
+│   │       └── instant_scalper.py
+│   ├── execution/              # Node.js execution layer
+│   │   ├── bot.js
+│   │   ├── gas_manager.js
+│   │   ├── lifi_manager.js
+│   │   ├── omniarb_sdk_engine.js
+│   │   └── bloxroute_manager.js
+│   ├── monitoring/             # Real-time monitoring
+│   │   ├── MempoolHound.ts
+│   │   └── decoderWorker.js
+│   └── routing/                # Cross-chain routing
+│       └── bridge_aggregator.py
+├── core-rust/                  # Rust performance cores (optional)
+│   └── src/
+│       ├── config.rs
+│       ├── commander.rs
+│       └── simulation_engine.rs
+├── core-go/                    # Go performance cores (optional)
+│   ├── config/
+│   ├── commander/
+│   └── simulation/
+├── signals/                    # File-based communication fallback
+├── data/                       # Persistent data storage
+├── .env                        # Environment configuration
+├── package.json                # Node.js dependencies
+├── requirements.txt            # Python dependencies
+├── hardhat.config.js           # Hardhat configuration
+└── README.md                   # This file
 ```
 
 ### Adding a New Chain
@@ -4010,7 +4025,7 @@ RPC_NEWCHAIN=https://newchain-rpc.com
 WSS_NEWCHAIN=wss://newchain-rpc.com
 ```
 
-2. **Update `core/config.py`:**
+2. **Update `offchain/core/config.py`:**
 ```python
 CHAINS = {
     999999: {  # New Chain ID
@@ -4042,14 +4057,14 @@ python test_phase1.py
 NEWDEX_ROUTER=0x...
 ```
 
-2. **Update `ml/dex_pricer.py`:**
+2. **Update `offchain/ml/dex_pricer.py`:**
 ```python
 def get_newdex_price(self, token_in, token_out, amount):
     router_addr = os.getenv('NEWDEX_ROUTER')
     # Implement pricing logic
 ```
 
-3. **Update `contracts/OmniArbExecutor.sol`:**
+3. **Update `onchain/contracts/OmniArbExecutor.sol`:**
 ```solidity
 if (protocols[i] == 5) { // NewDEX
     // Implement swap logic
@@ -4060,7 +4075,7 @@ if (protocols[i] == 5) { // NewDEX
 
 1. **Create new strategy file:**
 ```python
-# ml/strategies/my_strategy.py
+# offchain/ml/strategies/my_strategy.py
 
 class MyStrategy:
     def __init__(self, chain_id):
@@ -4077,9 +4092,9 @@ class MyStrategy:
 
 2. **Integrate with Brain:**
 ```python
-# ml/brain.py
+# offchain/ml/brain.py
 
-from ml.strategies.my_strategy import MyStrategy
+from offchain.ml.strategies.my_strategy import MyStrategy
 
 strategy = MyStrategy(chain_id)
 opportunities = strategy.scan()
