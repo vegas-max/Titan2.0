@@ -262,8 +262,11 @@ class ModelTrainer:
             reward = base_reward
             success = reward > 0
             
-            # Update agent
-            next_state = f"{chain}_{volatility}_{gas_level}"  # Simplified
+            # Update agent with a (potentially) new next state
+            next_chain = np.random.choice(['ethereum', 'polygon', 'arbitrum'])
+            next_volatility = np.random.choice(['low', 'medium', 'high'])
+            next_gas_level = np.random.choice(['low', 'normal', 'high'])
+            next_state = f"{next_chain}_{next_volatility}_{next_gas_level}"
             agent.update(state, action_params, reward, next_state, success)
             
             if (episode + 1) % 1000 == 0:
