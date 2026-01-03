@@ -321,7 +321,7 @@ kill <ORCHESTRATOR_PID> <EXECUTOR_PID>
 
 # Or use pkill
 pkill -f mainnet_orchestrator.py
-pkill -f "node execution/bot.js"
+pkill -f "node offchain/execution/bot.js"
 ```
 
 ### Restart the System
@@ -557,7 +557,7 @@ redis-server
 python3 mainnet_orchestrator.py
 
 # Terminal 3: Start Node.js Executor
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 ### Using Docker (Alternative)

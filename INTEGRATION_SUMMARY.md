@@ -212,7 +212,7 @@ Combine both systems' strengths for a **best-in-class arbitrage + MEV platform**
    - Test slippage reduction (target: 50-80%)
 
 3. Enhance Gas Optimization
-   - Update `execution/gas_manager.js`
+   - Update `offchain/execution/gas_manager.js`
    - Add strategy-specific gas calculation
    - Implement dynamic optimization
 
@@ -280,7 +280,7 @@ Combine both systems' strengths for a **best-in-class arbitrage + MEV platform**
 | File | Changes | Lines | Risk |
 |------|---------|-------|------|
 | `execution/merkle_builder.js` | Add optimization methods | ~50-80 | LOW |
-| `execution/gas_manager.js` | Add strategy-specific gas | ~30-50 | LOW |
+| `offchain/execution/gas_manager.js` | Add strategy-specific gas | ~30-50 | LOW |
 | `.env.example` | Add new config variables | ~20-30 | NONE |
 
 ### Files to Create (Priority 1):

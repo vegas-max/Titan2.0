@@ -41,7 +41,7 @@ This document verifies the implementation status of all features claimed in the 
 **Implementations**:
 - ✅ `core/config.py` - All 15 chains with RPC, WebSocket, Aave pools, DEX routers
 - ✅ `core/enum_matrix.py` - ChainManager utility class
-- ✅ `execution/bot.js` - RPC_MAP with all 15 chains
+- ✅ `offchain/execution/bot.js` - RPC_MAP with all 15 chains
 - ✅ `hardhat.config.js` - All networks for deployment
 - ✅ `test_phase1.py` - Network connectivity verification (PASSING)
 
@@ -190,7 +190,7 @@ This document verifies the implementation status of all features claimed in the 
 - ⚠️ Needs integration testing
 
 **Gas Limit Buffers**:
-- ✅ `execution/gas_manager.js` - GasManager class
+- ✅ `offchain/execution/gas_manager.js` - GasManager class
 - ✅ Safety multiplier: 1.2x (20% buffer)
 - ✅ EIP-1559 dynamic fee calculation
 - ✅ Network congestion detection
@@ -210,7 +210,7 @@ This document verifies the implementation status of all features claimed in the 
 ### Status: ✅ FULLY IMPLEMENTED
 
 **EIP-1559 Gas Management**:
-- ✅ `execution/gas_manager.js`
+- ✅ `offchain/execution/gas_manager.js`
 - ✅ Dynamic base fee + priority fee optimization
 - ✅ Strategy modes: SLOW, STANDARD, RAPID
 - ✅ Max fee calculation with volatility buffer

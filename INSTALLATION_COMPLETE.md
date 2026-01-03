@@ -280,7 +280,7 @@ kill $(cat .orchestrator.pid .executor.pid)
 
 # Or manually
 pkill -f mainnet_orchestrator.py
-pkill -f "node execution/bot.js"
+pkill -f "node offchain/execution/bot.js"
 ```
 
 ### Restart System

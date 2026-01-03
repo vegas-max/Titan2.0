@@ -173,12 +173,12 @@ class OrderSplitter {
 #### 3. Advanced Gas Optimization
 
 **Current State:**
-- Basic gas manager (`execution/gas_manager.js`)
+- Basic gas manager (`offchain/execution/gas_manager.js`)
 - Fixed gas price ceilings
 
 **Integration Recommendation:**
 
-Enhance `execution/gas_manager.js`:
+Enhance `offchain/execution/gas_manager.js`:
 
 ```javascript
 class GasManager {
@@ -365,7 +365,7 @@ module.exports = { MEVStrategies };
 
 **Integration with Bot:**
 
-Update `execution/bot.js`:
+Update `offchain/execution/bot.js`:
 
 ```javascript
 const { MEVStrategies } = require('./mev_strategies');
@@ -766,7 +766,7 @@ Based on alternate TITAN MEV PRO estimates, integrated components could add:
    - Test slippage improvements
 
 3. **Gas Optimization** (Priority 1)
-   - Enhance `execution/gas_manager.js`
+   - Enhance `offchain/execution/gas_manager.js`
    - Add strategy-specific gas calculation
    - Implement dynamic optimization
 

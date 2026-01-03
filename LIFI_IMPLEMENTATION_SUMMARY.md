@@ -121,7 +121,7 @@ ENABLE_CROSS_CHAIN=true
 
 ### Example 1: Get Bridge Quote
 ```javascript
-const { LifiExecutionEngine } = require('./execution/lifi_manager');
+const { LifiExecutionEngine } = require('./offchain/execution/lifi_manager');
 
 const quote = await LifiExecutionEngine.getQuote(
     137,      // Polygon

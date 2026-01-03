@@ -582,7 +582,7 @@ Implement high-value, low-risk enhancements that build upon existing functionali
 
 ### 1.3 Advanced Gas Optimization
 
-**File:** `execution/gas_manager.js`  
+**File:** `offchain/execution/gas_manager.js`  
 **Estimated Effort:** 4-6 hours development + 4-6 hours testing
 
 #### Implementation Tasks

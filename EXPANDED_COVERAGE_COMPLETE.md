@@ -213,7 +213,7 @@ Testing 19 DEX routes × 4 trade sizes = 2,736 evaluations
 python mainnet_orchestrator.py
 
 # Terminal 2 - Node.js Executor
-node execution/bot.js
+node offchain/execution/bot.js
 ```
 
 **Expected Output**:

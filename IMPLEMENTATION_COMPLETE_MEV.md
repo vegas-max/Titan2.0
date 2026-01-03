@@ -60,7 +60,7 @@ MAX_ORDER_SPLITS=5           # Maximum DEX splits per trade
 
 **Usage Example:**
 ```javascript
-const { OrderSplitter } = require('./execution/order_splitter');
+const { OrderSplitter } = require('./offchain/execution/order_splitter');
 const splitter = new OrderSplitter();
 
 const result = await splitter.optimizeSplit(USDC, WETH, 100000, dexPools);
@@ -72,7 +72,7 @@ const result = await splitter.optimizeSplit(USDC, WETH, 100000, dexPools);
 ---
 
 #### 3. Advanced Gas Optimization
-**File:** `execution/gas_manager.js` (+117 lines)
+**File:** `offchain/execution/gas_manager.js` (+117 lines)
 
 **New Features:**
 - `calculateMEVGas()` - Strategy-specific gas optimization
@@ -140,7 +140,7 @@ VALIDATOR_TIP_PERCENTAGE=90          # Tip 90% to validator (FIXED!)
 
 **Usage Example:**
 ```javascript
-const { MEVStrategies } = require('./execution/mev_strategies');
+const { MEVStrategies } = require('./offchain/execution/mev_strategies');
 const mev = new MEVStrategies();
 
 const result = await mev.executeJITLiquidity(targetSwap, pool, provider);
@@ -359,13 +359,13 @@ tail -f logs/brain.log logs/bot.log
 // In your trading logic
 
 // 1. Use enhanced Merkle batching
-const { MerkleBlockBuilder } = require('./execution/merkle_builder');
+const { MerkleBlockBuilder } = require('./offchain/execution/merkle_builder');
 const builder = new MerkleBlockBuilder();
 const batch = builder.buildOptimizedBatch(trades);
 console.log(`Gas saved: ${batch.savings.savingsPercent}%`);
 
 // 2. Use order splitting
-const { OrderSplitter } = require('./execution/order_splitter');
+const { OrderSplitter } = require('./offchain/execution/order_splitter');
 const splitter = new OrderSplitter();
 if (tradeSize > 10000) {
     const split = await splitter.optimizeSplit(tokenIn, tokenOut, tradeSize, dexPools);
@@ -376,7 +376,7 @@ if (tradeSize > 10000) {
 }
 
 // 3. Use strategy-specific gas
-const { GasManager } = require('./execution/gas_manager');
+const { GasManager } = require('./offchain/execution/gas_manager');
 const gasManager = new GasManager(provider, chainId);
 const gas = await gasManager.calculateMEVGas('BATCH_MERKLE');
 

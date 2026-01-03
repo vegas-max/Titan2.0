@@ -19,7 +19,7 @@ This document details the comprehensive improvements made to the Titan system to
 
 **Files Modified:**
 - `ml/brain.py`: Added `_init_redis_connection()` with retry logic
-- `execution/bot.js`: Enhanced `init()` with connection validation and retry
+- `offchain/execution/bot.js`: Enhanced `init()` with connection validation and retry
 
 **Impact:** Prevents system crashes due to temporary Redis failures, ensures continuous operation.
 
@@ -38,8 +38,8 @@ This document details the comprehensive improvements made to the Titan system to
 
 **Files Modified:**
 - `ml/brain.py`: Added gas price ceiling checks in `_get_gas_price()`
-- `execution/gas_manager.js`: Enhanced `getDynamicGasFees()` with multiple safety checks
-- `execution/bot.js`: Added gas fee validation before transaction submission
+- `offchain/execution/gas_manager.js`: Enhanced `getDynamicGasFees()` with multiple safety checks
+- `offchain/execution/bot.js`: Added gas fee validation before transaction submission
 
 **Impact:** Prevents excessive gas costs that could eliminate profits or cause losses.
 
@@ -58,7 +58,7 @@ This document details the comprehensive improvements made to the Titan system to
 - Detailed error classification and reporting
 
 **Files Modified:**
-- `execution/bot.js`: Complete rewrite of `executeTrade()` with comprehensive error handling
+- `offchain/execution/bot.js`: Complete rewrite of `executeTrade()` with comprehensive error handling
 
 **Impact:** Improves reliability, provides better visibility into failures, enables recovery strategies.
 
@@ -78,7 +78,7 @@ This document details the comprehensive improvements made to the Titan system to
 - Protocol-specific parameter validation
 
 **Files Modified:**
-- `execution/bot.js`: Added validation throughout `executeTrade()`
+- `offchain/execution/bot.js`: Added validation throughout `executeTrade()`
 - `ml/brain.py`: Added validation in `_evaluate_and_signal()`
 - `contracts/OmniArbExecutor.sol`: Added comprehensive validation in `_runRoute()`
 
@@ -205,7 +205,7 @@ This document details the comprehensive improvements made to the Titan system to
 - Status logging (success/revert)
 
 **Files Modified:**
-- `execution/bot.js`: Added transaction monitoring functionality
+- `offchain/execution/bot.js`: Added transaction monitoring functionality
 
 **Impact:** Provides visibility into actual transaction outcomes, enables performance analysis.
 
@@ -223,7 +223,7 @@ This document details the comprehensive improvements made to the Titan system to
 - Early exit with clear error messages for invalid config
 
 **Files Modified:**
-- `execution/bot.js`: Added configuration validation in `init()`
+- `offchain/execution/bot.js`: Added configuration validation in `init()`
 
 **Impact:** Prevents runtime failures due to misconfiguration, improves developer experience.
 
@@ -243,7 +243,7 @@ This document details the comprehensive improvements made to the Titan system to
 
 **Files Modified:**
 - `ml/brain.py`: Enhanced logging throughout
-- `execution/bot.js`: Added comprehensive logging
+- `offchain/execution/bot.js`: Added comprehensive logging
 
 **Impact:** Improves debuggability, enables performance monitoring, facilitates issue diagnosis.
 
