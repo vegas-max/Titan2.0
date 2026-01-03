@@ -7,7 +7,7 @@ import asyncio
 import json
 import logging
 import os
-from typing import Dict, Optional, Callable, List, Any
+from typing import Dict, Callable, List, Any
 from datetime import datetime
 from collections import defaultdict
 
