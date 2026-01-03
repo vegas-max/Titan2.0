@@ -87,7 +87,7 @@ echo ""
 # Try to compile the Rust code
 echo "Step 5: Compiling Rust engine (this may take a few minutes)..."
 cd core-rust
-if cargo check --quiet 2>&1; then
+if cargo check 2>&1 | grep -q "Finished"; then
     echo -e "${GREEN}✅ Rust engine compiles successfully!${NC}"
 else
     echo -e "${RED}❌ Rust engine failed to compile${NC}"
@@ -100,7 +100,8 @@ echo ""
 # Check for binary output
 echo "Step 6: Checking if Rust binaries can be built..."
 cd core-rust
-if cargo build --release --quiet 2>&1; then
+BUILD_OUTPUT=$(cargo build --release 2>&1)
+if echo "$BUILD_OUTPUT" | grep -q "Finished"; then
     echo -e "${GREEN}✅ Release build successful!${NC}"
     
     # Check if binary exists
