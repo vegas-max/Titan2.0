@@ -167,11 +167,30 @@ class OmniBrain:
         self.route_intelligence_enabled = ROUTE_INTELLIGENCE_ENABLED
         self.real_time_data_enabled = REAL_TIME_DATA_ENABLED
         
+        # AI & Scoring Thresholds and Constants
+        self.TAR_SCORE_MIN_THRESHOLD = 50  # Minimum TAR score to proceed
+        self.PUMP_HIGH_MARGIN_THRESHOLD = 0.05  # 5% profit margin triggers pump check
+        self.PUMP_VERY_HIGH_MARGIN_THRESHOLD = 0.10  # 10% profit margin high alert
+        self.PUMP_PROBABILITY_INCREMENT_HIGH = 0.3  # Probability increase for high margins
+        self.PUMP_PROBABILITY_INCREMENT_VERY_HIGH = 0.4  # Probability increase for very high margins
+        
+        # Static gas prices for non-real-time mode (conservative values in gwei)
+        self.STATIC_GAS_PRICES = {
+            1: 30.0,    # Ethereum
+            137: 50.0,  # Polygon
+            42161: 0.1, # Arbitrum
+            10: 0.5,    # Optimism
+            8453: 0.5,  # Base
+            56: 3.0,    # BSC
+            43114: 25.0 # Avalanche
+        }
+        
         logger.info(f"🎯 AI & Scoring Configuration:")
-        logger.info(f"   TAR Scoring: {'ENABLED' if self.tar_scoring_enabled else 'DISABLED'}")
+        logger.info(f"   TAR Scoring: {'ENABLED' if self.tar_scoring_enabled else 'DISABLED'} (min threshold: {self.TAR_SCORE_MIN_THRESHOLD})")
         logger.info(f"   AI Prediction: {'ENABLED' if self.ai_prediction_enabled else 'DISABLED'} (min confidence: {self.ai_prediction_min_confidence})")
         logger.info(f"   CatBoost Model: {'ENABLED' if self.catboost_model_enabled else 'DISABLED'}")
         logger.info(f"   ML Confidence Threshold: {self.ml_confidence_threshold}")
+        logger.info(f"   Pump Detection Threshold: {self.pump_probability_threshold}")
         logger.info(f"   Self-Learning: {'ENABLED' if self.self_learning_enabled else 'DISABLED'}")
         logger.info(f"   Route Intelligence: {'ENABLED' if self.route_intelligence_enabled else 'DISABLED'}")
         logger.info(f"   Real-time Data: {'ENABLED' if self.real_time_data_enabled else 'DISABLED'}")
@@ -312,16 +331,7 @@ class OmniBrain:
         """
         # If real-time data is disabled, use conservative static values
         if not self.real_time_data_enabled:
-            static_gas_prices = {
-                1: 30.0,    # Ethereum
-                137: 50.0,  # Polygon
-                42161: 0.1, # Arbitrum
-                10: 0.5,    # Optimism
-                8453: 0.5,  # Base
-                56: 3.0,    # BSC
-                43114: 25.0 # Avalanche
-            }
-            return static_gas_prices.get(chain_id, 30.0)
+            return self.STATIC_GAS_PRICES.get(chain_id, 30.0)
         
         import os
         
@@ -405,8 +415,12 @@ class OmniBrain:
         Detect potential pump-and-dump schemes based on abnormal price movements.
         Returns probability (0.0-1.0) that this is a pump scheme.
         """
+        # Convert Decimal to float for calculations
+        revenue = float(revenue_usd)
+        cost = float(cost_usd)
+        
         # Calculate profit margin
-        profit_margin = float((revenue_usd - cost_usd) / cost_usd) if cost_usd > 0 else 0
+        profit_margin = (revenue - cost) / cost if cost > 0 else 0
         
         # High profit margins on unknown tokens are suspicious
         tier1_tokens = ['USDC', 'USDT', 'DAI', 'WETH', 'WBTC', 'ETH']
@@ -416,10 +430,10 @@ class OmniBrain:
         
         # Unknown tokens with high margins are risky
         if token_sym not in tier1_tokens and token_sym not in tier2_tokens:
-            if profit_margin > 0.05:  # >5% margin is suspicious for unknown tokens
-                base_probability += 0.3
-            if profit_margin > 0.10:  # >10% is very suspicious
-                base_probability += 0.4
+            if profit_margin > self.PUMP_HIGH_MARGIN_THRESHOLD:
+                base_probability += self.PUMP_PROBABILITY_INCREMENT_HIGH
+            if profit_margin > self.PUMP_VERY_HIGH_MARGIN_THRESHOLD:
+                base_probability += self.PUMP_PROBABILITY_INCREMENT_VERY_HIGH
         
         # Established tokens rarely have pump schemes
         if token_sym in tier1_tokens:
@@ -640,7 +654,7 @@ class OmniBrain:
                 
                 # Apply TAR scoring filter
                 tar_score = self._calculate_tar_score(token_sym, chain_id)
-                if tar_score < 50:  # Filter low-quality tokens
+                if tar_score < self.TAR_SCORE_MIN_THRESHOLD:
                     logger.debug(f"❌ {token_sym} filtered by TAR score: {tar_score}")
                     continue
                 
