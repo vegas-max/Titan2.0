@@ -4,7 +4,7 @@
 
 **Production-Ready Multi-Chain Flash Loan Arbitrage with AI-Powered Intelligence**
 
-[![Version](https://img.shields.io/badge/version-4.2.0-blue.svg)](https://github.com/vegas-max/Titan2.0)
+[![Version](https://img.shields.io/badge/version-4.2.1-blue.svg)](https://github.com/vegas-max/Titan2.0)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-orange.svg)](https://soliditylang.org/)
 [![Hardhat](https://img.shields.io/badge/Hardhat-2.28.0-yellow.svg)](https://hardhat.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -64,7 +64,7 @@
 
 ---
 
-## 🆕 What's New in v4.2.0
+## 🆕 What's New in v4.2.1
 
 **🎉 Production-Ready Flash Arbitrage Executor & Complete Working System!**
 
@@ -192,7 +192,7 @@ cd Titan2.0
 
 ## 📋 Table of Contents
 
-- 🆕 [What's New in v4.2.0](#-whats-new-in-v420)
+- 🆕 [What's New in v4.2.1](#-whats-new-in-v421)
 - [Quick Start](#-quick-start) - **Start here for fast setup!**
 - [Overview](#-overview)
 - [Key Features](#-key-features)
@@ -303,7 +303,7 @@ The **simplest way** to get started - just one command after configuring .env:
 
 ```bash
 # Clone repository
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Configure .env (copy from template and add your keys)
 cp .env.example .env
@@ -327,7 +327,7 @@ Install everything and launch the complete system with command-line arguments:
 
 ```bash
 # Clone repository
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Run full-scale installation and launch
 ./install_and_run_titan.sh \
@@ -351,7 +351,7 @@ Get Titan running in 3 commands:
 
 ```bash
 # 1. Clone and enter directory
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # 2. Run automated setup
 ./setup.sh
@@ -4322,16 +4322,16 @@ SOFTWARE.
 
 ### Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/MavenSource/Titan/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MavenSource/Titan/discussions)
+- **Issues**: [GitHub Issues](https://github.com/vegas-max/Titan2.0/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/vegas-max/Titan2.0/discussions)
 - **Documentation**: This README and inline code comments
 
 ### Contributing Ideas
 
 Have an idea for improvement? We'd love to hear it!
 
-1. Check [existing issues](https://github.com/MavenSource/Titan/issues)
-2. Open a [new issue](https://github.com/MavenSource/Titan/issues/new)
+1. Check [existing issues](https://github.com/vegas-max/Titan2.0/issues)
+2. Open a [new issue](https://github.com/vegas-max/Titan2.0/issues/new)
 3. Join the discussion
 
 ### Acknowledgments
@@ -4372,7 +4372,7 @@ This project builds on the incredible work of:
 
 **Built with ❤️ by the Titan Team**
 
-[GitHub](https://github.com/MavenSource/Titan) • [Documentation](https://github.com/MavenSource/Titan/wiki)
+[GitHub](https://github.com/vegas-max/Titan2.0) • [Documentation](https://github.com/vegas-max/Titan2.0/wiki)
 
 ⭐ **Star this repo if you find it useful!** ⭐
 
