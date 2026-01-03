@@ -270,6 +270,72 @@ class PrivateRelayManager {
             return { success: false, error: error.message };
         }
     }
+
+    /**
+     * Validate private relay configuration
+     * @returns {object} Validation result with details
+     */
+    validateConfiguration() {
+        const results = {
+            valid: true,
+            issues: [],
+            warnings: [],
+            chainsConfigured: []
+        };
+
+        // Check each chain configuration
+        for (const [chainId, config] of Object.entries(this.chainRelayConfig)) {
+            const chainInfo = { chainId: parseInt(chainId), ...config };
+            
+            // Validate endpoint for enabled relays
+            if (config.enabled) {
+                if (!config.endpoint) {
+                    results.issues.push(`Chain ${chainId} (${config.name}): Relay enabled but no endpoint configured`);
+                    results.valid = false;
+                }
+                
+                // Validate endpoint URL format
+                if (config.endpoint && !config.endpoint.startsWith('http')) {
+                    results.issues.push(`Chain ${chainId} (${config.name}): Invalid endpoint URL format`);
+                    results.valid = false;
+                }
+                
+                results.chainsConfigured.push(chainInfo);
+            }
+        }
+
+        // Check for required environment variables based on relay types
+        const flashbotsChains = Object.entries(this.chainRelayConfig)
+            .filter(([_, config]) => config.relayType === 'flashbots' && config.enabled);
+        
+        if (flashbotsChains.length > 0 && !process.env.FLASHBOTS_AUTH_KEY) {
+            results.warnings.push('Flashbots enabled but FLASHBOTS_AUTH_KEY not configured (will use random key)');
+        }
+
+        const bloxrouteChains = Object.entries(this.chainRelayConfig)
+            .filter(([_, config]) => config.relayType === 'bloxroute' && config.enabled);
+        
+        if (bloxrouteChains.length > 0 && !process.env.BLOXROUTE_AUTH_HEADER) {
+            results.issues.push('BloxRoute enabled but BLOXROUTE_AUTH_HEADER not configured');
+            results.valid = false;
+        }
+
+        // Log results
+        if (results.valid) {
+            console.log('✅ Private relay configuration valid');
+            console.log(`   Configured chains: ${results.chainsConfigured.map(c => c.name).join(', ')}`);
+        } else {
+            console.error('❌ Private relay configuration errors:');
+            results.issues.forEach(issue => console.error(`   - ${issue}`));
+        }
+
+        if (results.warnings.length > 0) {
+            console.warn('⚠️ Private relay configuration warnings:');
+            results.warnings.forEach(warning => console.warn(`   - ${warning}`));
+        }
+
+        return results;
+    }
 }
 
 module.exports = { PrivateRelayManager };

@@ -16,6 +16,7 @@ from offchain.core.token_discovery import TokenDiscovery
 from routing.bridge_manager import BridgeManager
 from offchain.core.titan_commander_core import TitanCommander
 from offchain.core.terminal_display import get_terminal_display
+from offchain.core.trade_database import get_trade_database
 
 # Advanced Features
 from offchain.core.dynamic_price_oracle import DynamicPriceOracle
@@ -147,6 +148,14 @@ class OmniBrain:
         self.use_parallel_simulation = True  # Simulate multiple routes in parallel
         self.use_mev_detection = True  # Detect sandwich attacks
         self.use_direct_dex_query = True  # Query pools directly
+        
+        # 9. Trade Database
+        try:
+            self.trade_db = get_trade_database()
+            logger.info("📊 Trade history database initialized")
+        except Exception as e:
+            logger.warning(f"Trade database initialization failed: {e}")
+            self.trade_db = None
         
     def _cleanup_old_signals(self):
         """Clean up old signal files (keep last 100)"""
@@ -699,26 +708,64 @@ class OmniBrain:
         
         while True:
             try:
-                # CRITICAL FIX #9: Graceful degradation instead of full stop
+                # CRITICAL FIX #9: Graceful degradation with automated recovery
                 if self.consecutive_failures >= self.MAX_CONSECUTIVE_FAILURES:
                     # Track backoff period
                     if self.backoff_start_time is None:
                         self.backoff_start_time = time.time()
+                        logger.error(f"🛑 CIRCUIT BREAKER TRIGGERED: {self.consecutive_failures} consecutive failures")
+                        logger.info(f"⏸️ Entering recovery mode with backoff...")
+                        self.display.log_error("CIRCUIT_BREAKER", "Circuit breaker triggered",
+                                              f"{self.consecutive_failures} consecutive failures - entering recovery mode")
+                        
+                        # Record circuit breaker event
+                        if self.trade_db:
+                            try:
+                                self.trade_db.record_circuit_breaker_event(
+                                    event_type="TRIGGERED",
+                                    consecutive_failures=self.consecutive_failures,
+                                    details=f"Circuit breaker triggered after {self.consecutive_failures} failures"
+                                )
+                            except Exception as e:
+                                logger.debug(f"Failed to record circuit breaker event: {e}")
                     
-                    # Slow down instead of stopping completely
-                    self.scan_interval = min(self.scan_interval * 2, self.max_scan_interval)
-                    logger.error(f"🛑 HIGH FAILURE RATE: {self.consecutive_failures} consecutive failures")
-                    logger.info(f"⏸️ Reducing scan frequency to {self.scan_interval}s for stability...")
-                    self.display.log_error("BRAIN", "High failure rate detected",
-                                          f"{self.consecutive_failures} consecutive failures - slowing down")
+                    # Calculate recovery progress
+                    time_in_backoff = time.time() - self.backoff_start_time
+                    recovery_period = 30  # 30 seconds minimum recovery period
+                    
+                    # Exponential backoff with max cap
+                    self.scan_interval = min(self.scan_interval * 1.5, self.max_scan_interval)
+                    
+                    # Log recovery progress
+                    if int(time_in_backoff) % 10 == 0:  # Every 10 seconds
+                        remaining = max(0, recovery_period - time_in_backoff)
+                        logger.info(f"⏱️ Circuit breaker recovery: {time_in_backoff:.0f}s elapsed, {remaining:.0f}s remaining")
+                    
                     await asyncio.sleep(self.scan_interval)
                     
-                    # Only reset after minimum recovery period (30 seconds)
-                    if time.time() - self.backoff_start_time > 30:
+                    # Automated recovery after minimum period
+                    if time_in_backoff >= recovery_period:
+                        logger.info("✅ Circuit breaker recovery period complete - attempting restart")
                         self.consecutive_failures = 0
                         # Gradually restore normal speed
                         self.scan_interval = max(self.scan_interval / 2, self.min_scan_interval)
+                        recovery_time = time_in_backoff
                         self.backoff_start_time = None
+                        logger.info(f"🔄 Scan interval restored to {self.scan_interval}s")
+                        self.display.log_info("CIRCUIT_BREAKER", "Recovery successful", 
+                                             f"Resuming normal operations at {self.scan_interval}s interval")
+                        
+                        # Record recovery event
+                        if self.trade_db:
+                            try:
+                                self.trade_db.record_circuit_breaker_event(
+                                    event_type="RECOVERED",
+                                    consecutive_failures=0,
+                                    recovery_time=recovery_time,
+                                    details=f"Circuit breaker recovered after {recovery_time:.1f}s"
+                                )
+                            except Exception as e:
+                                logger.debug(f"Failed to record recovery event: {e}")
                     continue
                 
                 # Print stats every 60 seconds

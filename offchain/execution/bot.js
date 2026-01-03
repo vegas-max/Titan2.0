@@ -8,6 +8,7 @@ const { AggregatorSelector } = require('./aggregator_selector');
 const { OmniSDKEngine } = require('./omniarb_sdk_engine');
 const { LifiExecutionEngine } = require('./lifi_manager');
 const { terminalDisplay } = require('./terminal_display');
+const { TradeDatabase } = require('./trade_database');
 
 const SIGNALS_DIR = path.join(__dirname, '..', 'signals', 'outgoing');
 const PROCESSED_DIR = path.join(__dirname, '..', 'signals', 'processed');
@@ -62,6 +63,9 @@ class TitanBot {
         // Advanced features configuration
         this.usePrivateRelay = this._parseBooleanEnv(process.env.USE_PRIVATE_RELAY || 'true');
         this.useMEVDetection = this._parseBooleanEnv(process.env.USE_MEV_DETECTION || 'true');
+        
+        // Trade history database
+        this.tradeDB = new TradeDatabase();
         
         // Ensure directories exist
         if (!fs.existsSync(this.signalsDir)) {
@@ -290,6 +294,24 @@ class TitanBot {
             
             // Log execution complete
             this.display.logExecutionComplete(tradeId, 'SIMULATED', duration, profitUSD);
+            
+            // Record trade in database
+            await this.tradeDB.recordTrade({
+                tradeId: tradeId,
+                timestamp: Date.now() / 1000,
+                chainId: signal.chainId,
+                tokenIn: signal.token,
+                tokenOut: signal.path?.[0] || signal.token,
+                amountIn: signal.amount,
+                expectedProfit: profitUSD,
+                netProfit: profitUSD, // In paper mode, no gas costs
+                gasCost: 0,
+                executionMode: 'PAPER',
+                status: 'SIMULATED',
+                protocols: signal.protocols || [],
+                routers: signal.routers || [],
+                path: signal.path || []
+            });
             
         } catch (e) {
             console.error('❌ Paper trade error:', e.message);
@@ -544,8 +566,35 @@ class TitanBot {
                 }
                 
                 console.log('   ✅ Step 3: Pre-broadcast checks COMPLETE');
+                
+                // Step 4: Re-validate profit with current gas prices
+                console.log('   Step 4: Re-validating profit with current conditions...');
+                
+                const currentGasFees = await gasMgr.getDynamicGasFees(gasStrategy);
+                const currentGasPrice = currentGasFees.maxFeePerGas || currentGasFees.gasPrice;
+                const currentGasCostUSD = gasMgr.estimateGasCostUSD(txRequest.gasLimit, currentGasPrice);
+                
+                // Re-calculate net profit
+                const expectedProfitOriginal = signal.metrics?.profit_usd || 0;
+                const netProfitCurrent = expectedProfitOriginal - currentGasCostUSD;
+                
+                console.log(`   Original expected profit: $${expectedProfitOriginal.toFixed(2)}`);
+                console.log(`   Current gas cost: $${currentGasCostUSD.toFixed(2)}`);
+                console.log(`   Re-validated net profit: $${netProfitCurrent.toFixed(2)}`);
+                
+                // Profit threshold check (must be at least 2x gas cost)
+                const minProfitThreshold = currentGasCostUSD * 2;
+                if (netProfitCurrent < minProfitThreshold) {
+                    console.log(`   ❌ PROFIT RE-VALIDATION FAILED`);
+                    console.log(`   Net profit ($${netProfitCurrent.toFixed(2)}) below threshold ($${minProfitThreshold.toFixed(2)})`);
+                    console.log(`   Market conditions may have changed - aborting to prevent loss`);
+                    executionStatus = 'PROFIT_REVALIDATION_FAILED';
+                    return;
+                }
+                
+                console.log(`   ✅ Step 4: Profit re-validation PASSED (margin: ${(netProfitCurrent / currentGasCostUSD).toFixed(2)}x gas cost)`);
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-                console.log('✅ ALL SIMULATIONS PASSED - Transaction ready for broadcast');
+                console.log('✅ ALL VALIDATIONS PASSED - Transaction ready for broadcast');
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                 
             } catch (e) {
@@ -792,23 +841,86 @@ class TitanBot {
                 console.log(`   Gas used: ${receipt.gasUsed.toString()}`);
                 console.log(`   Block: ${receipt.blockNumber}`);
                 
-                // Calculate actual profit (simplified)
+                // Calculate actual profit
                 const gasUsed = receipt.gasUsed;
                 const gasPrice = receipt.gasPrice || tx.maxFeePerGas;
                 const gasCostWei = gasUsed * gasPrice;
                 const gasCostEth = ethers.formatEther(gasCostWei);
                 
-                console.log(`   Gas cost: ${gasCostEth} ETH`);
+                // Use configurable ETH price or conservative estimate
+                const ethPriceUSD = parseFloat(process.env.ETH_PRICE_USD || '2000');
+                const estimatedGasCostUSD = parseFloat(gasCostEth) * ethPriceUSD;
+                
+                console.log(`   Gas cost: ${gasCostEth} ETH (~$${estimatedGasCostUSD.toFixed(2)})`);
+                
+                const expectedProfit = signal.metrics?.profit_usd || 0;
+                const netProfit = expectedProfit - estimatedGasCostUSD;
                 
                 if (signal.metrics?.profit_usd) {
-                    console.log(`   Expected profit: $${signal.metrics.profit_usd}`);
+                    console.log(`   Expected profit: $${expectedProfit.toFixed(2)}`);
+                    console.log(`   Net profit: $${netProfit.toFixed(2)}`);
                 }
+                
+                // Record successful trade in database
+                await this.tradeDB.recordTrade({
+                    tradeId: `LIVE-${Date.now()}`,
+                    timestamp: Date.now() / 1000,
+                    chainId: signal.chainId,
+                    tokenIn: signal.token,
+                    tokenOut: signal.path?.[0] || signal.token,
+                    amountIn: signal.amount,
+                    expectedProfit: expectedProfit,
+                    netProfit: netProfit,
+                    gasCost: estimatedGasCostUSD,
+                    executionMode: 'LIVE',
+                    status: 'SUCCESS',
+                    txHash: tx.hash,
+                    protocols: signal.protocols || [],
+                    routers: signal.routers || [],
+                    path: signal.path || []
+                });
             } else {
                 console.log('❌ Transaction reverted on-chain');
+                
+                // Record failed trade
+                await this.tradeDB.recordTrade({
+                    tradeId: `LIVE-${Date.now()}`,
+                    timestamp: Date.now() / 1000,
+                    chainId: signal.chainId,
+                    tokenIn: signal.token,
+                    tokenOut: signal.path?.[0] || signal.token,
+                    amountIn: signal.amount,
+                    expectedProfit: signal.metrics?.profit_usd || 0,
+                    executionMode: 'LIVE',
+                    status: 'FAILED',
+                    txHash: tx.hash,
+                    error: 'Transaction reverted',
+                    protocols: signal.protocols || [],
+                    routers: signal.routers || [],
+                    path: signal.path || []
+                });
             }
         } catch (e) {
             console.log('⚠️ Transaction monitoring failed:', e.message);
             console.log('   Transaction may still succeed, check explorer');
+            
+            // Record as pending
+            await this.tradeDB.recordTrade({
+                tradeId: `LIVE-${Date.now()}`,
+                timestamp: Date.now() / 1000,
+                chainId: signal.chainId,
+                tokenIn: signal.token,
+                tokenOut: signal.path?.[0] || signal.token,
+                amountIn: signal.amount,
+                expectedProfit: signal.metrics?.profit_usd || 0,
+                executionMode: 'LIVE',
+                status: 'PENDING',
+                txHash: tx.hash,
+                error: e.message,
+                protocols: signal.protocols || [],
+                routers: signal.routers || [],
+                path: signal.path || []
+            });
         }
     }
     
