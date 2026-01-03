@@ -81,12 +81,29 @@ if self.catboost_model_enabled:
 ---
 
 ### 5. HF_CONFIDENCE_THRESHOLD
-**Location**: `offchain/ml/cortex/forecaster.py` (stored for future HF model integration)
+**Location**: `offchain/ml/hf_ranker.py::HuggingFaceRanker` + `offchain/ml/brain.py` (line ~801)
 **Returns**:
-- Threshold for Hugging Face model predictions
-- Currently stored for when HF models are integrated
+- Fine-tuned transformer model confidence score (0.0-1.0)
+- Filters opportunities using deep learning patterns
+- **Impact**: Filters 15-25% of opportunities that pass all other filters
 
-**Future Usage**: Will filter predictions from Hugging Face transformer models
+**Usage in Flow**:
+```python
+# Line ~801 in brain.py
+if self.hf_ranker is not None:
+    hf_score = self.hf_ranker.predict(opp, result, gas_price_gwei)
+    if not self.hf_ranker.is_confident(hf_score):
+        return False  # Reject based on HF transformer model
+```
+
+**Return Value**: Boolean decision based on transformer model confidence
+
+**Key Features**:
+- Uses 12-dimensional feature extraction
+- Transformer encoder with 4 attention heads
+- Learns from real execution history
+- Continuous learning capability
+- Graceful fallback if transformers library not available
 
 ---
 

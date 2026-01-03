@@ -108,6 +108,15 @@ class OmniBrain:
         self.optimizer = QLearningAgent()
         self.memory = FeatureStore()
         
+        # HuggingFace Ranker (optional - requires transformers library)
+        try:
+            from offchain.ml.hf_ranker import HuggingFaceRanker
+            self.hf_ranker = HuggingFaceRanker()
+            logger.info("🤖 HuggingFace Ranker initialized")
+        except Exception as e:
+            self.hf_ranker = None
+            logger.info(f"ℹ️ HuggingFace Ranker not available: {e}")
+        
         # 3. Advanced Features (initialized later with web3 connections)
         self.price_oracle = None
         self.parallel_simulator = None
@@ -788,6 +797,21 @@ class OmniBrain:
                                 logger.info(f"❌ CatBoost filter: {token_sym} score {catboost_score:.2f} < threshold {self.ml_confidence_threshold}")
                                 return False  # Reject based on ML model
                             logger.info(f"✅ CatBoost approved: {token_sym} score {catboost_score:.2f}")
+                        
+                        # Apply HuggingFace Ranker (fine-tuned transformer model)
+                        if self.hf_ranker is not None:
+                            hf_score = self.hf_ranker.predict(opp, result, gas_price_gwei)
+                            if not self.hf_ranker.is_confident(hf_score):
+                                logger.info(f"❌ HF Ranker filter: {token_sym} score {hf_score:.2f} < threshold {self.hf_confidence_threshold}")
+                                self.display.log_decision(
+                                    decision_type="HF_FILTER",
+                                    token=token_sym,
+                                    chain_id=src_chain,
+                                    reason=f"HF score {hf_score:.2f} below confidence threshold",
+                                    details={"hf_score": hf_score, "threshold": self.hf_confidence_threshold}
+                                )
+                                return False  # Reject based on HF transformer model
+                            logger.info(f"✅ HF Ranker approved: {token_sym} score {hf_score:.2f}")
                         
                         # Log profitable opportunity to terminal
                         self.display.log_opportunity_scan(
