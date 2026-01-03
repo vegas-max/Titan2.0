@@ -2,6 +2,7 @@ package config
 
 import (
 	"os"
+	"strconv"
 	"strings"
 )
 
@@ -31,12 +32,27 @@ type BridgeConfig struct {
 	Description        string
 }
 
+// AIConfig holds AI and scoring configuration
+type AIConfig struct {
+	TARScoringEnabled          bool
+	AIPredictionEnabled        bool
+	AIPredictionMinConfidence  float64
+	CatBoostModelEnabled       bool
+	HFConfidenceThreshold      float64
+	MLConfidenceThreshold      float64
+	PumpProbabilityThreshold   float64
+	SelfLearningEnabled        bool
+	RouteIntelligenceEnabled   bool
+	RealTimeDataEnabled        bool
+}
+
 // Config holds all configuration for the Titan system
 type Config struct {
 	Chains               map[uint64]*ChainConfig
 	DexRouters           map[uint64]DexRouters
 	IntentBasedBridges   map[string]*BridgeConfig
 	LifiSupportedChains  []uint64
+	AI                   *AIConfig
 }
 
 // LoadFromEnv loads configuration from environment variables
@@ -46,6 +62,7 @@ func LoadFromEnv() (*Config, error) {
 		DexRouters:          loadDexRouters(),
 		IntentBasedBridges:  loadBridges(),
 		LifiSupportedChains: []uint64{1, 137, 42161, 10, 8453, 56, 43114, 250, 59144, 534352, 5000, 324, 81457, 42220, 204},
+		AI:                  loadAIConfig(),
 	}
 	
 	return config, nil
@@ -186,4 +203,42 @@ func getEnv(key, defaultValue string) string {
 		return defaultValue
 	}
 	return strings.TrimSpace(value)
+}
+
+// getBoolEnv retrieves a boolean environment variable with a default value
+func getBoolEnv(key string, defaultValue bool) bool {
+	value := strings.ToLower(getEnv(key, ""))
+	if value == "" {
+		return defaultValue
+	}
+	return value == "true" || value == "1" || value == "yes"
+}
+
+// getFloatEnv retrieves a float environment variable with a default value
+func getFloatEnv(key string, defaultValue float64) float64 {
+	value := getEnv(key, "")
+	if value == "" {
+		return defaultValue
+	}
+	f, err := strconv.ParseFloat(value, 64)
+	if err != nil {
+		return defaultValue
+	}
+	return f
+}
+
+// loadAIConfig loads AI and scoring configuration from environment
+func loadAIConfig() *AIConfig {
+	return &AIConfig{
+		TARScoringEnabled:         getBoolEnv("TAR_SCORING_ENABLED", true),
+		AIPredictionEnabled:       getBoolEnv("AI_PREDICTION_ENABLED", true),
+		AIPredictionMinConfidence: getFloatEnv("AI_PREDICTION_MIN_CONFIDENCE", 0.8),
+		CatBoostModelEnabled:      getBoolEnv("CATBOOST_MODEL_ENABLED", true),
+		HFConfidenceThreshold:     getFloatEnv("HF_CONFIDENCE_THRESHOLD", 0.8),
+		MLConfidenceThreshold:     getFloatEnv("ML_CONFIDENCE_THRESHOLD", 0.75),
+		PumpProbabilityThreshold:  getFloatEnv("PUMP_PROBABILITY_THRESHOLD", 0.2),
+		SelfLearningEnabled:       getBoolEnv("SELF_LEARNING_ENABLED", true),
+		RouteIntelligenceEnabled:  getBoolEnv("ROUTE_INTELLIGENCE_ENABLED", true),
+		RealTimeDataEnabled:       getBoolEnv("REAL_TIME_DATA_ENABLED", true),
+	}
 }
