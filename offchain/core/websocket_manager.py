@@ -11,16 +11,14 @@ from typing import Dict, Callable, List, Any
 from datetime import datetime
 from collections import defaultdict
 
+logger = logging.getLogger("WebSocketManager")
+
 try:
     import websockets
     WEBSOCKETS_AVAILABLE = True
 except ImportError:
     WEBSOCKETS_AVAILABLE = False
-    print("⚠️  websockets not available. Install with: pip install websockets")
-
-logger = logging.getLogger("WebSocketManager")
-
-
+    logger.warning("⚠️  websockets not available. Install with: pip install websockets")
 class WebSocketManager:
     """
     Manages WebSocket connections to multiple DEX endpoints for real-time data
