@@ -291,8 +291,11 @@ REAL_TIME_DATA_ENABLED = os.getenv("REAL_TIME_DATA_ENABLED", "true").lower() == 
 
 def get_chain_name(chain_id):
     """
-    Get chain name from chain ID using Rust engine (10x faster).
-    Falls back to Python dict lookup if Rust unavailable.
+    Get chain name from chain ID.
+    
+    Note: For simple dict lookups, Python is faster due to PyO3 overhead.
+    The Rust engine provides benefits for complex operations like
+    full config loading, async operations, and concurrent processing.
     
     Args:
         chain_id (int): Chain ID
@@ -300,22 +303,18 @@ def get_chain_name(chain_id):
     Returns:
         str: Chain name or None
     """
-    if RUST_ENGINE_AVAILABLE:
-        try:
-            rust_config = titan_core.PyConfig()
-            return rust_config.get_chain_name(chain_id)
-        except:
-            pass
-    
-    # Fallback to Python
+    # Use Python dict for simple lookup (faster than Rust FFI overhead)
     chain = CHAINS.get(chain_id)
     return chain['name'] if chain else None
 
 
 def is_chain_supported(chain_id):
     """
-    Check if chain is supported using Rust engine (22x faster).
-    Falls back to Python dict lookup if Rust unavailable.
+    Check if chain is supported.
+    
+    Note: For simple dict lookups, Python is faster due to PyO3 overhead.
+    The Rust engine provides benefits for complex operations like
+    full config loading, async operations, and concurrent processing.
     
     Args:
         chain_id (int): Chain ID
@@ -323,14 +322,7 @@ def is_chain_supported(chain_id):
     Returns:
         bool: True if chain is supported
     """
-    if RUST_ENGINE_AVAILABLE:
-        try:
-            rust_config = titan_core.PyConfig()
-            return rust_config.is_supported(chain_id)
-        except:
-            pass
-    
-    # Fallback to Python
+    # Use Python dict for simple lookup (faster than Rust FFI overhead)
     return chain_id in CHAINS
 
 
@@ -346,7 +338,9 @@ def get_balancer_vault():
 
 # Log Rust engine status
 if RUST_ENGINE_AVAILABLE:
-    print("⚡ Rust Engine ENABLED - Configuration operations running at 10-22x speed")
+    print("⚡ Rust Engine AVAILABLE - Ready for high-performance operations")
+    print("   Use the Rust HTTP server for maximum performance:")
+    print("   ./start_rust_server.sh")
 else:
-    print("⚠️  Rust Engine NOT AVAILABLE - Using Python fallback (slower)")
-    print("   To enable Rust engine: cd core-rust && maturin build --release && pip install target/wheels/*.whl")
+    print("ℹ️  Rust Engine NOT AVAILABLE - Using Python implementation")
+    print("   To enable: ./build_rust_engine.sh")
