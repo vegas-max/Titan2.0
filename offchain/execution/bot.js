@@ -22,6 +22,10 @@ const EXECUTION_MODE = (process.env.TITAN_EXECUTION_MODE || process.env.EXECUTIO
 const FLASH_LOAN_ENABLED = process.env.FLASH_LOAN_ENABLED === 'true' || process.env.FLASH_LOAN_ENABLED === undefined; // Default: true if not set
 const FLASH_LOAN_PROVIDER = parseInt(process.env.FLASH_LOAN_PROVIDER || '1'); // 1=Balancer, 2=Aave
 
+// CRITICAL: Enforce simulation for LIVE mode (prevents failed transactions)
+// When ENFORCE_SIMULATION=true, all LIVE trades must pass simulation before execution
+const ENFORCE_SIMULATION = process.env.ENFORCE_SIMULATION !== 'false'; // Default: true (enforced) unless explicitly disabled
+
 const RPC_MAP = {
     1: process.env.RPC_ETHEREUM,
     137: process.env.RPC_POLYGON,
@@ -472,13 +476,18 @@ class TitanBot {
                 return;
             }
 
-            // 3. Comprehensive Pre-Broadcast Simulation
+            // 3. Comprehensive Pre-Broadcast Simulation (MANDATORY for LIVE mode)
             console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             console.log('🧪 PRE-BROADCAST SIMULATION & VALIDATION');
             console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
             
             let simulationResult = null;
             let isSafe = false;
+            
+            // CRITICAL: Enforce simulation for LIVE mode
+            if (this.executionMode === 'LIVE' && ENFORCE_SIMULATION) {
+                console.log('   🔒 LIVE MODE: Simulation is MANDATORY (cannot be skipped)');
+            }
             
             try {
                 console.log('   Step 1: Simulating transaction execution...');
@@ -491,6 +500,12 @@ class TitanBot {
                     console.log(`   Reason: ${simulationResult.error}`);
                     console.log('   ⚠️  Aborting transaction to prevent wasted gas fees');
                     executionStatus = 'SIMULATION_FAILED';
+                    
+                    // CRITICAL: Hard stop for LIVE mode
+                    if (this.executionMode === 'LIVE' && ENFORCE_SIMULATION) {
+                        console.error('   🚫 LIVE MODE: Transaction BLOCKED by mandatory simulation');
+                        return; // Cannot proceed in LIVE mode
+                    }
                     return;
                 }
                 
@@ -504,6 +519,12 @@ class TitanBot {
                 if (!isSafe) {
                     console.log('   ❌ Validation FAILED - Secondary check detected issues');
                     executionStatus = 'VALIDATION_FAILED';
+                    
+                    // CRITICAL: Hard stop for LIVE mode
+                    if (this.executionMode === 'LIVE' && ENFORCE_SIMULATION) {
+                        console.error('   🚫 LIVE MODE: Transaction BLOCKED by validation failure');
+                        return; // Cannot proceed in LIVE mode
+                    }
                     return;
                 }
                 
@@ -533,6 +554,13 @@ class TitanBot {
                 console.log('   Stack:', e.stack);
                 console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
                 executionStatus = 'SIMULATION_ERROR';
+                
+                // CRITICAL: Hard stop for LIVE mode on simulation error
+                if (this.executionMode === 'LIVE' && ENFORCE_SIMULATION) {
+                    console.error('   🚫 LIVE MODE: Transaction BLOCKED due to simulation error');
+                    console.error('   Cannot proceed without successful simulation in LIVE mode');
+                    return; // Cannot proceed in LIVE mode
+                }
                 return;
             }
 
