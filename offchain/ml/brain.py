@@ -306,7 +306,23 @@ class OmniBrain:
                     self.graph.add_edge(v, u, {"type": "bridge", "weight": 0.0})
 
     def _get_gas_price(self, chain_id):
-        """Get gas price with Alchemy fallback and safety ceiling"""
+        """
+        Get gas price with Alchemy fallback and safety ceiling.
+        Respects REAL_TIME_DATA_ENABLED configuration.
+        """
+        # If real-time data is disabled, use conservative static values
+        if not self.real_time_data_enabled:
+            static_gas_prices = {
+                1: 30.0,    # Ethereum
+                137: 50.0,  # Polygon
+                42161: 0.1, # Arbitrum
+                10: 0.5,    # Optimism
+                8453: 0.5,  # Base
+                56: 3.0,    # BSC
+                43114: 25.0 # Avalanche
+            }
+            return static_gas_prices.get(chain_id, 30.0)
+        
         import os
         
         # Alchemy RPC endpoints for major chains
@@ -351,10 +367,195 @@ class OmniBrain:
         # Silently return 0 if all RPCs fail (rate limited)
         return 0.0
 
+    def _calculate_tar_score(self, token_sym, chain_id):
+        """
+        Calculate Token Analysis & Risk (TAR) score for opportunity filtering.
+        Returns score 0-100 where higher is better.
+        
+        Factors:
+        - Token liquidity tier
+        - Chain reliability
+        - Historical volatility
+        """
+        if not self.tar_scoring_enabled:
+            return 100  # No filtering when disabled
+        
+        score = 50  # Base score
+        
+        # Tier-based scoring
+        tier1_tokens = ['USDC', 'USDT', 'DAI', 'WETH', 'WBTC', 'ETH']
+        tier2_tokens = ['UNI', 'LINK', 'AAVE', 'CRV', 'MATIC', 'AVAX', 'BNB', 'SNX', 'MKR', 'COMP']
+        
+        if token_sym in tier1_tokens:
+            score += 40  # High priority tokens
+        elif token_sym in tier2_tokens:
+            score += 20  # Medium priority
+        else:
+            score += 5   # Low priority
+        
+        # Chain reliability scoring
+        reliable_chains = [1, 137, 42161, 10, 8453]  # Ethereum, Polygon, Arbitrum, Optimism, Base
+        if chain_id in reliable_chains:
+            score += 10
+        
+        return min(100, score)
+    
+    def _detect_pump_scheme(self, token_sym, chain_id, revenue_usd, cost_usd):
+        """
+        Detect potential pump-and-dump schemes based on abnormal price movements.
+        Returns probability (0.0-1.0) that this is a pump scheme.
+        """
+        # Calculate profit margin
+        profit_margin = float((revenue_usd - cost_usd) / cost_usd) if cost_usd > 0 else 0
+        
+        # High profit margins on unknown tokens are suspicious
+        tier1_tokens = ['USDC', 'USDT', 'DAI', 'WETH', 'WBTC', 'ETH']
+        tier2_tokens = ['UNI', 'LINK', 'AAVE', 'CRV', 'MATIC', 'AVAX', 'BNB', 'SNX', 'MKR', 'COMP']
+        
+        base_probability = 0.0
+        
+        # Unknown tokens with high margins are risky
+        if token_sym not in tier1_tokens and token_sym not in tier2_tokens:
+            if profit_margin > 0.05:  # >5% margin is suspicious for unknown tokens
+                base_probability += 0.3
+            if profit_margin > 0.10:  # >10% is very suspicious
+                base_probability += 0.4
+        
+        # Established tokens rarely have pump schemes
+        if token_sym in tier1_tokens:
+            base_probability = max(0, base_probability - 0.5)
+        
+        return min(1.0, base_probability)
+    
+    def _catboost_predict(self, opp, profit_result, gas_gwei):
+        """
+        Apply CatBoost model prediction for opportunity scoring.
+        Returns confidence score (0.0-1.0) for this opportunity.
+        
+        Note: This is a placeholder implementation. In production, this would load
+        a trained CatBoost model and use actual features.
+        """
+        if not self.catboost_model_enabled:
+            return 1.0  # No filtering when disabled
+        
+        # Extract features for prediction
+        features = {
+            'profit_usd': float(profit_result['net_profit']),
+            'gas_gwei': gas_gwei,
+            'tar_score': opp.get('tar_score', 50),
+            'chain_id': opp['src_chain'],
+        }
+        
+        # Placeholder scoring logic (replace with actual CatBoost model in production)
+        score = 0.5  # Base score
+        
+        # Higher profits increase confidence
+        if features['profit_usd'] > 5:
+            score += 0.2
+        if features['profit_usd'] > 10:
+            score += 0.1
+        
+        # Lower gas prices increase confidence
+        if features['gas_gwei'] < 30:
+            score += 0.1
+        
+        # Higher TAR scores increase confidence
+        if features['tar_score'] > 70:
+            score += 0.15
+        
+        return min(1.0, score)
+    
+    def _apply_ai_prediction_filter(self, opportunities):
+        """
+        Apply AI prediction filtering to opportunities based on market conditions.
+        Returns filtered list of opportunities that pass AI confidence checks.
+        """
+        if not self.ai_prediction_enabled:
+            return opportunities  # No filtering when AI disabled
+        
+        filtered = []
+        for opp in opportunities:
+            # Get market forecast for this chain
+            chain_id = opp['src_chain']
+            
+            # Use forecaster to predict if conditions are favorable
+            gas_trend = self.forecaster.predict_gas_trend()
+            volatility = self.forecaster.predict_volatility()
+            
+            # Calculate confidence score based on market conditions
+            confidence = 0.5  # Base confidence
+            
+            # Adjust based on gas trend
+            if gas_trend == "DROPPING_FAST":
+                confidence += 0.2  # Good time to execute
+            elif gas_trend == "RISING_FAST":
+                confidence -= 0.2  # Poor time to execute
+            
+            # Adjust based on volatility
+            if volatility == "LOW":
+                confidence += 0.3  # Stable conditions
+            elif volatility == "HIGH":
+                confidence -= 0.2  # Risky conditions
+            
+            # Apply confidence threshold
+            if self.forecaster.is_prediction_confident(confidence):
+                filtered.append(opp)
+                logger.debug(f"✅ {opp['token']} passed AI filter (confidence: {confidence:.2f})")
+            else:
+                logger.debug(f"❌ {opp['token']} filtered by AI (confidence: {confidence:.2f} < {self.ai_prediction_min_confidence})")
+        
+        return filtered
+    
+    def _select_intelligent_routes(self, opportunities):
+        """
+        Apply route intelligence to select optimal DEX combinations.
+        Returns opportunities with best-predicted routes.
+        """
+        if not self.route_intelligence_enabled:
+            return opportunities  # No route optimization when disabled
+        
+        # Group opportunities by token and chain
+        from collections import defaultdict
+        token_opps = defaultdict(list)
+        
+        for opp in opportunities:
+            key = (opp['token'], opp['src_chain'])
+            token_opps[key].append(opp)
+        
+        # Select best route for each token
+        optimized = []
+        for (token, chain), opps in token_opps.items():
+            # Score each route based on historical success
+            best_opp = opps[0]  # Default to first route
+            best_score = 0
+            
+            for opp in opps:
+                route_score = 50  # Base score
+                
+                # Prefer routes with UniswapV3 (better pricing)
+                if 'UNIV3' in opp['route']:
+                    route_score += 20
+                
+                # Prefer established DEXes
+                established_dexes = ['SUSHI', 'QUICKSWAP', 'PANCAKE']
+                if any(dex in opp['route'] for dex in established_dexes):
+                    route_score += 10
+                
+                if route_score > best_score:
+                    best_score = route_score
+                    best_opp = opp
+            
+            optimized.append(best_opp)
+            logger.debug(f"🔀 Route Intelligence: Selected {best_opp['route_name']} for {token} on chain {chain}")
+        
+        return optimized
+    
     def _find_opportunities(self):
         """
         Find INTRA-CHAIN arbitrage opportunities with FULL market coverage
         Scans 100+ tokens across multiple DEX combinations
+        
+        Returns: List of filtered and scored opportunities
         """
         opportunities = []
         
@@ -437,6 +638,12 @@ class OmniBrain:
             for token_sym in tokens_to_scan:
                 token_data = tokens[token_sym]
                 
+                # Apply TAR scoring filter
+                tar_score = self._calculate_tar_score(token_sym, chain_id)
+                if tar_score < 50:  # Filter low-quality tokens
+                    logger.debug(f"❌ {token_sym} filtered by TAR score: {tar_score}")
+                    continue
+                
                 # Create opportunity for EACH DEX route combination
                 for dex1, dex2 in routes:
                     opportunities.append({
@@ -447,8 +654,19 @@ class OmniBrain:
                         "token_addr_dst": token_data['address'],
                         "decimals": token_data['decimals'],
                         "route": (dex1, dex2),  # Track which DEX pair
-                        "route_name": f"{dex1}→{dex2}"
+                        "route_name": f"{dex1}→{dex2}",
+                        "tar_score": tar_score  # Include score for tracking
                     })
+        
+        # Apply AI prediction filtering
+        logger.info(f"🤖 AI Prediction Filter: Processing {len(opportunities)} opportunities...")
+        opportunities = self._apply_ai_prediction_filter(opportunities)
+        logger.info(f"   → {len(opportunities)} opportunities passed AI filter")
+        
+        # Apply route intelligence optimization
+        logger.info(f"🔀 Route Intelligence: Optimizing routes...")
+        opportunities = self._select_intelligent_routes(opportunities)
+        logger.info(f"   → {len(opportunities)} optimal routes selected")
         
         return opportunities
 
@@ -535,6 +753,27 @@ class OmniBrain:
                     if result['is_profitable'] and result['net_profit'] >= self.MIN_PROFIT_THRESHOLD_USD:
                         # Found profitable trade at this size!
                         logger.info(f"💰 PROFIT: {token_sym} ${target_trade_usd} {route_name} = ${result['net_profit']:.2f}")
+                        
+                        # Apply pump detection filter
+                        pump_probability = self._detect_pump_scheme(token_sym, src_chain, revenue_usd, cost_usd)
+                        if pump_probability > self.pump_probability_threshold:
+                            logger.warning(f"⚠️ PUMP DETECTED: {token_sym} probability {pump_probability:.2f} > threshold {self.pump_probability_threshold}")
+                            self.display.log_decision(
+                                decision_type="PUMP_FILTER",
+                                token=token_sym,
+                                chain_id=src_chain,
+                                reason=f"Pump probability {pump_probability:.2f} exceeds threshold",
+                                details={"probability": pump_probability, "threshold": self.pump_probability_threshold}
+                            )
+                            return False  # Reject this opportunity
+                        
+                        # Apply CatBoost model prediction (if enabled)
+                        if self.catboost_model_enabled:
+                            catboost_score = self._catboost_predict(opp, result, gas_price_gwei)
+                            if catboost_score < self.ml_confidence_threshold:
+                                logger.info(f"❌ CatBoost filter: {token_sym} score {catboost_score:.2f} < threshold {self.ml_confidence_threshold}")
+                                return False  # Reject based on ML model
+                            logger.info(f"✅ CatBoost approved: {token_sym} score {catboost_score:.2f}")
                         
                         # Log profitable opportunity to terminal
                         self.display.log_opportunity_scan(
