@@ -4,6 +4,13 @@
   "description": "Production-ready arbitrage bot with multi-DEX and cross-chain support",
   
   "advanced_features": {
+    "real_data_pipeline": {
+      "enabled": true,
+      "use_websockets": true,
+      "polling_interval_seconds": 5,
+      "cache_duration_seconds": 10,
+      "description": "Use real DEX data via WebSockets and direct queries instead of simulation"
+    },
     "private_relay": {
       "enabled": true,
       "auto_select": true,
