@@ -92,7 +92,10 @@ async fn query_pool(
     let response = PoolQueryResponse {
         pool_address: request.pool_address.clone(),
         reserves: None,
-        error: Some("Not implemented yet".to_string()),
+        error: Some(format!(
+            "Pool querying for DEX '{}' on chain {} is not implemented yet; this endpoint currently returns a placeholder response.",
+            request.dex_type, request.chain_id
+        )),
     };
     
     (StatusCode::NOT_IMPLEMENTED, Json(response))
