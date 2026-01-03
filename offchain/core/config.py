@@ -245,3 +245,24 @@ MAX_INTENT_BASED_TRADE_SIZE = {
     'stargate': 250000,  # $250k max per trade
     'hop': 50000         # $50k max per trade
 }
+
+# ===================== AI & SCORING CONFIGURATION ===============================
+# TAR Scoring System - Token Analysis & Risk scoring for opportunity evaluation
+TAR_SCORING_ENABLED = os.getenv("TAR_SCORING_ENABLED", "true").lower() == "true"
+
+# AI Prediction System - Use AI models for market prediction
+AI_PREDICTION_ENABLED = os.getenv("AI_PREDICTION_ENABLED", "true").lower() == "true"
+AI_PREDICTION_MIN_CONFIDENCE = float(os.getenv("AI_PREDICTION_MIN_CONFIDENCE", "0.8"))
+
+# CatBoost Model - Gradient boosting model for classification/regression
+CATBOOST_MODEL_ENABLED = os.getenv("CATBOOST_MODEL_ENABLED", "true").lower() == "true"
+
+# Confidence Thresholds - Minimum confidence levels for different models
+HF_CONFIDENCE_THRESHOLD = float(os.getenv("HF_CONFIDENCE_THRESHOLD", "0.8"))
+ML_CONFIDENCE_THRESHOLD = float(os.getenv("ML_CONFIDENCE_THRESHOLD", "0.75"))
+PUMP_PROBABILITY_THRESHOLD = float(os.getenv("PUMP_PROBABILITY_THRESHOLD", "0.2"))
+
+# Self-Learning & Intelligence Features
+SELF_LEARNING_ENABLED = os.getenv("SELF_LEARNING_ENABLED", "true").lower() == "true"
+ROUTE_INTELLIGENCE_ENABLED = os.getenv("ROUTE_INTELLIGENCE_ENABLED", "true").lower() == "true"
+REAL_TIME_DATA_ENABLED = os.getenv("REAL_TIME_DATA_ENABLED", "true").lower() == "true"

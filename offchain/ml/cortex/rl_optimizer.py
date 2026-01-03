@@ -5,6 +5,18 @@ import numpy as np
 from datetime import datetime
 from collections import deque
 
+# Import AI & Scoring configuration
+try:
+    from offchain.core.config import (
+        SELF_LEARNING_ENABLED, ROUTE_INTELLIGENCE_ENABLED,
+        ML_CONFIDENCE_THRESHOLD
+    )
+except ImportError:
+    # Fallback defaults if config not available
+    SELF_LEARNING_ENABLED = True
+    ROUTE_INTELLIGENCE_ENABLED = True
+    ML_CONFIDENCE_THRESHOLD = 0.75
+
 class QLearningAgent:
     """
     Enhanced Reinforcement Learning Agent with Experience Replay.
@@ -24,8 +36,13 @@ class QLearningAgent:
     GAS_NORMAL_THRESHOLD = 50
     
     def __init__(self, buffer_size=10000):
+        # AI & Scoring Configuration
+        self.self_learning_enabled = SELF_LEARNING_ENABLED
+        self.route_intelligence_enabled = ROUTE_INTELLIGENCE_ENABLED
+        self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
+        
         self.q_table = self.load_q_table()
-        self.learning_rate = 0.1
+        self.learning_rate = 0.1 if self.self_learning_enabled else 0.0  # Disable learning if self-learning disabled
         self.discount_factor = 0.95
         self.epsilon = 0.1  # Exploration rate
         self.epsilon_decay = 0.995
@@ -48,7 +65,9 @@ class QLearningAgent:
             "successful_trades": 0,
             "failed_trades": 0,
             "success_rate": 0.0,
-            "last_updated": None
+            "last_updated": None,
+            "self_learning_enabled": self.self_learning_enabled,
+            "route_intelligence_enabled": self.route_intelligence_enabled
         }
         self._load_metrics()
 
@@ -171,6 +190,12 @@ class QLearningAgent:
             gas_gwei: Current gas price
             next_state_data: Optional next state info for temporal difference learning
         """
+        # Check if self-learning is enabled
+        if not self.self_learning_enabled:
+            # Still track metrics but don't update Q-table
+            self._update_metrics_only(reward)
+            return
+        
         gas_level = self._discretize_gas(gas_gwei)
         state = self.get_state_key(chain_id, volatility, gas_level)
         action_key = f"{action_taken['slippage']}_{action_taken['priority']}"
@@ -201,6 +226,20 @@ class QLearningAgent:
         self.q_table[state][action_key] = new_value
         
         # Update metrics
+        self._update_metrics_only(reward)
+        
+        # Decay epsilon (explore less over time)
+        if self.epsilon > self.epsilon_min:
+            self.epsilon *= self.epsilon_decay
+        
+        # Periodically save
+        if self.metrics["total_episodes"] % 10 == 0:
+            self._save_q_table()
+            self._save_metrics()
+            self._save_replay_buffer()
+    
+    def _update_metrics_only(self, reward):
+        """Update metrics without modifying Q-table (for non-learning mode)"""
         self.metrics["total_episodes"] += 1
         self.metrics["total_rewards"] += reward
         self.metrics["avg_reward"] = self.metrics["total_rewards"] / self.metrics["total_episodes"]
@@ -218,16 +257,6 @@ class QLearningAgent:
         total_trades = self.metrics["successful_trades"] + self.metrics["failed_trades"]
         if total_trades > 0:
             self.metrics["success_rate"] = (self.metrics["successful_trades"] / total_trades) * 100
-        
-        # Decay epsilon (explore less over time)
-        if self.epsilon > self.epsilon_min:
-            self.epsilon *= self.epsilon_decay
-        
-        # Periodically save
-        if self.metrics["total_episodes"] % 10 == 0:
-            self._save_q_table()
-            self._save_metrics()
-            self._save_replay_buffer()
     
     def batch_replay_learning(self, batch_size=32):
         """

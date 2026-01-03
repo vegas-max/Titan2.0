@@ -14,6 +14,19 @@ except ImportError:
     ML_AVAILABLE = False
     print("WARNING: ML libraries not available. Install with: pip install scikit-learn xgboost")
 
+# Import AI & Scoring configuration
+try:
+    from offchain.core.config import (
+        AI_PREDICTION_ENABLED, AI_PREDICTION_MIN_CONFIDENCE,
+        ML_CONFIDENCE_THRESHOLD, HF_CONFIDENCE_THRESHOLD
+    )
+except ImportError:
+    # Fallback defaults if config not available
+    AI_PREDICTION_ENABLED = True
+    AI_PREDICTION_MIN_CONFIDENCE = 0.8
+    ML_CONFIDENCE_THRESHOLD = 0.75
+    HF_CONFIDENCE_THRESHOLD = 0.8
+
 class MarketForecaster:
     """
     Advanced Market Forecaster with Machine Learning capabilities.
@@ -31,6 +44,12 @@ class MarketForecaster:
         self.volatility_history = deque(maxlen=history_window)
         self.window = history_window
         
+        # AI & Scoring Configuration
+        self.ai_prediction_enabled = AI_PREDICTION_ENABLED
+        self.min_confidence = AI_PREDICTION_MIN_CONFIDENCE
+        self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
+        self.hf_confidence_threshold = HF_CONFIDENCE_THRESHOLD
+        
         # ML Models
         self.scaler = StandardScaler() if ML_AVAILABLE else None
         self.xgb_model = None
@@ -44,7 +63,9 @@ class MarketForecaster:
             "mse": 0.0,
             "mae": 0.0,
             "last_updated": None,
-            "model_version": "2.0"
+            "model_version": "2.0",
+            "ai_enabled": self.ai_prediction_enabled,
+            "min_confidence": self.min_confidence
         }
         
         # Load existing models if available
@@ -222,8 +243,12 @@ class MarketForecaster:
     def should_wait(self):
         """
         AI Decision: Should we wait 1 block for cheaper gas?
-        Enhanced with volatility consideration.
+        Enhanced with volatility consideration and AI prediction check.
         """
+        # Check if AI prediction is enabled
+        if not self.ai_prediction_enabled:
+            return False
+        
         trend = self.predict_gas_trend()
         volatility = self.predict_volatility()
         
@@ -236,6 +261,39 @@ class MarketForecaster:
             return True
         
         return False
+    
+    def is_prediction_confident(self, confidence_score):
+        """
+        Check if a prediction meets the minimum confidence threshold.
+        
+        Args:
+            confidence_score: Prediction confidence score (0.0 to 1.0)
+        
+        Returns:
+            bool: True if confidence meets threshold, False otherwise
+        """
+        if not self.ai_prediction_enabled:
+            return True  # If AI prediction disabled, accept all predictions
+        
+        return confidence_score >= self.min_confidence
+    
+    def apply_ml_confidence_filter(self, predictions_with_scores):
+        """
+        Filter predictions based on ML confidence threshold.
+        
+        Args:
+            predictions_with_scores: List of (prediction, confidence_score) tuples
+        
+        Returns:
+            List of predictions that meet the confidence threshold
+        """
+        if not self.ai_prediction_enabled:
+            return [p[0] for p in predictions_with_scores]
+        
+        return [
+            prediction for prediction, score in predictions_with_scores
+            if score >= self.ml_confidence_threshold
+        ]
     
     def get_metrics(self):
         """Get current model performance metrics"""

@@ -11,7 +11,13 @@ from decimal import Decimal, getcontext
 from concurrent.futures import ThreadPoolExecutor, as_completed
 
 # Core Infrastructure
-from offchain.core.config import CHAINS, BALANCER_V3_VAULT, DEX_ROUTERS
+from offchain.core.config import (
+    CHAINS, BALANCER_V3_VAULT, DEX_ROUTERS,
+    TAR_SCORING_ENABLED, AI_PREDICTION_ENABLED, AI_PREDICTION_MIN_CONFIDENCE,
+    CATBOOST_MODEL_ENABLED, HF_CONFIDENCE_THRESHOLD, ML_CONFIDENCE_THRESHOLD,
+    PUMP_PROBABILITY_THRESHOLD, SELF_LEARNING_ENABLED, ROUTE_INTELLIGENCE_ENABLED,
+    REAL_TIME_DATA_ENABLED
+)
 from offchain.core.token_discovery import TokenDiscovery
 from routing.bridge_manager import BridgeManager
 from offchain.core.titan_commander_core import TitanCommander
@@ -149,7 +155,28 @@ class OmniBrain:
         self.use_mev_detection = True  # Detect sandwich attacks
         self.use_direct_dex_query = True  # Query pools directly
         
-        # 9. Trade Database
+        # 9. AI & Scoring Configuration
+        self.tar_scoring_enabled = TAR_SCORING_ENABLED
+        self.ai_prediction_enabled = AI_PREDICTION_ENABLED
+        self.ai_prediction_min_confidence = AI_PREDICTION_MIN_CONFIDENCE
+        self.catboost_model_enabled = CATBOOST_MODEL_ENABLED
+        self.hf_confidence_threshold = HF_CONFIDENCE_THRESHOLD
+        self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
+        self.pump_probability_threshold = PUMP_PROBABILITY_THRESHOLD
+        self.self_learning_enabled = SELF_LEARNING_ENABLED
+        self.route_intelligence_enabled = ROUTE_INTELLIGENCE_ENABLED
+        self.real_time_data_enabled = REAL_TIME_DATA_ENABLED
+        
+        logger.info(f"🎯 AI & Scoring Configuration:")
+        logger.info(f"   TAR Scoring: {'ENABLED' if self.tar_scoring_enabled else 'DISABLED'}")
+        logger.info(f"   AI Prediction: {'ENABLED' if self.ai_prediction_enabled else 'DISABLED'} (min confidence: {self.ai_prediction_min_confidence})")
+        logger.info(f"   CatBoost Model: {'ENABLED' if self.catboost_model_enabled else 'DISABLED'}")
+        logger.info(f"   ML Confidence Threshold: {self.ml_confidence_threshold}")
+        logger.info(f"   Self-Learning: {'ENABLED' if self.self_learning_enabled else 'DISABLED'}")
+        logger.info(f"   Route Intelligence: {'ENABLED' if self.route_intelligence_enabled else 'DISABLED'}")
+        logger.info(f"   Real-time Data: {'ENABLED' if self.real_time_data_enabled else 'DISABLED'}")
+        
+        # 10. Trade Database
         try:
             self.trade_db = get_trade_database()
             logger.info("📊 Trade history database initialized")
