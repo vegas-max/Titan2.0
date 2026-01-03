@@ -95,7 +95,7 @@ for script in "${scripts[@]}"; do
         if [ -x "$script" ]; then
             check_pass "$script exists and is executable"
         else
-            check_fail "$script exists but is NOT executable (run: chmod +x $script)"
+            check_fail "$script exists but is NOT executable (run: chmod +x ${script})"
         fi
         
         # Syntax check
