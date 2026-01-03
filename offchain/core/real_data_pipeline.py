@@ -10,10 +10,22 @@ import os
 from typing import Dict, List, Optional, Any
 from datetime import datetime
 from decimal import Decimal
-from web3 import Web3
+
+try:
+    from web3 import Web3
+    WEB3_AVAILABLE = True
+except ImportError:
+    WEB3_AVAILABLE = False
+    Web3 = None
 
 from offchain.core.websocket_manager import WebSocketManager
-from offchain.core.direct_dex_query import DirectDEXQuery
+
+try:
+    from offchain.core.direct_dex_query import DirectDEXQuery
+    DIRECT_QUERY_AVAILABLE = True
+except ImportError:
+    DIRECT_QUERY_AVAILABLE = False
+    DirectDEXQuery = None
 
 logger = logging.getLogger("RealDataPipeline")
 
@@ -24,7 +36,7 @@ class RealDataPipeline:
     Replaces simulated scanning with actual blockchain data
     """
     
-    def __init__(self, config: Dict, web3_connections: Dict[int, Web3], use_websockets: bool = True):
+    def __init__(self, config: Dict, web3_connections: Dict[int, Any], use_websockets: bool = True):
         """
         Initialize real data pipeline
         
@@ -33,12 +45,15 @@ class RealDataPipeline:
             web3_connections: Web3 connection pool
             use_websockets: Whether to use WebSocket streaming (True) or polling (False)
         """
+        if not WEB3_AVAILABLE:
+            raise ImportError("web3 package is required for RealDataPipeline. Install with: pip install web3")
+        
         self.config = config
         self.web3_connections = web3_connections
         self.use_websockets = use_websockets
         
         # Initialize components
-        self.direct_query = DirectDEXQuery(web3_connections)
+        self.direct_query = DirectDEXQuery(web3_connections) if DIRECT_QUERY_AVAILABLE else None
         self.ws_manager = WebSocketManager(config) if use_websockets else None
         
         # Pool data cache
@@ -174,6 +189,10 @@ class RealDataPipeline:
             
             # Fall back to direct query
             logger.debug(f"🔍 Querying pool {pool_address[:8]}... directly")
+            
+            if not self.direct_query:
+                logger.warning("Direct query not available - web3 not installed")
+                return None
             
             if dex_type == 'uniswap_v2' or dex_type == 'sushiswap' or dex_type == 'quickswap':
                 # These all use Uniswap V2 interface
