@@ -17,10 +17,10 @@ REQUIRED_FILES = [
     "ml/cortex/feature_store.py",
     "ml/cortex/forecaster.py",
     "ml/cortex/rl_optimizer.py",
-    "execution/bot.js",
-    "execution/lifi_discovery.js",
-    "execution/lifi_manager.js",
-    "execution/gas_manager.js", # The new file
+    "offchain/execution/bot.js",
+    "offchain/execution/lifi_discovery.js",
+    "offchain/execution/lifi_manager.js",
+    "offchain/execution/gas_manager.js", # The new file
     "contracts/OmniArbExecutor.sol"
 ]
 

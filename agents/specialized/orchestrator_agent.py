@@ -268,7 +268,7 @@ class OrchestratorAgent(BaseAgent):
     def _start_executor(self, mode: str) -> Dict[str, Any]:
         """Start the executor component"""
         try:
-            cmd = ["node", "execution/bot.js"]
+            cmd = ["node", "offchain/execution/bot.js"]
             
             process = subprocess.Popen(
                 cmd,

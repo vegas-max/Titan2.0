@@ -58,10 +58,10 @@ SYSTEM ARCHITECTURE:
 │  ┌───────────────────────────────────────────────────────────────┐ │
 │  │ LAYER 4: EXECUTION ENGINE (JavaScript)                        │ │
 │  ├───────────────────────────────────────────────────────────────┤ │
-│  │  • TitanBot (execution/bot.js)                                │ │
+│  │  • TitanBot (offchain/execution/bot.js)                       │ │
 │  │    - Signal file monitoring                                   │ │
 │  │    - Execution mode routing (PAPER/LIVE)                      │ │
-│  │  • GasManager (execution/gas_manager.js)                      │ │
+│  │  • GasManager (offchain/execution/gas_manager.js)             │ │
 │  │    - EIP-1559 optimization                                    │ │
 │  │  • AggregatorSelector (execution/aggregator_selector.js)      │ │
 │  │    - Multi-aggregator routing                                 │ │

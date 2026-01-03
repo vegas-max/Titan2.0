@@ -75,7 +75,7 @@ echo ""
 
 # Check 4: Bot.js updated
 echo "4️⃣  Checking bot.js integration..."
-if grep -q "AggregatorSelector" execution/bot.js; then
+if grep -q "AggregatorSelector" offchain/execution/bot.js; then
     echo -e "${GREEN}✅ PASSED: bot.js uses AggregatorSelector${NC}"
 else
     echo -e "${RED}❌ FAILED: bot.js not updated${NC}"
