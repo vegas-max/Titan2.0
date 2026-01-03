@@ -32,7 +32,6 @@ except ImportError:
     print("   pip install scikit-learn xgboost joblib pandas numpy")
     sys.exit(1)
 
-from offchain.ml.cortex.forecaster import MarketForecaster
 from offchain.ml.cortex.rl_optimizer import QLearningAgent
 
 logging.basicConfig(
