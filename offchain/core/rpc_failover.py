@@ -157,7 +157,7 @@ class FailoverWeb3Provider:
     
     def health_check(self) -> bool:
         """
-        Check if current connection is healthy.
+        Check if current connection is healthy with retry.
         
         Returns:
             bool: True if healthy, False otherwise
@@ -165,18 +165,52 @@ class FailoverWeb3Provider:
         if self.web3 is None:
             return False
         
-        try:
-            # Try to get latest block
-            self.web3.eth.block_number
-            return True
-        except Exception as e:
-            logger.warning(f"Health check failed: {e}")
-            # Try to reconnect with thread safety
-            with self._lock:
-                current_endpoint = self.endpoints[self.current_idx]
-                self.failed_endpoints.add(current_endpoint)
-                self.current_idx = (self.current_idx + 1) % len(self.endpoints)
-            return self._connect()
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                # Try to get latest block
+                block_number = self.web3.eth.block_number
+                logger.debug(f"Health check passed: block {block_number}")
+                return True
+            except Exception as e:
+                logger.warning(f"Health check failed (attempt {attempt + 1}/{max_retries}): {e}")
+                
+                if attempt < max_retries - 1:
+                    # Wait a bit before retry
+                    import time
+                    time.sleep(1)
+                else:
+                    # Final attempt failed, try to reconnect
+                    with self._lock:
+                        current_endpoint = self.endpoints[self.current_idx]
+                        self.failed_endpoints.add(current_endpoint)
+                        logger.warning(f"⚠️ Marking endpoint as failed: {current_endpoint}")
+                        self.current_idx = (self.current_idx + 1) % len(self.endpoints)
+                    return self._connect()
+        
+        return False
+    
+    def automated_health_monitoring(self, interval_seconds: int = 60):
+        """
+        Start automated health monitoring in background thread.
+        
+        Args:
+            interval_seconds: How often to run health checks (default: 60s)
+        """
+        import threading
+        import time
+        
+        def monitor():
+            while True:
+                if not self.health_check():
+                    logger.error(f"❌ Health check failed for chain {self.chain_id}, attempting recovery")
+                else:
+                    logger.debug(f"✅ Health check passed for chain {self.chain_id}")
+                time.sleep(interval_seconds)
+        
+        monitor_thread = threading.Thread(target=monitor, daemon=True)
+        monitor_thread.start()
+        logger.info(f"🏥 Started automated health monitoring for chain {self.chain_id} (interval: {interval_seconds}s)")
     
     def switch_endpoint(self):
         """Manually switch to next RPC endpoint (useful for load balancing)"""

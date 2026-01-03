@@ -263,12 +263,28 @@ class MEVStrategies {
     validateConfig() {
         const issues = [];
         
-        if (this.minJITProfit < 0) {
-            issues.push('MIN_JIT_PROFIT_USD must be non-negative');
+        // Validate JIT profit threshold
+        if (isNaN(this.minJITProfit) || this.minJITProfit < 0) {
+            issues.push('MIN_JIT_PROFIT_USD must be a non-negative number');
         }
         
-        if (this.validatorTipPercent < 50 || this.validatorTipPercent > 99) {
+        // Validate validator tip percentage
+        if (isNaN(this.validatorTipPercent) || this.validatorTipPercent < 50 || this.validatorTipPercent > 99) {
             issues.push('VALIDATOR_TIP_PERCENTAGE should be between 50-99');
+        }
+        
+        // Validate BloxRoute configuration
+        if (!this.bloxRoute) {
+            issues.push('BloxRoute manager not initialized');
+        }
+        
+        // Validate environment variables for MEV protection
+        const mevProtectionEnabled = this._parseBooleanEnv(process.env.USE_MEV_PROTECTION);
+        if (mevProtectionEnabled) {
+            // Check if BloxRoute auth header is configured
+            if (!process.env.BLOXROUTE_AUTH_HEADER) {
+                issues.push('USE_MEV_PROTECTION enabled but BLOXROUTE_AUTH_HEADER not configured');
+            }
         }
         
         if (issues.length > 0) {
