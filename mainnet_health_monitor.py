@@ -192,7 +192,7 @@ class MainnetHealthMonitor:
             logger.error(f"   ❌ Brain module: {e}")
         
         # Check if bot execution module exists
-        bot_path = Path('execution/bot.js')
+        bot_path = Path('offchain/execution/bot.js')
         if bot_path.exists():
             logger.info("   ✅ Bot module: OK")
         else:

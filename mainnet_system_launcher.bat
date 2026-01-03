@@ -156,7 +156,7 @@ timeout /t 3 /nobreak >nul
 
 REM Start JavaScript Bot in new window
 echo [32m⚙️  Starting JavaScript Bot (Execution)...[0m
-start "Titan Bot - %MODE%" /D "%CD%" cmd /k "node execution\bot.js"
+start "Titan Bot - %MODE%" /D "%CD%" cmd /k "node offchain\execution\bot.js"
 
 echo.
 echo [32m===================================================[0m

@@ -46,9 +46,9 @@ print("-"*70)
 from pathlib import Path
 
 files_to_check = [
-    'execution/bot.js',
-    'execution/gas_manager.js',
-    'execution/aggregator_selector.js',
+    'offchain/execution/bot.js',
+    'offchain/execution/gas_manager.js',
+    'offchain/execution/aggregator_selector.js',
     'mainnet_orchestrator.py',
     'system_wiring.py',
     'mainnet_health_monitor.py'

@@ -211,7 +211,7 @@ class MainnetOrchestrator:
         """Start real-time mainnet data ingestion and arbitrage scanning"""
         logger.info("📡 Starting real-time data ingestion + arbitrage calculations...")
         logger.info("   Signals will be written to: signals/outgoing/")
-        logger.info("   Make sure execution/bot.js is running to process signals")
+        logger.info("   Make sure offchain/execution/bot.js is running to process signals")
         logger.info("   This will run continuously. Press Ctrl+C to stop.")
         logger.info("")
         
