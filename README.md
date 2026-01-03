@@ -390,9 +390,9 @@ Titan 2.0 is a **production-ready, autonomous DeFi arbitrage system** that combi
 ### Core Capabilities
 
 #### 🌐 Multi-Chain Arbitrage
-- **15+ Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
+- **15 Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
 - **Cross-Chain Bridging**: Automated asset bridging via Li.Fi aggregator (15+ bridge protocols)
-- **40+ DEX Integration**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap, and more
+- **40+ DEX Integration**: Via aggregators (1inch, ParaSwap, Li.Fi) plus direct integration with Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap, and more
 - **Real-time Monitoring**: WebSocket connections for sub-second opportunity detection
 
 #### ⚡ Flash Loan Technology
@@ -429,7 +429,7 @@ Titan 2.0 is a **production-ready, autonomous DeFi arbitrage system** that combi
 
 | Category | Features |
 |----------|----------|
-| **Blockchain** | 15+ chains, 40+ DEXs, 2 flash loan providers, cross-chain bridges |
+| **Blockchain** | 15 chains, 40+ DEXs (via aggregators), 2 flash loan providers, cross-chain bridges |
 | **AI/ML** | Gas forecasting, Q-learning, profit optimization, graph pathfinding |
 | **Security** | Circuit breaker, simulation, MEV protection, multi-layer validation |
 | **Performance** | 7.5s execution, 99.2% uptime, 86% success rate, <$5 gas costs |
@@ -491,7 +491,7 @@ Flash loans allow borrowing large amounts of cryptocurrency without collateral, 
 ## ✨ Key Features
 
 ### 🌐 Multi-Chain Support
-- **10+ Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
+- **15 Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
 - **Dual RPC Providers**: Infura + Alchemy for redundancy and reliability
 - **WebSocket Streaming**: Real-time mempool monitoring and block updates
 
@@ -507,7 +507,8 @@ Flash loans allow borrowing large amounts of cryptocurrency without collateral, 
 - **Profit Engine**: Advanced profit calculation with real-time simulation
 
 ### 🔄 DEX Aggregation
-- **40+ DEX Routers**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, and more
+- **40+ DEX Access**: Via aggregators (1inch, ParaSwap, Li.Fi, KyberSwap, OpenOcean, 0x)
+- **Direct Integration**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap
 - **Smart Routing**: Automatically finds the best execution path
 - **Multi-Protocol Support**: V2/V3 AMMs, Stable Swap, Concentrated Liquidity
 
@@ -2191,8 +2192,8 @@ If you prefer manual installation:
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/MavenSource/Titan.git
-cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git
+cd Titan2.0
 ```
 
 #### 2. Install Node.js Dependencies
