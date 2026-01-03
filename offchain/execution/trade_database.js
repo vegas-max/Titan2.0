@@ -1,6 +1,7 @@
 const { spawn } = require('child_process');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 /**
  * Trade Database Manager (JavaScript wrapper for Python SQLite database)
@@ -9,6 +10,7 @@ const fs = require('fs');
 class TradeDatabase {
     constructor() {
         this.pythonScript = path.join(__dirname, '..', 'core', 'trade_database.py');
+        this.pythonExecutable = process.env.PYTHON_EXECUTABLE || 'python3';
         this.enabled = this._checkDatabaseAvailable();
         
         if (this.enabled) {
@@ -65,7 +67,7 @@ class TradeDatabase {
             };
 
             // Write trade data to temporary file for Python to read
-            const tempFile = path.join('/tmp', `trade_${Date.now()}.json`);
+            const tempFile = path.join(os.tmpdir(), `trade_${Date.now()}.json`);
             fs.writeFileSync(tempFile, JSON.stringify(trade));
 
             // Execute Python script to record trade
@@ -97,7 +99,7 @@ class TradeDatabase {
                 details: details
             };
 
-            const tempFile = path.join('/tmp', `circuit_breaker_${Date.now()}.json`);
+            const tempFile = path.join(os.tmpdir(), `circuit_breaker_${Date.now()}.json`);
             fs.writeFileSync(tempFile, JSON.stringify(data));
             
             await this._executePythonCommand('record_circuit_breaker', tempFile);
@@ -124,7 +126,7 @@ class TradeDatabase {
                 failure_reason: failureReason
             };
 
-            const tempFile = path.join('/tmp', `rpc_failover_${Date.now()}.json`);
+            const tempFile = path.join(os.tmpdir(), `rpc_failover_${Date.now()}.json`);
             fs.writeFileSync(tempFile, JSON.stringify(data));
             
             await this._executePythonCommand('record_rpc_failover', tempFile);
@@ -171,7 +173,7 @@ class TradeDatabase {
                 args.push(dataFile);
             }
 
-            const python = spawn('python3', args);
+            const python = spawn(this.pythonExecutable, args);
             let output = '';
             let errorOutput = '';
 

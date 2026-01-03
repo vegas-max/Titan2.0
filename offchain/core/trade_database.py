@@ -9,7 +9,6 @@ import logging
 from datetime import datetime
 from typing import Dict, List, Optional
 from pathlib import Path
-from decimal import Decimal
 
 logger = logging.getLogger(__name__)
 

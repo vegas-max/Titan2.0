@@ -846,7 +846,10 @@ class TitanBot {
                 const gasPrice = receipt.gasPrice || tx.maxFeePerGas;
                 const gasCostWei = gasUsed * gasPrice;
                 const gasCostEth = ethers.formatEther(gasCostWei);
-                const estimatedGasCostUSD = parseFloat(gasCostEth) * 2000; // Rough estimate
+                
+                // Use configurable ETH price or conservative estimate
+                const ethPriceUSD = parseFloat(process.env.ETH_PRICE_USD || '2000');
+                const estimatedGasCostUSD = parseFloat(gasCostEth) * ethPriceUSD;
                 
                 console.log(`   Gas cost: ${gasCostEth} ETH (~$${estimatedGasCostUSD.toFixed(2)})`);
                 
