@@ -42,7 +42,9 @@ class QLearningAgent:
         self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
         
         self.q_table = self.load_q_table()
-        self.learning_rate = 0.1  # Keep standard learning rate
+        # Learning rate is kept constant; when self_learning_enabled is False,
+        # Q-table updates are skipped entirely instead of zeroing the learning rate
+        self.learning_rate = 0.1
         self.discount_factor = 0.95
         self.epsilon = 0.1  # Exploration rate
         self.epsilon_decay = 0.995
@@ -227,7 +229,7 @@ class QLearningAgent:
                 self.epsilon *= self.epsilon_decay
         
         # Always update metrics and state tracking
-        self._update_metrics_only(reward)
+        self._update_metrics_without_learning(reward)
         
         # Periodically save (always save to maintain state consistency)
         if self.metrics["total_episodes"] % 10 == 0:
@@ -236,8 +238,11 @@ class QLearningAgent:
             self._save_metrics()
             self._save_replay_buffer()
     
-    def _update_metrics_only(self, reward):
-        """Update metrics without modifying Q-table (for non-learning mode)"""
+    def _update_metrics_without_learning(self, reward):
+        """
+        Update performance metrics without modifying Q-table.
+        Used when self-learning is disabled to track performance without updating the model.
+        """
         self.metrics["total_episodes"] += 1
         self.metrics["total_rewards"] += reward
         self.metrics["avg_reward"] = self.metrics["total_rewards"] / self.metrics["total_episodes"]

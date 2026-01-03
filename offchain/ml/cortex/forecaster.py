@@ -266,14 +266,18 @@ class MarketForecaster:
         """
         Check if a prediction meets the minimum confidence threshold.
         
+        When AI prediction is disabled, this returns True to bypass confidence checks,
+        effectively accepting all predictions. This allows the system to function
+        normally without AI validation when the feature is toggled off.
+        
         Args:
             confidence_score: Prediction confidence score (0.0 to 1.0)
         
         Returns:
-            bool: True if confidence meets threshold, False otherwise
+            bool: True if confidence meets threshold or AI is disabled, False otherwise
         """
         if not self.ai_prediction_enabled:
-            return True  # If AI prediction disabled, accept all predictions
+            return True  # Bypass confidence check when AI prediction is disabled
         
         return confidence_score >= self.min_confidence
     
