@@ -73,8 +73,8 @@ class LiFiWrapper:
         from_chain: int, 
         to_chain: int, 
         from_token: str, 
-        to_token: str = None, 
-        amount: str = None,
+        amount: str,
+        to_token: Optional[str] = None,
         prefer_intent_based: bool = True
     ) -> Optional[Dict]:
         """

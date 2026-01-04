@@ -273,7 +273,8 @@ class OmniBrain:
             if tokens_list:
                 # CRITICAL FIX: Ensure essential tokens (WETH, USDC, USDT, DAI, WBTC) are always included
                 # These are required for arbitrage routes and must be present regardless of position in list
-                essential_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC', 'ETH', 'WMATIC', 'WNATIVE']
+                # WNATIVE is used for wrapped native tokens on non-Ethereum chains
+                essential_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC', 'ETH', 'WNATIVE']
                 
                 # First, add all essential tokens if they exist
                 for token in tokens_list:

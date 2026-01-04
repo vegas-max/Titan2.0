@@ -93,7 +93,8 @@ class TokenDiscovery:
                 "native": True
             }
     
-    TOKEN_REGISTRY = _build_token_registry.__func__(_build_token_registry)
+    # Build the registry at module load time
+    TOKEN_REGISTRY = _build_token_registry()
     
     @classmethod
     def fetch_all_chains(cls, chain_ids):

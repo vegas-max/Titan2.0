@@ -359,12 +359,12 @@ class LifiExecutionEngine {
    * @param {number} fromChainId - Source Chain ID
    * @param {number} toChainId - Destination Chain ID
    * @param {string} fromToken - Source token address
-   * @param {string} toToken - Destination token address (optional, will be auto-resolved)
    * @param {string} amount - Amount to bridge
+   * @param {string} toToken - Destination token address (optional, will be auto-resolved)
    * @param {object} options - Optional configuration
    * @returns {Promise<object>} Quote with route details and cost estimates
    */
-  static async getQuote(fromChainId, toChainId, fromToken, toToken = null, amount, options = {}) {
+  static async getQuote(fromChainId, toChainId, fromToken, amount, toToken = null, options = {}) {
     // Initialize SDK on first use
     await initializeLifiSdk();
     
