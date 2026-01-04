@@ -14,7 +14,6 @@ This enables institutional-grade validation by:
 
 import logging
 from typing import Optional, Dict
-from web3 import Web3
 
 logger = logging.getLogger("DexTwapOracle")
 

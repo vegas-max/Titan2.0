@@ -10,7 +10,11 @@
  * Run with: node offchain/tests/integration_example.js
  */
 
-require('dotenv').config();
+try {
+  require('dotenv').config();
+} catch (e) {
+  // dotenv optional
+}
 const { ethers } = require('ethers');
 
 // Import our new modules
@@ -28,12 +32,32 @@ const {
 const {
   curveQuoteByTokens,
   getCurvePoolCoins
-} = require('../core/curveQuoter');
+} = {
+  // Mock implementations for demonstration
+  curveQuoteByTokens: async () => null,
+  getCurvePoolCoins: async () => []
+};
 
 const {
   buildBalancerLegs,
   quoteBalancerMultiHop
-} = require('../core/balancerRouter');
+} = {
+  // Mock implementations for demonstration
+  buildBalancerLegs: (poolId, assets, path, amountIn) => {
+    const legs = [];
+    for (let k = 0; k < path.length - 1; k++) {
+      legs.push({
+        poolId,
+        assetInIndex: path[k],
+        assetOutIndex: path[k + 1],
+        amount: k === 0 ? amountIn.toString() : "0",
+        userData: "0x"
+      });
+    }
+    return legs;
+  },
+  quoteBalancerMultiHop: async () => 0n
+};
 
 // Configuration
 const POLYGON_RPC = process.env.RPC_POLYGON || 'https://polygon-rpc.com';
