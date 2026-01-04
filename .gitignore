@@ -33,12 +33,6 @@ venv/
 ENV/
 env/
 
-# Hardhat
-cache/
-artifacts/
-typechain/
-typechain-types/
-
 # Environment
 .env
 .env.local
