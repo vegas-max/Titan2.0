@@ -177,10 +177,12 @@ export class TWAPAccumulator {
    */
   deviation(currentPrice: number): number {
     const twap = this.value();
-    if (twap === 0) {
+    // Handle edge cases
+    if (twap === 0 || !isFinite(twap)) {
       return 0;
     }
-    return Math.abs(currentPrice - twap) / twap;
+    // Use absolute values for proper deviation calculation
+    return Math.abs(currentPrice - twap) / Math.abs(twap);
   }
 
   /**

@@ -6,8 +6,6 @@
  * strategies without breaking existing functionality.
  */
 
-import { CHAINS } from './config';
-
 // Token configuration by chain ID
 export const TOKENS = {
   // Polygon (137)
