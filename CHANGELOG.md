@@ -7,24 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [4.2.2] - 2026-01-04
+
 ### Removed
 - **Hardhat Development Infrastructure** - Removed all Hardhat-related files and configuration as smart contracts are already deployed
   - Deleted `hardhat.config.js` configuration file
-  - Deleted `package-lock.json` (regenerated without hardhat dependencies)
-  - Removed `onchain/` directory containing all smart contracts and deployment scripts
-  - Removed `contracts/` legacy contract directory
+  - Deleted `contracts/` directory containing smart contract source
   - Removed Hardhat and OpenZeppelin dependencies from `package.json`
-  - Removed compilation and deployment scripts from npm scripts
+  - Removed `@nomicfoundation/hardhat-toolbox` devDependency
+  - Removed `hardhat` devDependency
   - Updated all installation and build scripts to remove contract compilation steps
   - Updated documentation to remove contract deployment instructions
   - Repository is now focused on bot execution with deployed contract addresses configured in `.env`
 
 ### Changed
 - **Installation Process** - Simplified setup process by removing smart contract compilation step
-  - `npm install` now installs only execution dependencies (~15MB smaller)
+  - `npm install` now installs only execution dependencies (no --legacy-peer-deps flag needed)
+  - Node.js version requirement updated from 18+ to 22+ in package.json engines
+  - CI workflow updated to remove contract compilation and artifact verification
   - `npm test` runs only Python tests
-  - All startup scripts (`setup.sh`, `run_titan.sh`, etc.) no longer compile contracts
+  - All startup scripts (`setup.sh`, `build.sh`, etc.) no longer compile contracts
   - Faster installation and setup time
+  - Repository is approximately 15MB smaller without Hardhat dependencies
+
+### Updated
+- **Documentation** - Updated all documentation to reflect deployment-only workflow
+  - `QUICKSTART.md` - Removed contract deployment instructions
+  - `INSTALL.md` - Removed Hardhat installation and compilation steps
+  - `SUPER_AGENT_QUICKREF.md` - Removed hardhat test commands
+  - `DEPENDENCIES.md` - Removed Hardhat dependency documentation
+  - `Makefile` - Removed compile and deploy-* targets
+  - `.github/workflows/ci.yml` - Removed contract compilation step
 
 ## [4.2.1] - 2025-12-14
 

@@ -1,59 +1,30 @@
 # Dependencies Documentation
 
-## Why --legacy-peer-deps?
+## Overview
 
-This project uses the `--legacy-peer-deps` flag for npm installation due to a known peer dependency conflict in the Ethereum development ecosystem.
+This project focuses on bot execution with pre-deployed smart contracts. All contract addresses are configured via environment variables in `.env`.
 
-### The Conflict
+## Dependency Management
 
-- **@flashbots/ethers-provider-bundle** requires `ethers@6.7.1` (exact version)
-- **@nomicfoundation/hardhat-toolbox** requires `ethers@^6.14.0` (any version >= 6.14.0)
+### Installation
 
-These dependencies have overlapping but incompatible peer dependency requirements.
+```bash
+# Install all dependencies
+npm install
 
-### Why It's Safe
-
-1. **Backward Compatibility**: ethers.js maintains strong backward compatibility within v6.x
-2. **Limited Surface Area**: We use a subset of ethers.js features that are stable across these versions
-3. **Tested Configuration**: This setup has been validated in production environments
-4. **No Breaking Changes**: The features we use haven't changed between 6.7.1 and 6.14.0
-
-### The Alternative
-
-Without `--legacy-peer-deps`, you would see:
-
-```
-npm error ERESOLVE could not resolve
-npm error Conflicting peer dependency: ethers@6.16.0
+# Or using Yarn
+yarn install
 ```
 
-The alternatives are:
-1. **Use --force**: More aggressive, can break things
-2. **Wait for upstream**: @flashbots needs to update their peer dependency range
-3. **Fork dependencies**: Impractical for maintainability
-4. **Use --legacy-peer-deps**: ✅ Best option - allows installation with known compatibility
-
-### Monitoring
-
-We monitor both dependencies for updates:
-- @flashbots/ethers-provider-bundle: Check for ethers v6.x support
-- @nomicfoundation/hardhat-toolbox: Generally up-to-date
-
-### Future Resolution
-
-This will be resolved when:
-1. Flashbots updates their package to support ethers@^6.7.1, or
-2. We find an alternative MEV protection solution, or
-3. Both packages converge on a compatible ethers version
+No additional flags are needed as Hardhat dependencies have been removed.
 
 ## Dependency Overview
 
 ### Node.js Dependencies
 
 #### Core Blockchain
-- **ethers@6.7.1** - Ethereum library for blockchain interaction
-- **@openzeppelin/contracts@5.4.0** - Secure smart contract library
-- **hardhat@2.19.5** - Ethereum development environment
+- **ethers@6.16.0** - Ethereum library for blockchain interaction
+- **@solana/web3.js@1.95.0** - Solana blockchain interaction
 
 #### Trading & DeFi
 - **@flashbots/ethers-provider-bundle@1.0.0** - MEV protection
@@ -74,8 +45,7 @@ All aggregators use HTTP REST API integration (no npm packages required):
 #### Utilities
 - **axios@1.6.7** - HTTP client
 - **dotenv@16.4.1** - Environment variable management
-- **redis@4.6.12** - Message queue client
-- **glob@10.4.0** - File pattern matching (updated from 8.1.0 to fix memory leak)
+- **glob@10.4.0** - File pattern matching
 
 ### Python Dependencies
 

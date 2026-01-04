@@ -35,9 +35,6 @@ jobs:
       - name: Install Python dependencies
         run: pip install -r requirements.txt
 
-      - name: Compile smart contracts
-        run: npx hardhat compile
-
       - name: Check code formatting
         run: |
           echo "Running code checks..."
@@ -47,19 +44,3 @@ jobs:
       - name: Run system audit
         run: python audit_system.py
         continue-on-error: true
-
-      - name: Verify build artifacts
-        run: |
-          echo "Verifying build..."
-          test -d artifacts || exit 1
-          test -f artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json || exit 1
-          echo "✅ Build verification passed"
-
-      - name: Upload artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-artifacts
-          path: |
-            artifacts/
-            cache/
-          retention-days: 7

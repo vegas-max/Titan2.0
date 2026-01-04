@@ -230,13 +230,11 @@ npm install
 
 This installs:
 - `ethers@6.7.1` - Blockchain interaction
-- `@openzeppelin/contracts@5.4.0` - Smart contract utilities
-- `@paraswap/sdk@7.3.1` - DEX aggregation
+- `@lifi/sdk@3.0.0` - Cross-chain bridge aggregation
 - `axios@1.6.7` - HTTP requests
 - `dotenv@16.4.1` - Environment management
-- `redis@4.6.12` - Message queue client
 - `@flashbots/ethers-provider-bundle@1.0.0` - MEV protection
-- `hardhat@2.19.5` - Smart contract development
+- `@solana/web3.js@1.95.0` - Solana blockchain interaction
 
 #### Python Dependencies
 
@@ -256,17 +254,6 @@ This installs:
 - `uvicorn>=0.27.0` - ASGI server
 - `eth-abi>=5.0.0` - ABI encoding/decoding
 - `colorama>=0.4.6` - Terminal colors
-
-#### Smart Contract Compilation
-
-```bash
-npx hardhat compile
-```
-
-This compiles:
-- `contracts/OmniArbExecutor.sol` - Main arbitrage contract
-- Contract interfaces and modules
-- Generates artifacts in `artifacts/` directory
 
 ---
 
@@ -329,28 +316,17 @@ Get free key from: https://li.fi/
 LIFI_API_KEY=your_lifi_api_key_here
 ```
 
-### 4. Deploy Smart Contract
-
-Choose your network (Polygon recommended for testing):
-
-```bash
-# Deploy to Polygon
-npx hardhat run scripts/deploy.js --network polygon
-
-# Deploy to Arbitrum
-npx hardhat run scripts/deploy.js --network arbitrum
-
-# Deploy to Optimism
-npx hardhat run scripts/deploy.js --network optimism
-```
-
-Copy the deployed address and add to `.env`:
+Choose your network and add the deployed contract addresses:
 
 ```env
-EXECUTOR_ADDRESS_POLYGON=0xYOUR_DEPLOYED_CONTRACT_ADDRESS
+# Contract addresses (already deployed on mainnet)
+EXECUTOR_ADDRESS_ETHEREUM=0xYOUR_ETHEREUM_CONTRACT_ADDRESS
+EXECUTOR_ADDRESS_POLYGON=0xYOUR_POLYGON_CONTRACT_ADDRESS
 ```
 
-### 5. Optional Configuration
+Check the repository documentation or `.env.example` for the official deployed contract addresses.
+
+### 4. Optional Configuration
 
 ```env
 # Strategy parameters
@@ -439,7 +415,6 @@ make verify
 
 This runs:
 - Prerequisite checks
-- Contract compilation
 - System audit
 
 ---
@@ -514,19 +489,6 @@ redis-server
 2. For testnet, use faucets:
    - Mumbai: https://faucet.polygon.technology/
    - Goerli: https://goerlifaucet.com/
-
-### Issue: "Contract deployment failed"
-
-**Cause**: Invalid network configuration or insufficient gas
-
-**Solution**:
-```bash
-# Check hardhat config
-npx hardhat test
-
-# Try with more gas
-npx hardhat run scripts/deploy.js --network polygon --gas 5000000
-```
 
 ### Issue: "Module not found"
 
