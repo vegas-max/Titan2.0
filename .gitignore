@@ -75,6 +75,11 @@ data/history.csv
 # Build artifacts
 *.tsbuildinfo
 
+# Hardhat
+cache/
+artifacts/
+typechain-types/
+
 # Process ID files
 *.pid
 .orchestrator.pid
