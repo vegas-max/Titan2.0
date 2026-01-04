@@ -28,3 +28,7 @@ crate-type = ["cdylib", "rlib"]
 [[bin]]
 name = "titan_server"
 path = "src/bin/titan_server.rs"
+
+[[bin]]
+name = "omniarb_engine"
+path = "src/bin/omniarb_engine.rs"
