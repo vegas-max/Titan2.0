@@ -221,6 +221,7 @@ cd Titan2.0
 Titan 2.0 includes extensive documentation organized by use case and experience level.
 
 ### 🚀 Quick Start (New Users)
+- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - 🆕 ⚡ Run in browser (no installation)
 - **[QUICKSTART.md](QUICKSTART.md)** - ⚡ 15-minute setup guide
 - **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - 🎯 Simplest installation method
 - **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - 📊 Interactive dashboard in 5 minutes
@@ -293,9 +294,40 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 
 ## ⚡ Quick Start
 
-### Option 1: One-Click Install and Run ⚡ **NEW!**
+### Option 0: Google Colab (No Installation Required) 🆕 **EASIEST!**
 
-The **simplest way** to get started - just one command after configuring .env:
+Run TITAN in your browser without any local installation:
+
+```bash
+# Windows: Double-click
+LAUNCH_GOOGLE_COLAB.bat
+
+# Linux/Mac: Run
+./launch_google_colab.sh
+```
+
+Or directly upload `Titan_Google_Colab.ipynb` to [Google Colab](https://colab.research.google.com/)
+
+**Features:**
+- ✅ Zero local installation
+- ✅ Interactive setup wizard
+- ✅ Full system (Brain + Bot + Dashboard)
+- ✅ Cloud deployment configuration
+- ✅ Oracle Free Tier deployment wizard
+
+**Perfect for:**
+- Testing and learning
+- Configuring production deployment
+- Paper mode trading
+- Quick demos
+
+**See [GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md) for complete instructions.**
+
+---
+
+### Option 1: One-Click Install and Run ⚡
+
+The **simplest local setup** - just one command after configuring .env:
 
 ```bash
 # Clone repository
@@ -317,7 +349,11 @@ This installs dependencies, compiles contracts, and starts the system automatica
 
 **See [ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md) for detailed one-click options.**
 
-### Option 2: Full-Scale Installation (With Arguments)
+### Option 2: Google Colab (No Installation)
+
+See **Option 0** above or [GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)
+
+### Option 3: Full-Scale Installation (With Arguments)
 
 Install everything and launch the complete system with command-line arguments:
 
@@ -341,7 +377,7 @@ This single script:
 
 **See [FULL_INSTALLATION_GUIDE.md](FULL_INSTALLATION_GUIDE.md) for complete documentation.**
 
-### Option 3: Step-by-Step Installation
+### Option 4: Step-by-Step Installation
 
 Get Titan running in 3 commands:
 
