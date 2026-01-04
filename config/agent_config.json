@@ -117,7 +117,7 @@
   "system": {
     "default_mode": "paper",
     "auto_start_on_boot": true,
-    "run_build_on_boot": false,
+    "run_build_on_boot": true,
     "graceful_shutdown_timeout": 30,
     "health_check_interval": 300
   },
