@@ -21,8 +21,7 @@ echo.
 echo This script will:
 echo   1. Install Node.js dependencies
 echo   2. Install Python dependencies
-echo   3. Compile smart contracts
-echo   4. Start the Titan system
+echo   3. Start the Titan system
 echo.
 echo Make sure you have configured .env file first!
 echo.
@@ -31,7 +30,7 @@ REM ============================================================================
 REM STEP 1: CHECK PREREQUISITES
 REM ==============================================================================
 
-echo [STEP 1/5] Checking prerequisites...
+echo [STEP 1/4] Checking prerequisites...
 echo.
 
 where node >nul 2>&1
@@ -64,7 +63,7 @@ REM ============================================================================
 REM STEP 2: CHECK .env FILE
 REM ==============================================================================
 
-echo [STEP 2/5] Checking configuration...
+echo [STEP 2/4] Checking configuration...
 echo.
 
 if not exist .env (
@@ -94,7 +93,7 @@ REM ============================================================================
 REM STEP 3: INSTALL NODE.JS DEPENDENCIES
 REM ==============================================================================
 
-echo [STEP 3/5] Installing Node.js dependencies...
+echo [STEP 3/4] Installing Node.js dependencies...
 echo.
 
 REM Try yarn first, fall back to npm
@@ -120,7 +119,7 @@ REM ============================================================================
 REM STEP 4: INSTALL PYTHON DEPENDENCIES
 REM ==============================================================================
 
-echo [STEP 4/5] Installing Python dependencies...
+echo [STEP 4/4] Installing Python dependencies...
 echo.
 
 pip install -r requirements.txt
@@ -134,19 +133,8 @@ echo [+] Python dependencies installed
 echo.
 
 REM ==============================================================================
-REM STEP 5: COMPILE SMART CONTRACTS
+REM START THE SYSTEM
 REM ==============================================================================
-
-echo [STEP 5/5] Compiling smart contracts...
-echo.
-
-call npx hardhat compile
-if %errorlevel% neq 0 (
-    echo [X] Failed to compile smart contracts
-    pause
-    exit /b 1
-)
-echo [+] Smart contracts compiled
 
 echo.
 echo ================================================================
