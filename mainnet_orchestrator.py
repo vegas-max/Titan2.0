@@ -20,6 +20,7 @@ import time
 import logging
 import signal
 import json
+import asyncio
 from datetime import datetime
 from threading import Thread, Event
 from pathlib import Path
@@ -220,7 +221,8 @@ class MainnetOrchestrator:
             # 1. Real-time data ingestion (gas prices, liquidity, etc.)
             # 2. Real arbitrage calculations (profit engine)
             # 3. Signal writing to JSON files for bot.js execution
-            self.brain.scan_loop()
+            # CRITICAL FIX: scan_loop is async, must use asyncio.run()
+            asyncio.run(self.brain.scan_loop())
             
         except KeyboardInterrupt:
             logger.info("🛑 Keyboard interrupt received")
