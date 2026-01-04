@@ -21,5 +21,13 @@ module.exports = {
     hardhat: {
       chainId: 1337,
     },
+    mainnet: {
+      chainId: 1,
+      url: process.env.MAINNET_RPC_URL || "",
+    },
+    polygon: {
+      chainId: 137,
+      url: process.env.POLYGON_RPC_URL || "",
+    },
   },
 };
