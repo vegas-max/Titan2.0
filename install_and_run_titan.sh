@@ -650,14 +650,13 @@ System Components:
 - Node.js dependencies: Installed
 - Python dependencies: Installed
 - Rust components (rustworkx): Installed
-- Smart contracts: Compiled
 - Data directories: Created
 
 Next Steps:
 1. Monitor logs: tail -f logs/orchestrator.log logs/executor.log
 2. View metrics: Check logs for profit opportunities
 3. Adjust parameters: Edit .env file
-4. Deploy to other networks: npx hardhat run scripts/deploy.js --network <network>
+4. Verify contract addresses in .env are correct
 
 Documentation:
 - README.md - Complete system documentation
