@@ -169,7 +169,7 @@ else
 fi
 echo ""
 
-# Step 8: Display Next Steps (removed - renumbered from 8/8 to 7/7)
+# Display completion message and next steps
 echo -e "${BLUE}Setup Complete!${NC}"
 echo ""
 echo -e "${GREEN}===================================================${NC}"
