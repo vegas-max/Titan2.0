@@ -5,6 +5,7 @@ This directory contains systemd service files for running Titan as a system serv
 ## Files
 
 - `titan-redis.service.template` - Redis service template
+- `titan-super-agent.service.template` - Super Agent system template (recommended for auto-management)
 - `titan-brain.service.template` - Brain (AI engine) service template
 - `titan-executor.service.template` - Executor (trading bot) service template
 
@@ -26,6 +27,9 @@ CURRENT_USER=$(whoami)
 CURRENT_DIR=$(pwd)
 
 sed "s|REPLACE_WITH_USER|$CURRENT_USER|g; s|REPLACE_WITH_WORKDIR|$CURRENT_DIR|g" \
+    systemd/titan-super-agent.service.template > systemd/titan-super-agent.service
+
+sed "s|REPLACE_WITH_USER|$CURRENT_USER|g; s|REPLACE_WITH_WORKDIR|$CURRENT_DIR|g" \
     systemd/titan-brain.service.template > systemd/titan-brain.service
 
 sed "s|REPLACE_WITH_USER|$CURRENT_USER|g; s|REPLACE_WITH_WORKDIR|$CURRENT_DIR|g" \
@@ -33,22 +37,47 @@ sed "s|REPLACE_WITH_USER|$CURRENT_USER|g; s|REPLACE_WITH_WORKDIR|$CURRENT_DIR|g"
 
 # Copy to systemd directory
 sudo cp systemd/titan-redis.service.template /etc/systemd/system/titan-redis.service
+sudo cp systemd/titan-super-agent.service /etc/systemd/system/
 sudo cp systemd/titan-brain.service /etc/systemd/system/
 sudo cp systemd/titan-executor.service /etc/systemd/system/
 
 # Reload systemd
 sudo systemctl daemon-reload
 
-# Enable services
-sudo systemctl enable titan-redis titan-brain titan-executor
-
-# Start services
+# Option 1: Enable Super Agent (Recommended - manages all components automatically)
+sudo systemctl enable titan-redis titan-super-agent
 sudo systemctl start titan-redis
-sudo systemctl start titan-brain
-sudo systemctl start titan-executor
+sudo systemctl start titan-super-agent
+
+# Option 2: Enable individual services (Alternative approach)
+# sudo systemctl enable titan-redis titan-brain titan-executor
+# sudo systemctl start titan-redis
+# sudo systemctl start titan-brain
+# sudo systemctl start titan-executor
 ```
 
 ## Managing Services
+
+### Super Agent (Recommended)
+
+```bash
+# Start Super Agent (automatically manages brain and executor)
+sudo systemctl start titan-super-agent
+
+# Stop Super Agent
+sudo systemctl stop titan-super-agent
+
+# Restart Super Agent
+sudo systemctl restart titan-super-agent
+
+# Check status
+sudo systemctl status titan-super-agent
+
+# View logs
+sudo journalctl -u titan-super-agent -f
+```
+
+### Individual Services (Alternative)
 
 ```bash
 # Start services

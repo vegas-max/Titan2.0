@@ -9,6 +9,7 @@ Main orchestrator agent that coordinates all other agents.
 import os
 import sys
 import time
+import glob
 import logging
 import subprocess
 from typing import Dict, List, Any, Optional
@@ -16,6 +17,7 @@ from datetime import datetime
 from pathlib import Path
 
 from agents.core.agent_base import BaseAgent, Task, AgentStatus, AgentPriority, AgentConfig
+
 
 
 class OrchestratorCapability:
@@ -27,6 +29,7 @@ class OrchestratorCapability:
     RESTART_SYSTEM = "restart_system"
     RUN_TESTS = "run_tests"
     BUILD_PROJECT = "build_project"
+    BUILD_RUST_ENGINE = "build_rust_engine"
     DEPLOY = "deploy"
     MONITOR_PERFORMANCE = "monitor_performance"
     AUTO_SCALE = "auto_scale"
@@ -71,6 +74,7 @@ class OrchestratorAgent(BaseAgent):
             OrchestratorCapability.RESTART_SYSTEM: self._restart_system,
             OrchestratorCapability.RUN_TESTS: self._run_tests,
             OrchestratorCapability.BUILD_PROJECT: self._build_project,
+            OrchestratorCapability.BUILD_RUST_ENGINE: self._build_rust_engine,
             OrchestratorCapability.DEPLOY: self._deploy,
             OrchestratorCapability.MONITOR_PERFORMANCE: self._monitor_performance,
             OrchestratorCapability.AUTO_SCALE: self._auto_scale,
@@ -383,10 +387,24 @@ class OrchestratorAgent(BaseAgent):
         }
     
     def _build_project(self, payload: Dict[str, Any]) -> Dict[str, Any]:
-        """Build the project"""
-        self.logger.info("🔨 Building project...")
+        """Build the complete project including Rust engine and smart contracts"""
+        self.logger.info("🔨 Building complete project...")
         
+        results = {}
+        
+        # Build Rust engine first
+        include_rust = payload.get("include_rust", True)
+        if include_rust:
+            self.logger.info("Building Rust engine...")
+            rust_result = self._build_rust_engine({})
+            results["rust_engine"] = rust_result
+            
+            if rust_result.get("status") == "failed":
+                self.logger.warning("Rust engine build failed, continuing with contracts...")
+        
+        # Build smart contracts
         try:
+            self.logger.info("Building smart contracts...")
             result = subprocess.run(
                 ["npx", "hardhat", "compile"],
                 cwd=self.project_root,
@@ -395,9 +413,141 @@ class OrchestratorAgent(BaseAgent):
                 timeout=300
             )
             
-            return {
+            results["contracts"] = {
                 "status": "success" if result.returncode == 0 else "failed",
-                "output": result.stdout[-500:] if len(result.stdout) > 500 else result.stdout,
+                "output": result.stdout[-500:] if len(result.stdout) > 500 else result.stdout
+            }
+        except Exception as e:
+            results["contracts"] = {
+                "status": "failed",
+                "error": str(e)
+            }
+        
+        # Determine overall status
+        overall_status = "success"
+        if results.get("contracts", {}).get("status") == "failed":
+            overall_status = "failed"
+        elif include_rust and results.get("rust_engine", {}).get("status") == "failed":
+            overall_status = "partial"
+        
+        return {
+            "status": overall_status,
+            "results": results,
+            "timestamp": datetime.now().isoformat()
+        }
+    
+    def _build_rust_engine(self, payload: Dict[str, Any]) -> Dict[str, Any]:
+        """Build the Rust engine"""
+        self.logger.info("🦀 Building Rust engine...")
+        
+        rust_dir = self.project_root / "core-rust"
+        
+        if not rust_dir.exists():
+            return {
+                "status": "skipped",
+                "message": "core-rust directory not found",
+                "timestamp": datetime.now().isoformat()
+            }
+        
+        try:
+            # Check if cargo is available
+            cargo_check = subprocess.run(
+                ["cargo", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if cargo_check.returncode != 0:
+                return {
+                    "status": "skipped",
+                    "message": "Rust/Cargo not installed",
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # Build Rust library
+            self.logger.info("Building Rust library (release mode)...")
+            build_result = subprocess.run(
+                ["cargo", "build", "--release"],
+                cwd=rust_dir,
+                capture_output=True,
+                text=True,
+                timeout=600  # Rust builds can take longer
+            )
+            
+            if build_result.returncode != 0:
+                return {
+                    "status": "failed",
+                    "error": "Cargo build failed",
+                    "output": build_result.stderr[-500:] if len(build_result.stderr) > 500 else build_result.stderr,
+                    "timestamp": datetime.now().isoformat()
+                }
+            
+            # Check if maturin is available for Python bindings
+            maturin_check = subprocess.run(
+                ["maturin", "--version"],
+                capture_output=True,
+                text=True,
+                timeout=5
+            )
+            
+            if maturin_check.returncode == 0:
+                # Build Python wheel
+                self.logger.info("Building Python wheel with maturin...")
+                wheel_result = subprocess.run(
+                    ["maturin", "build", "--release"],
+                    cwd=rust_dir,
+                    capture_output=True,
+                    text=True,
+                    timeout=600
+                )
+                
+                if wheel_result.returncode != 0:
+                    return {
+                        "status": "partial",
+                        "message": "Rust library built, but Python wheel build failed",
+                        "output": wheel_result.stderr[-500:] if len(wheel_result.stderr) > 500 else wheel_result.stderr,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                
+                # Try to install the wheel
+                import glob
+                wheels = glob.glob(str(rust_dir / "target" / "wheels" / "*.whl"))
+                if wheels:
+                    latest_wheel = max(wheels, key=os.path.getmtime)
+                    self.logger.info(f"Installing wheel: {latest_wheel}")
+                    
+                    install_result = subprocess.run(
+                        ["pip", "install", "--force-reinstall", latest_wheel],
+                        capture_output=True,
+                        text=True,
+                        timeout=300
+                    )
+                    
+                    if install_result.returncode != 0:
+                        return {
+                            "status": "partial",
+                            "message": "Rust library and wheel built, but installation failed",
+                            "timestamp": datetime.now().isoformat()
+                        }
+                    
+                    return {
+                        "status": "success",
+                        "message": "Rust engine built and Python bindings installed successfully",
+                        "wheel": os.path.basename(latest_wheel),
+                        "timestamp": datetime.now().isoformat()
+                    }
+            
+            return {
+                "status": "success",
+                "message": "Rust engine built successfully (Python bindings skipped - maturin not available)",
+                "timestamp": datetime.now().isoformat()
+            }
+            
+        except subprocess.TimeoutExpired:
+            return {
+                "status": "failed",
+                "error": "Build timeout (exceeded 10 minutes)",
                 "timestamp": datetime.now().isoformat()
             }
         except Exception as e:
