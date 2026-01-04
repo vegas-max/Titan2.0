@@ -58,7 +58,7 @@ check_directory() {
 }
 
 # Check Prerequisites
-echo -e "${BLUE}[1/7] Checking Prerequisites...${NC}"
+echo -e "${BLUE}[1/6] Checking Prerequisites...${NC}"
 check_command node "Node.js installed"
 if command -v node >/dev/null 2>&1; then
     NODE_VERSION=$(node -v)
@@ -81,18 +81,16 @@ check_command git "Git installed"
 echo ""
 
 # Check Required Files
-echo -e "${BLUE}[2/7] Checking Required Files...${NC}"
+echo -e "${BLUE}[2/6] Checking Required Files...${NC}"
 check_file "package.json" "package.json exists"
 check_file "requirements.txt" "requirements.txt exists"
-check_file "hardhat.config.js" "hardhat.config.js exists"
 check_file ".env" ".env configuration file exists"
-check_file "contracts/OmniArbExecutor.sol" "Main smart contract exists"
-check_file "ml/brain.py" "AI Brain module exists"
+check_file "offchain/ml/brain.py" "AI Brain module exists"
 check_file "offchain/execution/bot.js" "Execution bot exists"
 echo ""
 
 # Check Dependencies
-echo -e "${BLUE}[3/7] Checking Node.js Dependencies...${NC}"
+echo -e "${BLUE}[3/6] Checking Node.js Dependencies...${NC}"
 if [ -d "node_modules" ]; then
     echo -e "${GREEN}[✓]${NC} node_modules directory exists"
     
@@ -112,7 +110,7 @@ fi
 echo ""
 
 # Check Python Dependencies
-echo -e "${BLUE}[4/7] Checking Python Dependencies...${NC}"
+echo -e "${BLUE}[4/6] Checking Python Dependencies...${NC}"
 PYTHON_PACKAGES=("web3" "pandas" "numpy" "redis" "requests")
 for pkg in "${PYTHON_PACKAGES[@]}"; do
     if python3 -c "import $pkg" 2>/dev/null; then
@@ -124,24 +122,8 @@ for pkg in "${PYTHON_PACKAGES[@]}"; do
 done
 echo ""
 
-# Check Compiled Contracts
-echo -e "${BLUE}[5/7] Checking Compiled Contracts...${NC}"
-if [ -d "artifacts" ]; then
-    echo -e "${GREEN}[✓]${NC} Artifacts directory exists"
-    if [ -f "artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json" ]; then
-        echo -e "${GREEN}[✓]${NC} OmniArbExecutor compiled"
-    else
-        echo -e "${RED}[✗]${NC} OmniArbExecutor not compiled (run: npx hardhat compile)"
-        ((ERRORS++))
-    fi
-else
-    echo -e "${YELLOW}[!]${NC} Contracts not compiled (run: npx hardhat compile)"
-    ((WARNINGS++))
-fi
-echo ""
-
 # Check Redis Connection
-echo -e "${BLUE}[6/7] Checking Redis Connection...${NC}"
+echo -e "${BLUE}[5/6] Checking Redis Connection...${NC}"
 if redis-cli ping >/dev/null 2>&1; then
     echo -e "${GREEN}[✓]${NC} Redis is running"
     REDIS_INFO=$(redis-cli INFO | grep -E "redis_version|uptime_in_seconds")
@@ -153,7 +135,7 @@ fi
 echo ""
 
 # Check Environment Configuration
-echo -e "${BLUE}[7/7] Checking Environment Configuration...${NC}"
+echo -e "${BLUE}[6/6] Checking Environment Configuration...${NC}"
 if [ -f ".env" ]; then
     # Check for key variables (without revealing values)
     if grep -q "PRIVATE_KEY=" .env; then
@@ -215,7 +197,6 @@ else
     echo "Common fixes:"
     echo "  - Run: npm install"
     echo "  - Run: pip3 install -r requirements.txt"
-    echo "  - Run: npx hardhat compile"
     echo "  - Configure .env file"
     echo "  - Start Redis: redis-server"
     exit 1

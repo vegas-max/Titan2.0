@@ -1,5 +1,7 @@
 # Migration Guide: On-Chain and Off-Chain Separation
 
+> **⚠️ UPDATE (v4.2.1+):** As of version 4.2.1, smart contracts have been removed from this repository as they are already deployed and the Hardhat development infrastructure is no longer needed. The information below is kept for historical reference only. For current system architecture, see [README.md](README.md).
+
 ## Overview
 
 The Titan 2.0 repository has been reorganized to clearly separate on-chain (blockchain-executable) code from off-chain (traditional computing) code. This improves code organization, maintainability, and developer experience.

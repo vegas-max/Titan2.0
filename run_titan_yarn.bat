@@ -49,7 +49,7 @@ if not exist .env (
 )
 
 REM Install dependencies with Yarn
-echo [1/4] Installing Node.js dependencies with Yarn...
+echo [1/3] Installing Node.js dependencies with Yarn...
 call yarn install
 if %errorlevel% neq 0 (
     echo [X] Failed to install Node.js dependencies
@@ -57,7 +57,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [2/4] Installing Python dependencies...
+echo [2/3] Installing Python dependencies...
 pip install -r requirements.txt
 if %errorlevel% neq 0 (
     echo [X] Failed to install Python dependencies
@@ -65,15 +65,7 @@ if %errorlevel% neq 0 (
     exit /b 1
 )
 
-echo [3/4] Compiling smart contracts...
-call npx hardhat compile
-if %errorlevel% neq 0 (
-    echo [X] Failed to compile contracts
-    pause
-    exit /b 1
-)
-
-echo [4/4] Starting Titan system...
+echo [3/3] Starting Titan system...
 echo.
 start "Titan [BRAIN]" cmd /k "python offchain/ml/brain.py"
 timeout /t 2 /nobreak >nul

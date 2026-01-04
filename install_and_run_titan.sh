@@ -170,7 +170,7 @@ done
 
 print_banner
 
-print_section "STEP 1/10: CHECKING SYSTEM PREREQUISITES"
+print_section "STEP 1/9: CHECKING SYSTEM PREREQUISITES"
 
 # Detect OS
 OS="unknown"
@@ -269,7 +269,7 @@ else
     print_info "System will use npm as fallback"
 fi
 
-print_section "STEP 2/10: INSTALLING NODE.JS DEPENDENCIES"
+print_section "STEP 2/9: INSTALLING NODE.JS DEPENDENCIES"
 
 print_progress "Installing Node.js packages..."
 if [ -f "package.json" ]; then
@@ -289,7 +289,7 @@ else
     exit 1
 fi
 
-print_section "STEP 3/10: INSTALLING PYTHON DEPENDENCIES & RUST COMPONENTS"
+print_section "STEP 3/9: INSTALLING PYTHON DEPENDENCIES & RUST COMPONENTS"
 
 print_progress "Installing Python packages (including rustworkx for graph algorithms)..."
 if [ -f "requirements.txt" ]; then
@@ -317,7 +317,7 @@ else
     exit 1
 fi
 
-print_section "STEP 4/10: SETTING UP REDIS (MESSAGE QUEUE)"
+print_section "STEP 4/9: SETTING UP REDIS (MESSAGE QUEUE)"
 
 if [ "$SKIP_REDIS" = true ]; then
     print_warning "Skipping Redis setup (--skip-redis flag provided)"
@@ -358,20 +358,7 @@ else
     fi
 fi
 
-print_section "STEP 5/10: COMPILING SMART CONTRACTS"
-
-print_progress "Compiling Solidity contracts (OmniArbExecutor, registries, tokenomics)..."
-npx hardhat compile
-if [ $? -eq 0 ]; then
-    print_status "Smart contracts compiled successfully"
-    print_info "Built: OmniArbExecutor (flash loan arbitrage executor)"
-    print_info "Built: Token registries, pool managers, and tokenomics modules"
-else
-    print_error "Smart contract compilation failed"
-    exit 1
-fi
-
-print_section "STEP 6/10: CONFIGURING ENVIRONMENT"
+print_section "STEP 5/9: CONFIGURING ENVIRONMENT"
 
 # Create or update .env file
 if [ ! -f ".env" ]; then
@@ -491,70 +478,12 @@ if [ "$RPC_CONFIGURED" = false ]; then
     print_info "Get free keys from: https://infura.io/ and https://alchemy.com/"
 fi
 
-print_section "STEP 7/10: CREATING DATA DIRECTORIES"
+print_section "STEP 6/9: CREATING DATA DIRECTORIES"
 
 mkdir -p data logs certs
 print_status "Data directories created (data/, logs/, certs/)"
 
-print_section "STEP 8/10: DEPLOYING SMART CONTRACTS (REGISTRIES & POOLS)"
-
-print_progress "Deploying OmniArbExecutor to $DEPLOY_NETWORK..."
-print_info "This creates the on-chain registry for pools, tokenomics, and arbitrage execution"
-
-# Check if contract already deployed
-CONTRACT_DEPLOYED=false
-if grep -q "^EXECUTOR_ADDRESS_$(echo $DEPLOY_NETWORK | tr '[:lower:]' '[:upper:]')=" .env; then
-    EXISTING_ADDRESS=$(grep "^EXECUTOR_ADDRESS_$(echo $DEPLOY_NETWORK | tr '[:lower:]' '[:upper:]')=" .env | cut -d'=' -f2)
-    if [[ "$EXISTING_ADDRESS" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
-        print_warning "Contract already deployed to $DEPLOY_NETWORK at $EXISTING_ADDRESS"
-        echo -e "${YELLOW}Redeploy? (y/N):${NC} "
-        read -r REDEPLOY
-        if [[ ! "$REDEPLOY" =~ ^[Yy]$ ]]; then
-            CONTRACT_DEPLOYED=true
-            print_info "Using existing contract deployment"
-        fi
-    fi
-fi
-
-if [ "$CONTRACT_DEPLOYED" = false ]; then
-    # Deploy contract
-    DEPLOY_OUTPUT=$(npx hardhat run scripts/deploy.js --network $DEPLOY_NETWORK 2>&1)
-    DEPLOY_EXIT=$?
-    
-    if [ $DEPLOY_EXIT -eq 0 ]; then
-        # Extract deployed address from output
-        DEPLOYED_ADDRESS=$(echo "$DEPLOY_OUTPUT" | grep -oE "0x[0-9a-fA-F]{40}" | tail -1)
-        
-        if [[ "$DEPLOYED_ADDRESS" =~ ^0x[0-9a-fA-F]{40}$ ]]; then
-            print_status "Contract deployed to: $DEPLOYED_ADDRESS"
-            
-            # Update .env with deployed address
-            ENV_KEY="EXECUTOR_ADDRESS_$(echo $DEPLOY_NETWORK | tr '[:lower:]' '[:upper:]')"
-            if grep -q "^$ENV_KEY=" .env; then
-                if [[ "$OS" == "macos" ]]; then
-                    sed -i '' "s|^$ENV_KEY=.*|$ENV_KEY=$DEPLOYED_ADDRESS|" .env
-                else
-                    sed -i "s|^$ENV_KEY=.*|$ENV_KEY=$DEPLOYED_ADDRESS|" .env
-                fi
-            else
-                echo "$ENV_KEY=$DEPLOYED_ADDRESS" >> .env
-            fi
-            
-            print_status "Contract address saved to .env"
-            print_info "Registry initialized: Pools + Tokenomics + Omni Token Universe"
-        else
-            print_warning "Could not extract deployed address from output"
-            print_info "Please manually add EXECUTOR_ADDRESS_$(echo $DEPLOY_NETWORK | tr '[:lower:]' '[:upper:]') to .env"
-        fi
-    else
-        print_warning "Contract deployment failed or skipped"
-        print_info "This may be due to insufficient funds or network issues"
-        print_info "You can deploy later with: npx hardhat run scripts/deploy.js --network $DEPLOY_NETWORK"
-        print_info "System can still run in simulation mode without deployment"
-    fi
-fi
-
-print_section "STEP 9/10: RUNNING SYSTEM AUDIT"
+print_section "STEP 7/9: RUNNING SYSTEM AUDIT"
 
 if [ -f "audit_system.py" ]; then
     print_progress "Auditing system integrity..."
@@ -568,7 +497,7 @@ else
     print_warning "audit_system.py not found, skipping audit"
 fi
 
-print_section "STEP 10/10: SYSTEM READY - LAUNCHING TITAN"
+print_section "STEP 8/9: SYSTEM READY - LAUNCHING TITAN"
 
 echo ""
 print_status "Installation complete!"

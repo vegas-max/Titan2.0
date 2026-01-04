@@ -50,16 +50,13 @@ try {
         console.log('');
         
         // Run commands sequentially
-        console.log('[1/4] Installing Node.js dependencies...');
+        console.log('[1/3] Installing Node.js dependencies...');
         execSync('npm install --legacy-peer-deps', { stdio: 'inherit' });
         
-        console.log('[2/4] Installing Python dependencies...');
+        console.log('[2/3] Installing Python dependencies...');
         execSync('pip install -r requirements.txt', { stdio: 'inherit' });
         
-        console.log('[3/4] Compiling smart contracts...');
-        execSync('npx hardhat compile', { stdio: 'inherit' });
-        
-        console.log('[4/4] Starting system...');
+        console.log('[3/3] Starting system...');
         console.log('');
         console.log('⚠️  Starting in current terminal. Press Ctrl+C to stop.');
         console.log('For separate windows, use run_titan.bat instead.');
