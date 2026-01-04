@@ -33,12 +33,6 @@ venv/
 ENV/
 env/
 
-# Hardhat
-cache/
-artifacts/
-typechain/
-typechain-types/
-
 # Environment
 .env
 .env.local
@@ -89,6 +83,8 @@ data/history.csv
 # Rust build artifacts
 core-rust/target/
 core-rust/Cargo.lock
+target/
+Cargo.lock
 
 # Go build artifacts
 core-go/titan-core

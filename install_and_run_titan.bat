@@ -31,7 +31,7 @@ REM ============================================================================
 REM STEP 1: CHECK PREREQUISITES
 REM ==============================================================================
 
-echo [STEP 1/10] Checking System Prerequisites...
+echo [STEP 1/9] Checking System Prerequisites...
 echo.
 
 REM Check Node.js
@@ -83,7 +83,7 @@ REM ============================================================================
 REM STEP 2: INSTALL NODE.JS DEPENDENCIES
 REM ==============================================================================
 
-echo [STEP 2/10] Installing Node.js Dependencies...
+echo [STEP 2/9] Installing Node.js Dependencies...
 echo.
 
 if exist package.json (
@@ -106,7 +106,7 @@ REM ============================================================================
 REM STEP 3: INSTALL PYTHON DEPENDENCIES & RUST COMPONENTS
 REM ==============================================================================
 
-echo [STEP 3/10] Installing Python Dependencies ^& Rust Components...
+echo [STEP 3/9] Installing Python Dependencies ^& Rust Components...
 echo.
 
 if exist requirements.txt (
@@ -131,7 +131,7 @@ REM ============================================================================
 REM STEP 4: SETUP REDIS
 REM ==============================================================================
 
-echo [STEP 4/10] Setting Up Redis (Message Queue)...
+echo [STEP 4/9] Setting Up Redis (Message Queue)...
 echo.
 
 where redis-server >nul 2>&1
@@ -160,30 +160,10 @@ if %errorlevel% neq 0 (
 echo.
 
 REM ==============================================================================
-REM STEP 5: COMPILE SMART CONTRACTS
+REM STEP 5: CONFIGURE ENVIRONMENT
 REM ==============================================================================
 
-echo [STEP 5/10] Compiling Smart Contracts...
-echo.
-
-echo [i] Compiling Solidity contracts...
-call npx hardhat compile
-if %errorlevel% neq 0 (
-    echo [X] Smart contract compilation failed
-    pause
-    exit /b 1
-)
-echo [+] Smart contracts compiled successfully
-echo [i] Built: OmniArbExecutor (flash loan arbitrage executor)
-echo [i] Built: Token registries, pool managers, and tokenomics modules
-
-echo.
-
-REM ==============================================================================
-REM STEP 6: CONFIGURE ENVIRONMENT
-REM ==============================================================================
-
-echo [STEP 6/10] Configuring Environment...
+echo [STEP 5/9] Configuring Environment...
 echo.
 
 if not exist .env (
@@ -232,7 +212,7 @@ REM ============================================================================
 REM STEP 7: CREATE DATA DIRECTORIES
 REM ==============================================================================
 
-echo [STEP 7/10] Creating Data Directories...
+echo [STEP 6/9] Creating Data Directories...
 echo.
 
 if not exist data mkdir data
@@ -243,46 +223,10 @@ echo [+] Data directories created (data\, logs\, certs\)
 echo.
 
 REM ==============================================================================
-REM STEP 8: DEPLOY SMART CONTRACTS
+REM STEP 7: RUN SYSTEM AUDIT
 REM ==============================================================================
 
-echo [STEP 8/10] Deploying Smart Contracts (Registries ^& Pools)...
-echo.
-
-echo [i] Deploying OmniArbExecutor to %DEPLOY_NETWORK%...
-echo [i] This creates the on-chain registry for pools and tokenomics
-
-REM Check if RPC is configured
-findstr /C:"RPC_POLYGON=https://" .env >nul 2>&1
-if %errorlevel% neq 0 (
-    echo [!] RPC endpoint not configured. Deployment may fail.
-    echo [i] Add RPC_POLYGON to .env before deploying
-    echo.
-    echo Skip deployment? (Y/N):
-    set /p "SKIP_DEPLOY=Choice: "
-    if /i "!SKIP_DEPLOY!"=="Y" (
-        echo [!] Deployment skipped
-        goto :skip_deploy
-    )
-)
-
-call npx hardhat run scripts/deploy.js --network %DEPLOY_NETWORK%
-if %errorlevel% equ 0 (
-    echo [+] Contract deployed successfully
-    echo [i] Please add the deployed address to .env
-) else (
-    echo [!] Contract deployment failed or skipped
-    echo [i] You can deploy later with: npx hardhat run scripts/deploy.js --network %DEPLOY_NETWORK%
-)
-
-:skip_deploy
-echo.
-
-REM ==============================================================================
-REM STEP 9: RUN SYSTEM AUDIT
-REM ==============================================================================
-
-echo [STEP 9/10] Running System Audit...
+echo [STEP 7/9] Running System Audit...
 echo.
 
 if exist audit_system.py (
@@ -299,10 +243,10 @@ if exist audit_system.py (
 echo.
 
 REM ==============================================================================
-REM STEP 10: LAUNCH SYSTEM
+REM STEP 8: LAUNCH SYSTEM
 REM ==============================================================================
 
-echo [STEP 10/10] System Ready - Launching Titan...
+echo [STEP 8/9] System Ready - Launching Titan...
 echo.
 
 echo ================================================================

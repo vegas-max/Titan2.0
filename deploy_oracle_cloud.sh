@@ -267,12 +267,6 @@ main() {
     print_status "Python dependencies installed"
     echo ""
     
-    # Compile contracts
-    print_step "Compiling smart contracts..."
-    npx hardhat compile
-    print_status "Smart contracts compiled"
-    echo ""
-    
     echo -e "${BLUE}===================================================${NC}"
     echo -e "${BLUE}   STEP 5: Configure Environment${NC}"
     echo -e "${BLUE}===================================================${NC}"
@@ -592,11 +586,7 @@ EOF
     echo -e "     nano .env"
     echo -e "     ${BLUE}Add your PRIVATE_KEY, API keys (Infura, Alchemy, Li.Fi)${NC}"
     echo ""
-    echo -e "  ${YELLOW}2. Deploy smart contract (if needed):${NC}"
-    echo -e "     npx hardhat run onchain/scripts/deploy.js --network polygon"
-    echo -e "     ${BLUE}Copy the deployed address to .env as EXECUTOR_ADDRESS_POLYGON${NC}"
-    echo ""
-    echo -e "  ${YELLOW}3. Start Titan:${NC}"
+    echo -e "  ${YELLOW}2. Start Titan:${NC}"
     echo -e "     ./start_oracle.sh"
     echo ""
     echo -e "  ${YELLOW}4. Monitor status:${NC}"

@@ -59,8 +59,7 @@ print_banner
 echo "This script will:"
 echo "  1. Install Node.js dependencies"
 echo "  2. Install Python dependencies"
-echo "  3. Compile smart contracts"
-echo "  4. Start the Titan system"
+echo "  3. Start the Titan system"
 echo ""
 echo "Make sure you have configured .env file first!"
 echo ""
@@ -70,7 +69,7 @@ echo ""
 # ==============================================================================
 
 echo ""
-print_info "STEP 1/5: Checking prerequisites..."
+print_info "STEP 1/4: Checking prerequisites..."
 echo ""
 
 if command_exists node; then
@@ -108,7 +107,7 @@ fi
 # ==============================================================================
 
 echo ""
-print_info "STEP 2/5: Checking configuration..."
+print_info "STEP 2/4: Checking configuration..."
 echo ""
 
 if [ ! -f .env ]; then
@@ -137,7 +136,7 @@ fi
 # ==============================================================================
 
 echo ""
-print_info "STEP 3/5: Installing Node.js dependencies..."
+print_info "STEP 3/4: Installing Node.js dependencies..."
 echo ""
 
 # Try yarn first, fall back to npm
@@ -156,7 +155,7 @@ print_status "Node.js dependencies installed"
 # ==============================================================================
 
 echo ""
-print_info "STEP 4/5: Installing Python dependencies..."
+print_info "STEP 4/4: Installing Python dependencies..."
 echo ""
 
 if ! $PIP_CMD install -r requirements.txt; then
@@ -165,21 +164,6 @@ if ! $PIP_CMD install -r requirements.txt; then
 fi
 
 print_status "Python dependencies installed"
-
-# ==============================================================================
-# STEP 5: COMPILE SMART CONTRACTS
-# ==============================================================================
-
-echo ""
-print_info "STEP 5/5: Compiling smart contracts..."
-echo ""
-
-if ! npx hardhat compile; then
-    print_error "Failed to compile smart contracts"
-    exit 1
-fi
-
-print_status "Smart contracts compiled"
 
 # ==============================================================================
 # START THE SYSTEM

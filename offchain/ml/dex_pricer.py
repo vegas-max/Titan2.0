@@ -12,8 +12,8 @@ UNIV2_ABI = '[{"inputs":[{"internalType":"uint256","name":"amountIn","type":"uin
 # Uniswap V3 Quoter (quoteExactInputSingle)
 UNIV3_ABI = '[{"inputs":[{"components":[{"internalType":"address","name":"tokenIn","type":"address"},{"internalType":"address","name":"tokenOut","type":"address"},{"internalType":"uint256","name":"amountIn","type":"uint256"},{"internalType":"uint24","name":"fee","type":"uint24"},{"internalType":"uint160","name":"sqrtPriceLimitX96","type":"uint160"}],"internalType":"struct IQuoterV2.QuoteExactInputSingleParams","name":"params","type":"tuple"}],"name":"quoteExactInputSingle","outputs":[{"internalType":"uint256","name":"amountOut","type":"uint256"},{"internalType":"uint160","name":"sqrtPriceX96After","type":"uint160"},{"internalType":"uint32","name":"initializedTicksCrossed","type":"uint32"},{"internalType":"uint256","name":"gasEstimate","type":"uint256"}],"stateMutability":"nonpayable","type":"function"}]'
 
-# Curve (get_dy and coins)
-CURVE_ABI = '[{"stateMutability":"view","type":"function","name":"get_dy","inputs":[{"name":"i","type":"int128"},{"name":"j","type":"int128"},{"name":"dx","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"coins","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}]}]'
+# Curve (get_dy, get_dy_underlying, and coins)
+CURVE_ABI = '[{"stateMutability":"view","type":"function","name":"get_dy","inputs":[{"name":"i","type":"int128"},{"name":"j","type":"int128"},{"name":"dx","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"get_dy_underlying","inputs":[{"name":"i","type":"int128"},{"name":"j","type":"int128"},{"name":"dx","type":"uint256"}],"outputs":[{"name":"","type":"uint256"}]},{"stateMutability":"view","type":"function","name":"coins","inputs":[{"name":"arg0","type":"uint256"}],"outputs":[{"name":"","type":"address"}]}]'
 
 # Maximum number of coins to check in a Curve pool (most pools have 2-4 coins)
 MAX_CURVE_COINS = 8
@@ -161,6 +161,8 @@ class DexPricer:
         1. New mode: Pass token_in, token_out addresses (automatically resolves indices)
         2. Legacy mode: Pass i, j indices directly
         
+        Automatically tries get_dy_underlying for better stablecoin routing.
+        
         Args:
             pool_address: Curve pool contract address
             token_in: Input token address (Mode 1)
@@ -188,9 +190,16 @@ class DexPricer:
                 logger.error("get_curve_price requires either (token_in, token_out) or (i, j)")
                 return 0
             
-            # Execute the price query
-            result = contract.functions.get_dy(i, j, int(amount)).call(block_identifier=self.block_identifier)
-            return result
+            # Try get_dy_underlying first (better for stablecoin pools with wrapped tokens)
+            try:
+                result = contract.functions.get_dy_underlying(i, j, int(amount)).call(block_identifier=self.block_identifier)
+                logger.debug(f"Curve get_dy_underlying succeeded: {result}")
+                return result
+            except Exception as e_underlying:
+                # get_dy_underlying not available or failed, fall back to get_dy
+                logger.debug(f"get_dy_underlying failed, trying get_dy: {e_underlying}")
+                result = contract.functions.get_dy(i, j, int(amount)).call(block_identifier=self.block_identifier)
+                return result
             
         except ValueError as e:
             # Contract revert - typically means invalid indices or pool state

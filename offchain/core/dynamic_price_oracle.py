@@ -2,6 +2,9 @@
 Dynamic Price Oracle
 Real-time price feeds using Chainlink, DEX TWAPs, and fallback mechanisms
 No hardcoded prices - all dynamic and on-chain
+
+Enhanced with integrated chainlink_oracle_feeds module for comprehensive
+multi-chain price data with Chainlink → Coingecko → Binance fallback.
 """
 
 import logging
@@ -10,6 +13,14 @@ from decimal import Decimal, getcontext
 from typing import Dict, Optional, Tuple
 import time
 from eth_abi import encode
+
+# Import enhanced Chainlink oracle feeds module
+try:
+    from offchain.core import chainlink_oracle_feeds
+    CHAINLINK_ORACLE_AVAILABLE = True
+except ImportError:
+    CHAINLINK_ORACLE_AVAILABLE = False
+    logging.warning("⚠️ chainlink_oracle_feeds module not available, using built-in feeds only")
 
 logger = logging.getLogger("DynamicPriceOracle")
 getcontext().prec = 28
@@ -298,10 +309,22 @@ class DynamicPriceOracle:
             self.price_cache[cache_key] = (price, time.time())
             return price
         
+        # Try enhanced chainlink_oracle_feeds module with fallback support
+        if CHAINLINK_ORACLE_AVAILABLE:
+            try:
+                price_float = chainlink_oracle_feeds.get_price_usd_by_chain_id(token_symbol, chain_id)
+                if price_float > 0:
+                    price = Decimal(str(price_float))
+                    self.price_cache[cache_key] = (price, time.time())
+                    logger.info(f"📊 Got price from enhanced oracle for {token_symbol}: ${price}")
+                    return price
+            except Exception as e:
+                logger.debug(f"Enhanced oracle lookup failed for {token_symbol}: {e}")
+        
         # Fallback to DEX TWAP (not implemented for all pairs yet)
         logger.warning(f"Chainlink price not available for {token_symbol}, using fallback methods")
         
-        # For now, return None if Chainlink fails
+        # For now, return None if all methods fail
         # In production, implement TWAP fallback with pool addresses
         return None
     
@@ -368,6 +391,35 @@ class DynamicPriceOracle:
         except Exception as e:
             logger.error(f"Failed to get gas price oracle: {e}")
             return None
+    
+    def get_price_with_enhanced_fallback(
+        self,
+        chain_id: int,
+        token_symbol: str
+    ) -> Optional[Decimal]:
+        """
+        Get token price using enhanced chainlink_oracle_feeds module with full fallback chain.
+        This method bypasses the cache and provides fresh data with comprehensive fallback:
+        Chainlink (on-chain) → Coingecko (off-chain) → Binance (off-chain)
+        
+        Args:
+            chain_id: Chain ID
+            token_symbol: Token symbol (e.g., 'ETH', 'USDC')
+            
+        Returns: Price in USD as Decimal or None
+        """
+        if not CHAINLINK_ORACLE_AVAILABLE:
+            logger.warning("Enhanced chainlink_oracle_feeds module not available")
+            return self.get_token_price_usd(chain_id, token_symbol, use_cache=False)
+        
+        try:
+            price_float = chainlink_oracle_feeds.get_price_usd_by_chain_id(token_symbol, chain_id)
+            if price_float > 0:
+                return Decimal(str(price_float))
+        except Exception as e:
+            logger.error(f"Enhanced oracle failed for {token_symbol} on chain {chain_id}: {e}")
+        
+        return None
     
     def clear_cache(self):
         """Clear price cache"""

@@ -21,15 +21,15 @@ echo -e "${BLUE}===================================================${NC}"
 echo ""
 
 # Step 1: Clean previous builds
-echo -e "${BLUE}[1/6] Cleaning Previous Build Artifacts...${NC}"
-rm -rf artifacts/ cache/ typechain/ typechain-types/
+echo -e "${BLUE}[1/5] Cleaning Previous Build Artifacts...${NC}"
+rm -rf typechain/ typechain-types/
 find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 find . -type f -name "*.pyc" -delete 2>/dev/null || true
 echo -e "${GREEN}[✓]${NC} Clean complete"
 echo ""
 
 # Step 2: Install Node.js dependencies
-echo -e "${BLUE}[2/6] Installing Node.js Dependencies...${NC}"
+echo -e "${BLUE}[2/5] Installing Node.js Dependencies...${NC}"
 if [ -f "package.json" ]; then
     # Note: --legacy-peer-deps is used to resolve ethers.js version conflict
     # between hardhat-toolbox (requires ^6.14.0) and flashbots-provider (requires 6.7.1)
@@ -43,7 +43,7 @@ fi
 echo ""
 
 # Step 3: Install Python dependencies
-echo -e "${BLUE}[3/6] Installing Python Dependencies...${NC}"
+echo -e "${BLUE}[3/5] Installing Python Dependencies...${NC}"
 if [ -f "requirements.txt" ]; then
     pip3 install -r requirements.txt --quiet
     echo -e "${GREEN}[✓]${NC} Python dependencies installed"
@@ -53,31 +53,8 @@ else
 fi
 echo ""
 
-# Step 4: Compile smart contracts
-echo -e "${BLUE}[4/6] Compiling Smart Contracts...${NC}"
-npx hardhat compile
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[✓]${NC} Smart contracts compiled successfully"
-    
-    # Verify compilation
-    if [ -f "artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json" ]; then
-        echo -e "${GREEN}[✓]${NC} OmniArbExecutor.json generated"
-        
-        # Get contract size
-        SIZE=$(stat -f%z "artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json" 2>/dev/null || stat -c%s "artifacts/contracts/OmniArbExecutor.sol/OmniArbExecutor.json" 2>/dev/null)
-        echo "       Contract artifact size: $(numfmt --to=iec-i --suffix=B $SIZE 2>/dev/null || echo "${SIZE} bytes")"
-    else
-        echo -e "${RED}[✗]${NC} Contract compilation verification failed"
-        exit 1
-    fi
-else
-    echo -e "${RED}[✗]${NC} Smart contract compilation failed"
-    exit 1
-fi
-echo ""
-
-# Step 5: Verify Python modules
-echo -e "${BLUE}[5/6] Verifying Python Modules...${NC}"
+# Step 4: Verify Python modules
+echo -e "${BLUE}[4/5] Verifying Python Modules...${NC}"
 PYTHON_ERRORS=0
 
 # Test imports
@@ -104,8 +81,8 @@ fi
 
 echo ""
 
-# Step 6: Run system audit
-echo -e "${BLUE}[6/6] Running System Audit...${NC}"
+# Step 5: Run system audit
+echo -e "${BLUE}[5/5] Running System Audit...${NC}"
 if [ -f "audit_system.py" ]; then
     python3 audit_system.py
     AUDIT_RESULT=$?
@@ -129,15 +106,13 @@ if [ $PYTHON_ERRORS -eq 0 ]; then
     echo -e "${GREEN}✅ BUILD SUCCESSFUL${NC}"
     echo ""
     echo "Build artifacts:"
-    echo "  • artifacts/contracts/ - Compiled contract ABIs"
     echo "  • node_modules/ - Node.js dependencies"
     echo "  • Python packages - Installed globally or in venv"
     echo ""
     echo "Next steps:"
     echo "  1. Configure .env file (cp .env.example .env)"
     echo "  2. Run health check: ./health-check.sh"
-    echo "  3. Deploy contract: npx hardhat run scripts/deploy.js --network <network>"
-    echo "  4. Start system: ./start.sh or make start"
+    echo "  3. Start system: ./start.sh or make start"
     exit 0
 else
     echo -e "${RED}❌ BUILD FAILED${NC}"

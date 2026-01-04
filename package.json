@@ -6,20 +6,11 @@
   "scripts": {
     "start": "node offchain/execution/bot.js",
     "brain": "python3 offchain/ml/brain.py",
-    "compile": "npx hardhat compile",
-    "deploy:polygon": "npx hardhat run onchain/scripts/deploy.js --network polygon",
-    "deploy:arbitrum": "npx hardhat run onchain/scripts/deploy.js --network arbitrum",
-    "deploy:optimism": "npx hardhat run onchain/scripts/deploy.js --network optimism",
-    "deploy:base": "npx hardhat run onchain/scripts/deploy.js --network base",
-    "deploy:flasharb:polygon": "npx hardhat run onchain/scripts/deployFlashArbExecutor.js --network polygon",
-    "deploy:flasharb:ethereum": "npx hardhat run onchain/scripts/deployFlashArbExecutor.js --network ethereum",
-    "deploy:flasharb:arbitrum": "npx hardhat run onchain/scripts/deployFlashArbExecutor.js --network arbitrum",
-    "test": "npx hardhat test && python3 test_phase1.py",
+    "test": "python3 test_phase1.py",
     "audit": "python3 audit_system.py",
     "health": "node -v && python3 --version",
-    "clean": "rm -rf artifacts cache typechain typechain-types",
-    "setup": "npm ci && pip3 install -r requirements.txt && npx hardhat compile",
-    "setup:yarn": "yarn install && pip3 install -r requirements.txt && npx hardhat compile",
+    "setup": "npm ci && pip3 install -r requirements.txt",
+    "setup:yarn": "yarn install && pip3 install -r requirements.txt",
     "install-and-run": "node install_and_run.js",
     "install-and-run:yarn": "node install_and_run.js",
     "dashboard": "python3 live_operational_dashboard.py",
@@ -61,7 +52,6 @@
   "dependencies": {
     "@flashbots/ethers-provider-bundle": "^1.0.0",
     "@lifi/sdk": "^3.0.0",
-    "@openzeppelin/contracts": "^5.4.0",
     "@solana/web3.js": "^1.95.0",
     "axios": "^1.6.7",
     "dotenv": "^16.4.1",
@@ -69,8 +59,6 @@
     "glob": "^10.4.0"
   },
   "devDependencies": {
-    "@nomicfoundation/hardhat-toolbox": "^4.0.0",
-    "hardhat": "^2.28.0"
   },
   "overrides": {
     "ethers": "^6.16.0",

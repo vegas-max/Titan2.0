@@ -5,8 +5,6 @@
 **Production-Ready Multi-Chain Flash Loan Arbitrage with AI-Powered Intelligence**
 
 [![Version](https://img.shields.io/badge/version-4.2.1-blue.svg)](https://github.com/vegas-max/Titan2.0)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-orange.svg)](https://soliditylang.org/)
-[![Hardhat](https://img.shields.io/badge/Hardhat-2.28.0-yellow.svg)](https://hardhat.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org/)
@@ -243,8 +241,6 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
 ### 🏗️ Architecture & Development
-- **[onchain/README.md](onchain/README.md)** - 📜 Smart contracts documentation
-- **[onchain/contracts/SystemArchitecture.md](onchain/contracts/SystemArchitecture.md)** - 🏛️ Contract architecture
 - **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
 - **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
@@ -596,12 +592,12 @@ Titan 2.0 follows a modular, event-driven architecture with clear separation bet
 │                                   ▼                                      │
 │  ┌───────────────────────────────────────────────────────────────────────┐ │
 │  │                  3. BLOCKCHAIN LAYER (Solidity 0.8.24)               │ │
-│  │                onchain/contracts/FlashArbExecutor.sol                 │ │
+│  │                          Titan Execution Engine                     │ │
 │  │                                                                       │ │
 │  │  ┌──────────────────┐  ┌──────────────────┐  ┌──────────────────┐  │ │
-│  │  │ Flash Loan       │  │ Universal Swap   │  │ Profit & Repay   │  │ │
-│  │  │ Orchestration    │  │ Router           │  │ Verification     │  │ │
-│  │  │ • Balancer V3    │  │ • UniV2/V3       │  │ • SafeERC20      │  │ │
+│  │  │ Opportunity      │  │ Route            │  │ Transaction      │  │ │
+│  │  │ Detection        │  │ Optimization     │  │ Execution        │  │ │
+│  │  │ • Multi-DEX      │  │ • Path Finding   │  │ • Gas Mgmt       │  │ │
 │  │  │ • Aave V3        │  │ • Curve          │  │ • Owner withdraw │  │ │
 │  │  └──────────────────┘  └──────────────────┘  └──────────────────┘  │ │
 │  │                                                                       │ │
@@ -672,15 +668,15 @@ Titan 2.0 follows a modular, event-driven architecture with clear separation bet
 - `redis`: Message queue client
 - `axios`: HTTP client for APIs
 
-#### Blockchain Layer (`onchain/contracts/`)
-**Primary Language**: Solidity 0.8.24
+#### Execution Layer (Node.js & Python)
+**Primary Languages**: JavaScript (Node.js), Python, TypeScript
 
-**Core Contracts:**
-1. **FlashArbExecutor.sol**:
-   - Dual flash loan support (Balancer V3, Aave V3)
-   - Universal swap router (UniV2/V3, Curve, Balancer)
-   - Route encoding: RAW_ADDRESSES & REGISTRY_ENUMS
-   - Owner-only execution, SafeERC20 operations
+**Core Components:**
+1. **Execution Bot (bot.js)**:
+   - Multi-chain transaction execution
+   - Gas optimization and management
+   - MEV protection via Flashbots
+   - DEX aggregator integrations (15+ protocols)
 
 2. **OmniArbExecutor.sol** (Alternative):
    - Similar functionality with different optimization focus
@@ -1035,28 +1031,6 @@ For detailed installation instructions, see [INSTALL.md](INSTALL.md).
 
 ```
 Titan2.0/
-├── onchain/                    # Blockchain-executable components
-│   ├── contracts/              # Solidity smart contracts
-│   │   ├── FlashArbExecutor.sol        # Primary flash loan executor
-│   │   ├── OmniArbExecutor.sol         # Alternative executor
-│   │   ├── interfaces/                 # Protocol interfaces
-│   │   │   ├── IAaveV3.sol            # Aave V3 flash loan interface
-│   │   │   ├── IB3.sol                # Balancer V3 vault interface
-│   │   │   ├── IUniV2.sol             # Uniswap V2 router interface
-│   │   │   ├── IUniV3.sol             # Uniswap V3 router interface
-│   │   │   └── ICurve.sol             # Curve pool interface
-│   │   ├── modules/                    # Reusable contract modules
-│   │   │   ├── SwapHandler.sol        # Universal swap execution
-│   │   │   ├── AaveHandler.sol        # Aave-specific logic
-│   │   │   └── BalancerHandler.sol    # Balancer-specific logic
-│   │   └── helpers/                    # Helper contracts
-│   ├── scripts/                # Deployment and utility scripts
-│   │   ├── deploy.js                  # Main deployment script
-│   │   ├── deployFlashArbExecutor.js  # FlashArbExecutor deployment
-│   │   ├── configureTokenRanks.js     # Token registry setup
-│   │   └── setupTokenRegistry.js      # Registry initialization
-│   ├── test/                   # Smart contract tests
-│   └── README.md               # Onchain documentation
 ├── offchain/                   # Traditional computing components
 │   ├── core/                   # Core infrastructure (Python)
 │   │   ├── config.py                  # Central configuration
@@ -1121,7 +1095,6 @@ Titan2.0/
 ├── .env.example                # Environment template
 ├── package.json                # Node.js dependencies
 ├── requirements.txt            # Python dependencies
-├── hardhat.config.js           # Hardhat configuration
 ├── Makefile                    # Build automation
 └── README.md                   # This file
 ```
@@ -1546,45 +1519,27 @@ async detectCongestion(chainId) {
 }
 ```
 
-#### 6. Smart Contracts (`onchain/contracts/FlashArbExecutor.sol`)
+#### 6. Execution Components
 
-**Purpose**: Atomic flash loan arbitrage execution on-chain
+**Purpose**: Multi-chain arbitrage execution and monitoring
 
-**Key Functions**:
+**Key Modules**:
 
-```solidity
-contract FlashArbExecutor is Ownable {
-    // Flash loan providers
-    IVaultV3 public immutable balancerVault;
-    IAavePoolV3 public immutable aavePool;
-    
-    // Configuration
-    uint256 public swapDeadline = 180; // 3 minutes
-    
-    // Registry mappings
-    mapping(uint256 => mapping(uint8 => address)) public dexRouter;
-    mapping(uint256 => mapping(uint8 => mapping(uint8 => address))) public tokenRegistry;
-    
-    /**
-     * @notice Execute flash loan arbitrage
-     * @param flashSource 0 = Aave, 1 = Balancer
-     * @param loanToken Token to borrow
-     * @param loanAmount Amount to borrow
-     * @param routeData Encoded route information
-     */
-    function execute(
-        uint8 flashSource,
-        address loanToken,
-        uint256 loanAmount,
-        bytes calldata routeData
-    ) external onlyOwner {
-        if (flashSource == 0) {
-            // Aave V3 flash loan
-            aavePool.flashLoanSimple(
-                address(this),
-                loanToken,
-                loanAmount,
-                routeData,
+- **bot.js**: Main execution coordinator
+  - Transaction signing and submission
+  - Gas price optimization
+  - Nonce management
+  - Error handling and retry logic
+
+- **gas_manager.js**: EIP-1559 gas optimization
+  - Dynamic base fee tracking
+  - Priority fee calculation
+  - Gas limit estimation
+
+- **lifi_manager.js**: Cross-chain bridge aggregation
+  - Best route discovery
+  - Fee comparison
+  - Transaction preparation
                 0  // referralCode
             );
         } else {
@@ -1871,7 +1826,6 @@ function onBalancerUnlock(bytes calldata data) external returns (bytes memory) {
 ```
 
 For complete component documentation, see:
-- **Onchain**: [onchain/README.md](onchain/README.md), [onchain/contracts/SystemArchitecture.md](onchain/contracts/SystemArchitecture.md)
 - **Offchain**: [offchain/README.md](offchain/README.md)
 - **Core Rebuild**: [CORE_REBUILD_README.md](CORE_REBUILD_README.md)
 
@@ -2013,38 +1967,21 @@ For complete component documentation, see:
 - Concurrent transaction management
 - Prevents nonce conflicts
 
-### Smart Contracts (Solidity)
+### Execution (Node.js & Python)
 
-#### `onchain/contracts/OmniArbExecutor.sol`
-The core smart contract that orchestrates flash loan arbitrage:
+#### `offchain/execution/bot.js`
+The main execution coordinator that handles transaction submission:
 
 **Key Functions:**
-- `execute()`: Entry point triggered by Node.js bot
-- `onBalancerUnlock()`: Balancer V3 callback handler
-- `executeOperation()`: Aave V3 callback handler
-- `_runRoute()`: Universal swap execution engine
-- `withdraw()`: Owner profit extraction
+- Transaction signing and submission
+- Gas optimization (EIP-1559)
+- Nonce management
+- Multi-chain execution
 
-**Supported Protocols:**
-- Protocol ID 1: Uniswap V3
-- Protocol ID 2: Curve
-- Protocol ID 3: Balancer (future)
-- Protocol ID 4: ParaSwap aggregator
-
-**Flash Loan Sources:**
-- Balancer V3 Vault: `0xbA1333333333a1BA1108E8412f11850A5C319bA9`
-- Aave V3 Pool: Chain-specific (e.g., Polygon: `0x794a61358D6845594F94dc1DB02A252b5b4814aD`)
-
-#### `onchain/contracts/interfaces/`
-- `IB3.sol`: Balancer V3 interface
-- `IAaveV3.sol`: Aave V3 interface
-- `IUniV3.sol`: Uniswap V3 interface
-- `ICurve.sol`: Curve pool interface
-
-#### `onchain/contracts/modules/`
-- `BalancerHandler.sol`: Balancer-specific logic
-- `AaveHandler.sol`: Aave-specific logic
-- `SwapHandler.sol`: Generic swap utilities
+**Integrations:**
+- Flashbots RPC for MEV protection
+- Multiple DEX aggregators
+- Bridge protocols via Li.Fi
 
 ### Routing (Python)
 
@@ -2066,14 +2003,7 @@ The core smart contract that orchestrates flash loan arbitrage:
 - ABI parsing and method identification
 - Parameter extraction
 
-### Scripts
-
-#### `onchain/scripts/deploy.js`
-- Hardhat deployment script
-- Contract initialization
-- Address verification
-
-### Utilities
+### Scripts and Utilities
 
 #### `audit_system.py`
 - File integrity checker
@@ -2252,14 +2182,6 @@ redis-cli ping
 # Should return: PONG
 ```
 
-#### 5. Compile Smart Contracts
-
-```bash
-npx hardhat compile
-```
-
-This compiles `OmniArbExecutor.sol` and generates artifacts in `artifacts/`.
-
 ---
 
 ## ⚙️ Configuration
@@ -2313,15 +2235,7 @@ PRIVATE_KEY=0xYOUR_64_CHARACTER_PRIVATE_KEY_HERE
 - Store the private key in a secure password manager
 - Consider using a hardware wallet for production
 
-#### 3. Deploy Smart Contract
-
-```bash
-npx hardhat run scripts/deploy.js --network polygon
-```
-
-Copy the deployed address:
-```env
-EXECUTOR_ADDRESS=0xYOUR_DEPLOYED_CONTRACT_ADDRESS
+#### 3. Li.Fi API Key
 ```
 
 #### 4. API Keys
@@ -2531,83 +2445,6 @@ All output is color-coded, timestamped, and includes icons for easy visual scann
 Press `Ctrl+C` in each terminal to gracefully shut down each component.
 
 ---
-
-## 📜 Smart Contracts
-
-### OmniArbExecutor.sol
-
-The core contract that enables flash loan arbitrage across multiple protocols.
-
-#### Contract Architecture
-
-```solidity
-OmniArbExecutor (Ownable)
-├── Balancer V3 Integration
-│   ├── unlock() - Initiates flash loan
-│   └── onBalancerUnlock() - Callback handler
-├── Aave V3 Integration
-│   └── executeOperation() - Callback handler
-├── Universal Swap Engine
-│   └── _runRoute() - Multi-protocol execution
-└── Profit Management
-    └── withdraw() - Owner extraction
-```
-
-#### Deployment
-
-**Testnet (Polygon Mumbai):**
-```bash
-npx hardhat run scripts/deploy.js --network mumbai
-```
-
-**Mainnet (Polygon):**
-```bash
-npx hardhat run scripts/deploy.js --network polygon
-```
-
-**Verify on Etherscan:**
-```bash
-npx hardhat verify --network polygon DEPLOYED_ADDRESS \
-  "0xbA1333333333a1BA1108E8412f11850A5C319bA9" \
-  "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-```
-
-#### Key Features
-
-**1. Flash Loan Orchestration**
-- Supports both Balancer V3 (0% fee) and Aave V3 (0.05-0.09% fee)
-- Automatic source selection based on availability and cost
-- Callback-based execution model
-
-**2. Universal Swap Router**
-- Protocol-agnostic design with pluggable DEX modules
-- Supports encoded multi-step routes
-- Automatic approval management
-
-**3. Safety Mechanisms**
-- Owner-only execution (prevents unauthorized use)
-- Atomic transactions (all-or-nothing execution)
-- Implicit profit verification (reverts if loan can't be repaid)
-
-#### Gas Optimization
-
-- **Compiler Optimization**: 200 runs
-- **Via IR**: Enabled for complex route optimization
-- **Minimal Storage**: No persistent state beyond addresses
-- **Efficient Encoding**: ABI-encoded routes for minimal calldata
-
-#### Estimated Gas Costs
-
-| Operation | Gas Used | Cost @ 30 Gwei |
-|-----------|----------|----------------|
-| Balancer V3 Flash Loan | 180,000 | ~$0.80 |
-| + Uniswap V3 Swap | +120,000 | +$0.53 |
-| + Curve Swap | +90,000 | +$0.40 |
-| **Total Intra-Chain** | **~390,000** | **~$1.73** |
-| Cross-Chain Bridge | +150,000 | +$0.66 |
-| **Total Cross-Chain** | **~540,000** | **~$2.39** |
-
-*Note: Costs vary by network and congestion*
 
 ---
 
@@ -3963,15 +3800,6 @@ except Exception as e:
 
 ```
 Titan2.0/
-├── onchain/                    # Blockchain-executable components
-│   ├── contracts/              # Solidity smart contracts
-│   │   ├── FlashArbExecutor.sol
-│   │   ├── OmniArbExecutor.sol
-│   │   ├── interfaces/
-│   │   └── modules/
-│   ├── scripts/                # Deployment scripts
-│   │   └── deploy.js
-│   └── test/                   # Smart contract tests
 ├── offchain/                   # Traditional computing components
 │   ├── core/                   # Core Python infrastructure
 │   │   ├── config.py
@@ -4013,7 +3841,6 @@ Titan2.0/
 ├── .env                        # Environment configuration
 ├── package.json                # Node.js dependencies
 ├── requirements.txt            # Python dependencies
-├── hardhat.config.js           # Hardhat configuration
 └── README.md                   # This file
 ```
 
@@ -4154,40 +3981,6 @@ redis_client.publish('trade_signals', json.dumps({
 ```
 
 3. Verify execution in logs
-
-### Mainnet Fork Testing
-
-**Configure Hardhat:**
-```javascript
-// hardhat.config.js
-networks: {
-    hardhat: {
-        forking: {
-            url: process.env.RPC_POLYGON,
-            blockNumber: 52847291  // Pin to specific block
-        }
-    }
-}
-```
-
-**Run Test:**
-```javascript
-// test/arbitrage.test.js
-describe("OmniArbExecutor", function () {
-    it("should execute profitable arbitrage", async function () {
-        const [owner] = await ethers.getSigners();
-        const contract = await ethers.deployContract("OmniArbExecutor", [BALANCER_V3, AAVE_POOL]);
-        
-        // Test flash loan execution
-        const tx = await contract.execute(1, USDC_ADDR, LOAN_AMOUNT, ROUTE_DATA);
-        await tx.wait();
-        
-        // Verify profit
-        const profit = await usdc.balanceOf(contract.address);
-        expect(profit).to.be.gt(0);
-    });
-});
-```
 
 ### Performance Testing
 
