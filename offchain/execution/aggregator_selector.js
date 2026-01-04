@@ -8,9 +8,13 @@ const { RangoManager } = require('./rango_manager');
 const { JupiterManager } = require('./jupiter_manager');
 const { LifiExecutionEngine } = require('./lifi_manager');
 
+// Import centralized token configuration
+const tokenConfig = require('../core/token_config');
+
 /**
  * AggregatorSelector - Intelligent routing to optimal DEX aggregator
  * Routes trades to the best aggregator based on trade characteristics
+ * Enhanced with token registry awareness for better routing decisions
  */
 class AggregatorSelector {
     constructor(chainId, provider = null) {
