@@ -3,6 +3,7 @@ pub mod enum_matrix;
 pub mod simulation_engine;
 pub mod commander;
 pub mod http_server;
+pub mod omniarb;
 
 // Re-export main types
 pub use config::{Config, ChainConfig, BALANCER_V3_VAULT};
@@ -10,6 +11,7 @@ pub use enum_matrix::{ChainId, ProviderManager};
 pub use simulation_engine::{TitanSimulationEngine, get_provider_tvl};
 pub use commander::TitanCommander;
 pub use http_server::{start_server, create_router, AppState};
+pub use omniarb::{load_token_matrix, calculate_tar_score, fetch_live_quotes, run_tar_onnx, run_flanker, TokenEntry, QuoteInfo};
 
 // Python bindings
 use pyo3::prelude::*;

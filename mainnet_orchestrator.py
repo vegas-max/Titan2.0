@@ -84,6 +84,7 @@ class MainnetOrchestrator:
         
         # Core components
         self.brain = None
+        self.omniarb_engine = None
         self.forecaster = None
         self.optimizer = None
         
@@ -113,22 +114,43 @@ class MainnetOrchestrator:
         
         try:
             # 1. Initialize Brain (handles data ingestion + arbitrage calculations)
-            logger.info("   [1/3] Initializing OmniBrain (data + calculations)...")
+            logger.info("   [1/4] Initializing OmniBrain (data + calculations)...")
             self.brain = OmniBrain()
             self.brain.initialize()
             logger.info("   ✅ OmniBrain online")
             
+            # 1.5. Initialize OmniArb Rust Engine (high-speed TAR scoring)
+            logger.info("   [2/4] Initializing OmniArb Dual Turbo Rust Engine...")
+            try:
+                from offchain.core.omniarb_engine_bridge import OmniArbEngine
+                self.omniarb_engine = OmniArbEngine()
+                if self.omniarb_engine.is_available():
+                    logger.info("   ✅ OmniArb Rust Engine initialized (high-speed mode)")
+                    # Run initial scan to populate routing data
+                    logger.info("   🔄 Running initial route scan...")
+                    result = self.omniarb_engine.run_engine(timeout=15)
+                    if result["success"]:
+                        logger.info(f"   ✅ Found {result['stats']['high_quality_routes']} high-quality routes")
+                    else:
+                        logger.warning(f"   ⚠️  Initial scan warning: {result.get('error', 'Unknown')}")
+                else:
+                    logger.warning("   ⚠️  OmniArb Rust Engine not available")
+                    self.omniarb_engine = None
+            except Exception as e:
+                logger.warning(f"   ⚠️  OmniArb Rust Engine initialization failed: {e}")
+                self.omniarb_engine = None
+            
             # 2. Initialize AI components for real-time training
             if self.enable_realtime_training:
-                logger.info("   [2/3] Initializing ML training pipeline...")
+                logger.info("   [3/4] Initializing ML training pipeline...")
                 self.forecaster = MarketForecaster()
                 self.optimizer = QLearningAgent()
                 logger.info("   ✅ ML pipeline ready")
             else:
-                logger.info("   [2/3] ML training disabled (skipped)")
+                logger.info("   [3/4] ML training disabled (skipped)")
             
             # 3. Set execution mode in Brain
-            logger.info(f"   [3/3] Configuring execution mode: {self.mode}...")
+            logger.info(f"   [4/4] Configuring execution mode: {self.mode}...")
             self._configure_execution_mode()
             logger.info(f"   ✅ Execution mode: {self.mode}")
             
