@@ -859,6 +859,9 @@ class OmniBrain:
         """
         Evaluate INTRA-CHAIN arbitrage with specific DEX route
         Tests multiple trade sizes as per README ($1.50-$10 profit target)
+        
+        ENHANCED: Now supports multiple intermediary tokens beyond just WETH
+        Tries WETH, USDC, USDT, DAI, WBTC in order of liquidity preference
         """
         try:
             src_chain = opp['src_chain']
@@ -876,7 +879,11 @@ class OmniBrain:
             trade_sizes_usd = [500, 1000, 2000, 5000]  # Test various depths
             commander = TitanCommander(src_chain)
             
-            # Find best profitable size
+            # ENHANCED: Try multiple intermediary tokens, not just WETH
+            # Order by typical liquidity: WETH > USDC > USDT > DAI > WBTC
+            intermediary_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC']
+            
+            # Find best profitable size across all intermediary tokens
             for target_trade_usd in trade_sizes_usd:
                 target_raw = target_trade_usd * (10**decimals)
                 safe_amount = commander.optimize_loan_size(token_addr, target_raw, decimals)
@@ -884,122 +891,136 @@ class OmniBrain:
                 if safe_amount == 0:
                     continue  # Try next size
                 
-                # 2. SIMULATE DEX SWAPS with specific route
-                try:
-                    w3 = self.web3_connections.get(src_chain)
-                    if not w3:
-                        logger.info(f"❌ {token_sym}: No Web3 for chain {src_chain}")
-                        return False
+                # Try each intermediary token until we find a profitable route
+                for intermediary_symbol in intermediary_tokens:
+                    intermediary_addr = self.inventory[src_chain].get(intermediary_symbol, {}).get('address')
                     
-                    pricer = DexPricer(w3, src_chain)
-                    weth_addr = self.inventory[src_chain].get('WETH', {}).get('address')
-                    
-                    if not weth_addr:
-                        logger.info(f"❌ {token_sym}: No WETH on chain {src_chain}")
-                        return False
-                    
-                    # STEP 1: Token → WETH using DEX1
-                    dex1 = opp.get('dex1', dex1)  # Get from opp dict if available
-                    step1_out = self._get_dex_price(pricer, dex1, token_addr, weth_addr, safe_amount, src_chain)
-                    
-                    if step1_out == 0:
-                        continue  # Try next size
-                    
-                    # STEP 2: WETH → Token using DEX2
-                    dex2 = opp.get('dex2', dex2)  # Get from opp dict if available
-                    step2_out = self._get_dex_price(pricer, dex2, weth_addr, token_addr, step1_out, src_chain)
-                    
-                    if step2_out == 0:
-                        continue  # Try next size
-                    
-                    # Check profitability
-                    if step2_out <= safe_amount:
-                        continue  # Try next size
-                    
-                    # Calculate profit
-                    revenue_usd = Decimal(step2_out) / Decimal(10**decimals)
-                    cost_usd = Decimal(safe_amount) / Decimal(10**decimals)
-                    
-                    gas_price_gwei = chain_gas_map.get(src_chain, 0)
-                    if gas_price_gwei == 0:
+                    # Skip if intermediary not available on this chain
+                    if not intermediary_addr:
                         continue
                     
-                    eth_price = Decimal("2000")
-                    gas_cost_usd = Decimal(str(gas_price_gwei)) * Decimal("300000") * eth_price / Decimal("1e9")
+                    # Skip if trying to arbitrage the intermediary token itself
+                    if token_sym == intermediary_symbol:
+                        continue
                     
-                    result = self.profit_engine.calculate_enhanced_profit(
-                        amount=cost_usd,
-                        amount_out=revenue_usd,
-                        bridge_fee_usd=0,
-                        gas_cost_usd=gas_cost_usd
-                    )
-                    
-                    if result['is_profitable'] and result['net_profit'] >= self.MIN_PROFIT_THRESHOLD_USD:
-                        # Found profitable trade at this size!
-                        logger.info(f"💰 PROFIT: {token_sym} ${target_trade_usd} {route_name} = ${result['net_profit']:.2f}")
+                    # 2. SIMULATE DEX SWAPS with specific route and intermediary
+                    try:
+                        w3 = self.web3_connections.get(src_chain)
+                        if not w3:
+                            logger.debug(f"❌ {token_sym}: No Web3 for chain {src_chain}")
+                            break  # No point trying other intermediaries
                         
-                        # Apply pump detection filter
-                        pump_probability = self._detect_pump_scheme(token_sym, src_chain, revenue_usd, cost_usd)
-                        if pump_probability > self.pump_probability_threshold:
-                            logger.warning(f"⚠️ PUMP DETECTED: {token_sym} probability {pump_probability:.2f} > threshold {self.pump_probability_threshold}")
-                            self.display.log_decision(
-                                decision_type="PUMP_FILTER",
-                                token=token_sym,
-                                chain_id=src_chain,
-                                reason=f"Pump probability {pump_probability:.2f} exceeds threshold",
-                                details={"probability": pump_probability, "threshold": self.pump_probability_threshold}
-                            )
-                            return False  # Reject this opportunity
+                        pricer = DexPricer(w3, src_chain)
                         
-                        # Apply CatBoost model prediction (if enabled)
-                        if self.catboost_model_enabled:
-                            catboost_score = self._catboost_predict(opp, result, gas_price_gwei)
-                            if catboost_score < self.ml_confidence_threshold:
-                                logger.info(f"❌ CatBoost filter: {token_sym} score {catboost_score:.2f} < threshold {self.ml_confidence_threshold}")
-                                return False  # Reject based on ML model
-                            logger.info(f"✅ CatBoost approved: {token_sym} score {catboost_score:.2f}")
+                        # STEP 1: Token → Intermediary using DEX1
+                        dex1 = opp.get('dex1', dex1)  # Get from opp dict if available
+                        step1_out = self._get_dex_price(pricer, dex1, token_addr, intermediary_addr, safe_amount, src_chain)
                         
-                        # Apply HuggingFace Ranker (fine-tuned transformer model)
-                        if self.hf_ranker is not None:
-                            hf_score = self.hf_ranker.predict(opp, result, gas_price_gwei)
-                            if not self.hf_ranker.is_confident(hf_score):
-                                logger.info(f"❌ HF Ranker filter: {token_sym} score {hf_score:.2f} < threshold {self.hf_confidence_threshold}")
-                                self.display.log_decision(
-                                    decision_type="HF_FILTER",
-                                    token=token_sym,
-                                    chain_id=src_chain,
-                                    reason=f"HF score {hf_score:.2f} below confidence threshold",
-                                    details={"hf_score": hf_score, "threshold": self.hf_confidence_threshold}
-                                )
-                                return False  # Reject based on HF transformer model
-                            logger.info(f"✅ HF Ranker approved: {token_sym} score {hf_score:.2f}")
+                        if step1_out == 0:
+                            continue  # Try next intermediary
                         
-                        # Log profitable opportunity to terminal
-                        self.display.log_opportunity_scan(
-                            token=token_sym,
-                            chain_id=src_chain,
-                            dex1=dex1,
-                            dex2=dex2,
-                            amount_usd=float(cost_usd),
-                            profitable=True,
-                            profit_usd=float(result['net_profit']),
-                            gas_gwei=gas_price_gwei,
-                            details=f"Size: ${target_trade_usd}"
+                        # STEP 2: Intermediary → Token using DEX2
+                        dex2 = opp.get('dex2', dex2)  # Get from opp dict if available
+                        step2_out = self._get_dex_price(pricer, dex2, intermediary_addr, token_addr, step1_out, src_chain)
+                        
+                        if step2_out == 0:
+                            continue  # Try next intermediary
+                        
+                        # Check profitability
+                        if step2_out <= safe_amount:
+                            continue  # Try next intermediary
+                        
+                        # Calculate profit
+                        revenue_usd = Decimal(step2_out) / Decimal(10**decimals)
+                        cost_usd = Decimal(safe_amount) / Decimal(10**decimals)
+                        
+                        gas_price_gwei = chain_gas_map.get(src_chain, 0)
+                        if gas_price_gwei == 0:
+                            continue  # Try next intermediary
+                        
+                        eth_price = Decimal("2000")
+                        gas_cost_usd = Decimal(str(gas_price_gwei)) * Decimal("300000") * eth_price / Decimal("1e9")
+                        
+                        result = self.profit_engine.calculate_enhanced_profit(
+                            amount=cost_usd,
+                            amount_out=revenue_usd,
+                            bridge_fee_usd=0,
+                            gas_cost_usd=gas_cost_usd
                         )
                         
-                        # Continue with signal generation...
-                        break  # Use this size
-                        
-                except Exception as e:
-                    logger.debug(f"Size ${target_trade_usd} failed: {e}")
-                    continue
+                        if result['is_profitable'] and result['net_profit'] >= self.MIN_PROFIT_THRESHOLD_USD:
+                            # Found profitable trade with this intermediary and size!
+                            logger.info(f"💰 PROFIT: {token_sym} ${target_trade_usd} via {intermediary_symbol} {route_name} = ${result['net_profit']:.2f}")
+                            
+                            # Apply pump detection filter
+                            pump_probability = self._detect_pump_scheme(token_sym, src_chain, revenue_usd, cost_usd)
+                            if pump_probability > self.pump_probability_threshold:
+                                logger.warning(f"⚠️ PUMP DETECTED: {token_sym} probability {pump_probability:.2f} > threshold {self.pump_probability_threshold}")
+                                self.display.log_decision(
+                                    decision_type="PUMP_FILTER",
+                                    token=token_sym,
+                                    chain_id=src_chain,
+                                    reason=f"Pump probability {pump_probability:.2f} exceeds threshold",
+                                    details={"probability": pump_probability, "threshold": self.pump_probability_threshold}
+                                )
+                                continue  # Try next intermediary
+                            
+                            # Apply CatBoost model prediction (if enabled)
+                            if self.catboost_model_enabled:
+                                catboost_score = self._catboost_predict(opp, result, gas_price_gwei)
+                                if catboost_score < self.ml_confidence_threshold:
+                                    logger.info(f"❌ CatBoost filter: {token_sym} score {catboost_score:.2f} < threshold {self.ml_confidence_threshold}")
+                                    continue  # Try next intermediary
+                                logger.info(f"✅ CatBoost approved: {token_sym} score {catboost_score:.2f}")
+                            
+                            # Apply HuggingFace Ranker (fine-tuned transformer model)
+                            if self.hf_ranker is not None:
+                                hf_score = self.hf_ranker.predict(opp, result, gas_price_gwei)
+                                if not self.hf_ranker.is_confident(hf_score):
+                                    logger.info(f"❌ HF Ranker filter: {token_sym} score {hf_score:.2f} < threshold {self.hf_confidence_threshold}")
+                                    self.display.log_decision(
+                                        decision_type="HF_FILTER",
+                                        token=token_sym,
+                                        chain_id=src_chain,
+                                        reason=f"HF score {hf_score:.2f} below confidence threshold",
+                                        details={"hf_score": hf_score, "threshold": self.hf_confidence_threshold}
+                                    )
+                                    continue  # Try next intermediary
+                                logger.info(f"✅ HF Ranker approved: {token_sym} score {hf_score:.2f}")
+                            
+                            # Log profitable opportunity to terminal
+                            self.display.log_opportunity_scan(
+                                token=token_sym,
+                                chain_id=src_chain,
+                                dex1=dex1,
+                                dex2=dex2,
+                                amount_usd=float(cost_usd),
+                                profitable=True,
+                                profit_usd=float(result['net_profit']),
+                                gas_gwei=gas_price_gwei,
+                                details=f"Size: ${target_trade_usd} via {intermediary_symbol}"
+                            )
+                            
+                            # Found profitable route - break out of intermediary loop
+                            # Note: intermediary_addr, step1_out, step2_out are now set for signal generation
+                            break  # Use this intermediary
+                            
+                    except Exception as e:
+                        logger.debug(f"Intermediary {intermediary_symbol} evaluation error: {e}")
+                        continue  # Try next intermediary
+                
+                # Check if we found a profitable route with any intermediary
+                if result.get('is_profitable') and result['net_profit'] >= self.MIN_PROFIT_THRESHOLD_USD:
+                    # Break out of trade size loop - we found a profitable size
+                    break  # Use this size
             
             else:
                 # No profitable size found after trying all sizes
                 return False
             
-            # If we get here, we found profitable trade with variables: safe_amount, step1_out, step2_out, result
-            # 4. PAYLOAD CONSTRUCTION - Using specific DEX route
+            # If we get here, we found profitable trade with variables: 
+            # safe_amount, step1_out, step2_out, result, intermediary_addr, intermediary_symbol
+            # 4. PAYLOAD CONSTRUCTION - Using specific DEX route and intermediary token
             try:
                 chain_conf = CHAINS.get(src_chain)
                 if not chain_conf:
@@ -1028,7 +1049,8 @@ class OmniBrain:
                 
                 protocols = [protocol1, protocol2]
                 routers = [router1, router2]
-                path = [weth_addr, token_addr]  # Outputs of each step
+                # UPDATED: Use intermediary_addr instead of hardcoded weth_addr
+                path = [intermediary_addr, token_addr]  # Outputs of each step
                 extras = [extra1, extra2]
                 
             except Exception as e:
@@ -1074,6 +1096,8 @@ class OmniBrain:
                 "chainId": src_chain,
                 "token": token_addr,
                 "amount": str(safe_amount),
+                "intermediary": intermediary_addr,  # NEW: Include intermediary token used
+                "intermediary_symbol": intermediary_symbol,  # NEW: For logging/debugging
                 "protocols": protocols,
                 "routers": routers,
                 "path": path,
@@ -1090,9 +1114,10 @@ class OmniBrain:
             }
 
             # Signal generated successfully with detailed info
-            logger.info(f"⚡ SIGNAL GENERATED: {token_sym} on Chain {src_chain}")
+            logger.info(f"⚡ SIGNAL GENERATED: {token_sym} on Chain {src_chain} via {intermediary_symbol}")
             logger.info(f"   💰 Profit: ${result['net_profit']:.2f} | Fees: ${result['total_fees']:.2f}")
-            logger.info(f"   🔄 Route: {' -> '.join(protocols)}")
+            logger.info(f"   🔄 Route: {token_sym} → {intermediary_symbol} → {token_sym}")
+            logger.info(f"   📊 DEXes: {dex1} → {dex2}")
             logger.info(f"   ⛽ Gas: {chain_gas_map.get(src_chain, 0):.1f} Gwei")
             self.consecutive_failures = 0
             
