@@ -116,8 +116,8 @@ class OrchestratorAgent(BaseAgent):
         required_dirs = [
             "contracts",
             "execution",
-            "ml",
-            "core",
+            "offchain",
+            "agents",
         ]
         
         for file in required_files:
@@ -402,6 +402,43 @@ class OrchestratorAgent(BaseAgent):
             if rust_result.get("status") == "failed":
                 self.logger.warning("Rust engine build failed, continuing with contracts...")
         
+        # Check if node_modules exists, install dependencies if not
+        node_modules_path = self.project_root / "node_modules"
+        if not node_modules_path.exists() or not (node_modules_path / "hardhat").exists():
+            self.logger.info("Installing Node.js dependencies...")
+            try:
+                install_result = subprocess.run(
+                    ["npm", "install"],
+                    cwd=self.project_root,
+                    capture_output=True,
+                    text=True,
+                    timeout=300
+                )
+                
+                if install_result.returncode != 0:
+                    results["dependencies"] = {
+                        "status": "failed",
+                        "error": "npm install failed",
+                        "output": install_result.stderr[-500:] if len(install_result.stderr) > 500 else install_result.stderr
+                    }
+                    return {
+                        "status": "failed",
+                        "results": results,
+                        "timestamp": datetime.now().isoformat()
+                    }
+                else:
+                    results["dependencies"] = {"status": "installed"}
+            except Exception as e:
+                results["dependencies"] = {
+                    "status": "failed",
+                    "error": str(e)
+                }
+                return {
+                    "status": "failed",
+                    "results": results,
+                    "timestamp": datetime.now().isoformat()
+                }
+        
         # Build smart contracts
         try:
             self.logger.info("Building smart contracts...")
@@ -484,14 +521,18 @@ class OrchestratorAgent(BaseAgent):
                 }
             
             # Check if maturin is available for Python bindings
-            maturin_check = subprocess.run(
-                ["maturin", "--version"],
-                capture_output=True,
-                text=True,
-                timeout=5
-            )
+            try:
+                maturin_check = subprocess.run(
+                    ["maturin", "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5
+                )
+                maturin_available = (maturin_check.returncode == 0)
+            except FileNotFoundError:
+                maturin_available = False
             
-            if maturin_check.returncode == 0:
+            if maturin_available:
                 # Build Python wheel
                 self.logger.info("Building Python wheel with maturin...")
                 wheel_result = subprocess.run(

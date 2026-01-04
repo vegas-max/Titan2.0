@@ -2,6 +2,8 @@
 
 /home/runner/work/Titan2.0/Titan2.0/core-rust/target/release/deps/libtitan_core.so: src/lib.rs src/config.rs src/enum_matrix.rs src/simulation_engine.rs src/commander.rs src/http_server.rs
 
+/home/runner/work/Titan2.0/Titan2.0/core-rust/target/release/deps/libtitan_core.rlib: src/lib.rs src/config.rs src/enum_matrix.rs src/simulation_engine.rs src/commander.rs src/http_server.rs
+
 src/lib.rs:
 src/config.rs:
 src/enum_matrix.rs:
