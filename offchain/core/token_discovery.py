@@ -1,10 +1,27 @@
 """
 Token Discovery Module - Multi-chain token inventory and bridge-compatible asset detection
+
+This module now integrates with the centralized token_config system for consistent
+token management across the entire platform.
 """
+
+from offchain.core.token_config import (
+    CHAIN_CONFIGS,
+    TokenType,
+    UniversalTokenIds,
+    ChainTokenIds,
+    get_chain_tokens,
+    get_token_address,
+    get_canonical_token_address,
+    get_all_token_addresses,
+    is_token_registered
+)
+
 
 class TokenDiscovery:
     """
     Manages token inventory across multiple chains and identifies bridge-compatible assets.
+    Now enhanced with centralized token configuration system.
     """
     
     # Tokens that exist on multiple chains and can be bridged
@@ -13,84 +30,71 @@ class TokenDiscovery:
         "LINK", "UNI", "AAVE", "MATIC", "FRAX"
     ]
     
-    # Token addresses by chain - Production ready configuration
-    TOKEN_REGISTRY = {
-        137: {  # Polygon
-            "USDC": {
-                "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",  # USDC.e (bridged)
-                "decimals": 6
-            },
-            "USDT": {
-                "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F",
-                "decimals": 6
-            },
-            "DAI": {
-                "address": "0x8f3Cf7ad23Cd3CaDbD9735AFf958023239c6A063",
-                "decimals": 18
-            },
-            "WETH": {
-                "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
-                "decimals": 18
-            },
-            "WBTC": {
-                "address": "0x1BFD67037B42Cf73acF2047067bd4F2C47D9BfD6",
-                "decimals": 8
-            },
-            "MATIC": {
-                "address": "0x0000000000000000000000000000000000001010",  # Native MATIC (not ERC20)
+    # Token addresses by chain - Now sourced from centralized config
+    @classmethod
+    def _build_token_registry(cls):
+        """Build token registry from centralized configuration"""
+        registry = {}
+        
+        for chain_id, config in CHAIN_CONFIGS.items():
+            registry[chain_id] = {}
+            tokens = config.get("tokens", [])
+            
+            for token in tokens:
+                # Get symbol from token ID
+                symbol = None
+                for name, member in UniversalTokenIds.__members__.items():
+                    if member.value == token.id:
+                        symbol = name
+                        break
+                if not symbol:
+                    for name, member in ChainTokenIds.__members__.items():
+                        if member.value == token.id:
+                            symbol = name
+                            break
+                
+                if symbol:
+                    # Store canonical/wrapped tokens, prefer canonical
+                    if symbol not in registry[chain_id] or token.type == TokenType.CANONICAL:
+                        registry[chain_id][symbol] = {
+                            "address": token.address,
+                            "decimals": cls._get_default_decimals(symbol),
+                            "token_id": token.id,
+                            "token_type": token.type
+                        }
+        
+        # Add legacy mappings for backward compatibility
+        cls._add_legacy_mappings(registry)
+        
+        return registry
+    
+    @staticmethod
+    def _get_default_decimals(symbol: str) -> int:
+        """Get default decimals for a token symbol"""
+        if symbol in ["USDC", "USDT"]:
+            return 6
+        elif symbol in ["WBTC"]:
+            return 8
+        else:
+            return 18
+    
+    @classmethod
+    def _add_legacy_mappings(cls, registry):
+        """Add legacy token mappings for backward compatibility"""
+        # Polygon specific
+        if 137 in registry:
+            if "WNATIVE" in registry[137]:
+                # Alias WNATIVE as WMATIC on Polygon
+                registry[137]["WMATIC"] = registry[137]["WNATIVE"].copy()
+            # Add native MATIC placeholder
+            registry[137]["MATIC"] = {
+                "address": "0x0000000000000000000000000000000000001010",
                 "decimals": 18,
                 "native": True
-            },
-            "WMATIC": {
-                "address": "0x0d500B1d8E8eF31E21C99d1Db9A6444d3ADf1270",  # Wrapped MATIC (ERC20)
-                "decimals": 18
             }
-        },
-        42161: {  # Arbitrum
-            "USDC": {
-                "address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",  # USDC.e (bridged)
-                "decimals": 6
-            },
-            "USDT": {
-                "address": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9",
-                "decimals": 6
-            },
-            "DAI": {
-                "address": "0xDA10009cBd5D07dd0CeCc66161FC93D7c9000da1",
-                "decimals": 18
-            },
-            "WETH": {
-                "address": "0x82aF49447D8a07e3bd95BD0d56f35241523fBab1",
-                "decimals": 18
-            },
-            "WBTC": {
-                "address": "0x2f2a2543B76A4166549F7aaB2e75Bef0aefC5B0f",
-                "decimals": 8
-            }
-        },
-        1: {  # Ethereum
-            "USDC": {
-                "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-                "decimals": 6
-            },
-            "USDT": {
-                "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7",
-                "decimals": 6
-            },
-            "DAI": {
-                "address": "0x6B175474E89094C44Da98b954EedeAC495271d0F",
-                "decimals": 18
-            },
-            "WETH": {
-                "address": "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-                "decimals": 18
-            },
-            "WBTC": {
-                "address": "0x2260FAC5E5542a773Aa44fBCfeDf7C193bc2C599",
-                "decimals": 8
-            }
-        }
-    }
+    
+    # Build the registry at module load time
+    TOKEN_REGISTRY = _build_token_registry()
     
     @classmethod
     def fetch_all_chains(cls, chain_ids):
@@ -149,3 +153,71 @@ class TokenDiscovery:
             if token_data:
                 return token_data["decimals"]
         return 18  # Default to 18 decimals
+    
+    @classmethod
+    def get_token_id(cls, chain_id, symbol):
+        """
+        Get token ID for registry-based encoding
+        
+        Args:
+            chain_id (int): Chain ID
+            symbol (str): Token symbol
+            
+        Returns:
+            int: Token ID or None if not found
+        """
+        if chain_id in cls.TOKEN_REGISTRY:
+            token_data = cls.TOKEN_REGISTRY[chain_id].get(symbol)
+            if token_data and "token_id" in token_data:
+                return token_data["token_id"]
+        return None
+    
+    @classmethod
+    def get_token_type(cls, chain_id, symbol):
+        """
+        Get token type for a specific token
+        
+        Args:
+            chain_id (int): Chain ID
+            symbol (str): Token symbol
+            
+        Returns:
+            TokenType: Token type or None if not found
+        """
+        if chain_id in cls.TOKEN_REGISTRY:
+            token_data = cls.TOKEN_REGISTRY[chain_id].get(symbol)
+            if token_data and "token_type" in token_data:
+                return token_data["token_type"]
+        return None
+    
+    @classmethod
+    def is_registered_token(cls, chain_id, address):
+        """
+        Check if a token address is in the centralized registry
+        
+        Args:
+            chain_id (int): Chain ID
+            address (str): Token address
+            
+        Returns:
+            bool: True if registered, False otherwise
+        """
+        return is_token_registered(chain_id, address)
+    
+    @classmethod
+    def get_all_token_variants(cls, chain_id, symbol):
+        """
+        Get all variants (CANONICAL, BRIDGED, WRAPPED) of a token
+        
+        Args:
+            chain_id (int): Chain ID
+            symbol (str): Token symbol
+            
+        Returns:
+            list: List of (address, type) tuples
+        """
+        # Map symbol to token ID
+        token_id = cls.get_token_id(chain_id, symbol)
+        if token_id is not None:
+            return get_all_token_addresses(chain_id, token_id)
+        return []

@@ -225,32 +225,65 @@ class OmniBrain:
     def initialize(self):
         logger.info("🧠 Booting Apex-Omega Titan Brain...")
         
-        # A. Load Assets - Dynamic token loading from 1inch API (100+ tokens per chain)
+        # A. Load Assets - Dynamic token loading from 1inch API (100+ tokens per chain) 
+        # Enhanced with centralized token configuration for registry-based encoding
         from offchain.core.token_loader import TokenLoader
+        from offchain.core.token_config import (
+            get_chain_tokens, 
+            get_token_id_from_address,
+            get_supported_chains,
+            UniversalTokenIds,
+            ChainTokenIds
+        )
         
         target_chains = [1, 137, 42161, 10, 8453, 56, 43114]  # Major chains with good liquidity
         self.inventory = {}
+        self.token_registry_map = {}  # Maps addresses to (token_id, token_type) for encoding
         
         for chain_id in target_chains:
             logger.info(f"📥 Loading tokens for chain {chain_id}...")
+            
+            # First, load registered tokens from centralized config
+            registered_tokens = get_chain_tokens(chain_id)
+            self.inventory[chain_id] = {}
+            self.token_registry_map[chain_id] = {}
+            
+            for token in registered_tokens:
+                from offchain.core.token_config import get_token_symbol
+                symbol = get_token_symbol(token.id)
+                if symbol:
+                    self.inventory[chain_id][symbol] = {
+                        'address': token.address,
+                        'decimals': self._get_token_decimals(symbol),
+                        'token_id': token.id,
+                        'token_type': token.type,
+                        'registered': True
+                    }
+                    # Map address to registry info for encoding
+                    self.token_registry_map[chain_id][token.address.lower()] = {
+                        'id': token.id,
+                        'type': token.type
+                    }
+            
+            logger.info(f"   ✅ Loaded {len(self.inventory[chain_id])} registered tokens from config")
+            
             # Get 100+ tokens dynamically from 1inch
             tokens_list = TokenLoader.get_tokens(chain_id)
             
             if tokens_list:
                 # CRITICAL FIX: Ensure essential tokens (WETH, USDC, USDT, DAI, WBTC) are always included
                 # These are required for arbitrage routes and must be present regardless of position in list
-                essential_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC', 'ETH']
-                
-                # Convert to dict format {symbol: {address, decimals}}
-                self.inventory[chain_id] = {}
+                # WNATIVE is used for wrapped native tokens on non-Ethereum chains
+                essential_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC', 'ETH', 'WNATIVE']
                 
                 # First, add all essential tokens if they exist
                 for token in tokens_list:
                     symbol = token['symbol']
-                    if symbol in essential_tokens:
+                    if symbol in essential_tokens and symbol not in self.inventory[chain_id]:
                         self.inventory[chain_id][symbol] = {
                             'address': token['address'],
-                            'decimals': token['decimals']
+                            'decimals': token['decimals'],
+                            'registered': False  # Dynamically loaded, not in registry
                         }
                 
                 # Then add remaining tokens up to 100 total
@@ -261,10 +294,11 @@ class OmniBrain:
                     if symbol not in self.inventory[chain_id]:
                         self.inventory[chain_id][symbol] = {
                             'address': token['address'],
-                            'decimals': token['decimals']
+                            'decimals': token['decimals'],
+                            'registered': False
                         }
                 
-                logger.info(f"   ✅ Loaded {len(self.inventory[chain_id])} tokens for chain {chain_id}")
+                logger.info(f"   ✅ Total {len(self.inventory[chain_id])} tokens loaded for chain {chain_id}")
                 # Log which essential tokens were found
                 found_essential = [t for t in essential_tokens if t in self.inventory[chain_id]]
                 if found_essential:
@@ -277,6 +311,36 @@ class OmniBrain:
                 logger.warning(f"   ⚠️ API failed, using static registry for chain {chain_id}")
                 static_tokens = TokenDiscovery.fetch_all_chains([chain_id])
                 self.inventory.update(static_tokens)
+    
+    def _get_token_decimals(self, symbol):
+        """Get default decimals for a token symbol"""
+        if symbol in ["USDC", "USDT"]:
+            return 6
+        elif symbol in ["WBTC"]:
+            return 8
+        else:
+            return 18
+    
+    def get_token_encoding_info(self, chain_id, token_address):
+        """
+        Determine optimal encoding for a token (REGISTRY_ENUMS vs RAW_ADDRESSES)
+        
+        Args:
+            chain_id: Chain ID
+            token_address: Token address
+            
+        Returns:
+            dict: {'encoding': 'REGISTRY_ENUMS'|'RAW_ADDRESSES', 'id': int, 'type': int} or {'encoding': 'RAW_ADDRESSES'}
+        """
+        addr_lower = token_address.lower()
+        if chain_id in self.token_registry_map and addr_lower in self.token_registry_map[chain_id]:
+            registry_info = self.token_registry_map[chain_id][addr_lower]
+            return {
+                'encoding': 'REGISTRY_ENUMS',
+                'id': registry_info['id'],
+                'type': registry_info['type']
+            }
+        return {'encoding': 'RAW_ADDRESSES'}
         
         # B. Initialize Web3 with timeout protection
         for cid, config in CHAINS.items():

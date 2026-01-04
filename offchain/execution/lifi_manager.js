@@ -1,6 +1,9 @@
 require('dotenv').config();
 const { ethers } = require('ethers');
 
+// Import centralized token configuration
+const tokenConfig = require('../core/token_config');
+
 // Lazy-load LiFi SDK to avoid network calls during module import
 let lifiSdk = null;
 let lifiConfig = null;
@@ -190,6 +193,61 @@ function validateSdkState() {
   return { valid: true };
 }
 
+/**
+ * Resolve destination token address using centralized token configuration.
+ * If destination token is not provided, attempts to find equivalent token on destination chain.
+ * 
+ * @param {number} fromChainId - Source chain ID
+ * @param {string} fromToken - Source token address
+ * @param {number} toChainId - Destination chain ID
+ * @param {string} toToken - Destination token address (optional, will be auto-resolved if not provided)
+ * @returns {string|null} Resolved destination token address or null if not found
+ */
+function resolveDestinationToken(fromChainId, fromToken, toChainId, toToken = null) {
+  // If destination token is provided, use it
+  if (toToken) return toToken;
+  
+  // Try to resolve using token registry
+  const tokenInfo = tokenConfig.getTokenIdFromAddress(fromChainId, fromToken);
+  if (tokenInfo) {
+    const tokenId = tokenInfo.id;
+    // Get canonical token on destination chain
+    const destToken = tokenConfig.getTokenAddress(toChainId, tokenId, tokenConfig.TokenType.CANONICAL);
+    if (destToken) {
+      console.log(`🔗 Auto-resolved destination token: ${destToken} (Token ID: ${tokenId})`);
+      return destToken;
+    }
+  }
+  
+  console.warn(`⚠️ Could not auto-resolve destination token for ${fromToken} on chain ${toChainId}`);
+  return null;
+}
+
+/**
+ * Enhance quote with token registry information.
+ * Adds token_id, token_type, and registered status to the quote.
+ * 
+ * @param {object} quote - Quote object from LiFi SDK
+ * @param {number} fromChainId - Source chain ID
+ * @param {string} fromToken - Source token address
+ * @returns {object} Enhanced quote with registry information
+ */
+function enhanceQuoteWithRegistryInfo(quote, fromChainId, fromToken) {
+  if (!quote.success) return quote;
+  
+  const tokenInfo = tokenConfig.getTokenIdFromAddress(fromChainId, fromToken);
+  if (tokenInfo) {
+    quote.token_id = tokenInfo.id;
+    quote.token_type = tokenInfo.type;
+    quote.token_symbol = tokenConfig.getTokenSymbol(tokenInfo.id);
+    quote.registered = true;
+  } else {
+    quote.registered = false;
+  }
+  
+  return quote;
+}
+
 // === 2. EXECUTION ENGINE ===
 class LifiExecutionEngine {
   
@@ -295,17 +353,18 @@ class LifiExecutionEngine {
 
   /**
    * Get a quote for bridging without executing.
+   * Enhanced with automatic token resolution.
    * Useful for pre-validation and cost estimation.
    * 
    * @param {number} fromChainId - Source Chain ID
    * @param {number} toChainId - Destination Chain ID
    * @param {string} fromToken - Source token address
-   * @param {string} toToken - Destination token address
    * @param {string} amount - Amount to bridge
+   * @param {string} toToken - Destination token address (optional, will be auto-resolved)
    * @param {object} options - Optional configuration
    * @returns {Promise<object>} Quote with route details and cost estimates
    */
-  static async getQuote(fromChainId, toChainId, fromToken, toToken, amount, options = {}) {
+  static async getQuote(fromChainId, toChainId, fromToken, amount, toToken = null, options = {}) {
     // Initialize SDK on first use
     await initializeLifiSdk();
     
@@ -313,6 +372,16 @@ class LifiExecutionEngine {
     if (!validation.valid) {
       console.error('❌ LiFi SDK not available:', validation.error.details);
       return validation.error;
+    }
+
+    // Auto-resolve destination token if not provided
+    const resolvedToToken = resolveDestinationToken(fromChainId, fromToken, toChainId, toToken);
+    if (!resolvedToToken) {
+      return { 
+        success: false, 
+        error: 'DESTINATION_TOKEN_NOT_FOUND',
+        message: 'Could not resolve destination token address'
+      };
     }
 
     const { order = 'CHEAPEST', slippage = 0.005 } = options;
@@ -324,7 +393,7 @@ class LifiExecutionEngine {
         fromChainId,
         toChainId,
         fromTokenAddress: fromToken,
-        toTokenAddress: toToken,
+        toTokenAddress: resolvedToToken,
         fromAmount: amount,
         options: {
           integrator: 'Apex-Omega-Titan',
@@ -338,7 +407,7 @@ class LifiExecutionEngine {
         return { success: false, error: 'NO_ROUTE_AVAILABLE' };
       }
 
-      return {
+      const quote = {
         success: true,
         bridgeName: bestRoute.steps[0].tool,
         fromAmount: bestRoute.fromAmount,
@@ -348,6 +417,9 @@ class LifiExecutionEngine {
         estimatedTime: bestRoute.steps[0].estimate.executionDuration,
         route: bestRoute
       };
+      
+      // Enhance with registry info
+      return enhanceQuoteWithRegistryInfo(quote, fromChainId, fromToken);
     } catch (error) {
       console.error('❌ Li.Fi Quote Failed:', error.message);
       return { success: false, error: error.message };

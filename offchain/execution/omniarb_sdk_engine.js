@@ -1,6 +1,9 @@
 require('dotenv').config();
 const { ethers } = require('ethers');
 
+// Import centralized token configuration
+const tokenConfig = require('../core/token_config');
+
 // ============================================================================
 // 1. REAL-WORLD ABIS (NO PLACEHOLDERS)
 // ============================================================================

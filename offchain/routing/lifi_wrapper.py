@@ -6,12 +6,16 @@ asset bridging. It supports intent-based bridging via protocols like Across,
 Stargate, and Hop, which enable near-instant cross-chain transfers through
 market maker solver networks.
 
+Enhanced with centralized token configuration for automatic token resolution
+across chains.
+
 Key Features:
 - Intent-based bridging with 30-120 second settlement times
 - Automatic best route selection from 15+ bridge protocols
 - Solver liquidity verification
 - Route validation and cost estimation
 - Integration with Titan AI brain for arbitrage decisions
+- Automatic token mapping across chains using registry
 """
 
 import subprocess
@@ -21,13 +25,21 @@ import logging
 from decimal import Decimal
 from typing import Dict, Optional, Tuple
 
+from offchain.core.token_config import (
+    get_token_id_from_address,
+    get_canonical_token_address,
+    get_all_token_addresses,
+    is_token_registered,
+    TokenType
+)
+
 # Configure logging
 logger = logging.getLogger(__name__)
 
 
 class LiFiWrapper:
     """
-    Python wrapper for Li.Fi JavaScript SDK.
+    Python wrapper for Li.Fi JavaScript SDK with token registry integration.
     Calls Node.js scripts to interact with the Li.Fi API.
     """
     
@@ -37,23 +49,43 @@ class LiFiWrapper:
             'execution'
         )
     
+    def resolve_cross_chain_token(self, from_chain: int, from_token: str, to_chain: int) -> Optional[str]:
+        """
+        Resolve the equivalent token on destination chain using registry
+        
+        Args:
+            from_chain: Source chain ID
+            from_token: Source token address
+            to_chain: Destination chain ID
+            
+        Returns:
+            Destination token address or None if not found
+        """
+        token_info = get_token_id_from_address(from_chain, from_token)
+        if token_info:
+            token_id, _ = token_info
+            # Get canonical token on destination chain
+            return get_canonical_token_address(to_chain, token_id)
+        return None
+    
     def get_quote(
         self, 
         from_chain: int, 
         to_chain: int, 
         from_token: str, 
-        to_token: str, 
         amount: str,
+        to_token: Optional[str] = None,
         prefer_intent_based: bool = True
     ) -> Optional[Dict]:
         """
         Get a bridge quote without executing the transaction.
+        Enhanced with automatic token resolution.
         
         Args:
             from_chain: Source chain ID (e.g., 137 for Polygon)
             to_chain: Destination chain ID (e.g., 42161 for Arbitrum)
             from_token: Source token address
-            to_token: Destination token address
+            to_token: Destination token address (auto-resolved if None)
             amount: Amount to bridge (in smallest unit, e.g., "1000000" for 1 USDC)
             prefer_intent_based: Prefer intent-based bridges for faster settlement
             
@@ -66,16 +98,24 @@ class LiFiWrapper:
                 'to_amount_min': str,
                 'gas_cost_usd': float,
                 'estimated_time': int (seconds),
+                'token_id': int (if registered),
                 'error': str (if failed)
             }
         """
         try:
+            # Auto-resolve destination token if not provided
+            if to_token is None:
+                to_token = self.resolve_cross_chain_token(from_chain, from_token, to_chain)
+                if to_token is None:
+                    logger.warning(f"Could not resolve token {from_token} on chain {to_chain}")
+                    return None
+            
             # Validate inputs to prevent code injection
             if not isinstance(from_chain, int) or not isinstance(to_chain, int):
                 return None
             if not from_token.startswith('0x') or not to_token.startswith('0x'):
                 return None
-            if not amount.isdigit():
+            if amount and not amount.isdigit():
                 return None
             
             # Build parameters as JSON for safe passing
@@ -84,7 +124,7 @@ class LiFiWrapper:
                 'to_chain': to_chain,
                 'from_token': from_token,
                 'to_token': to_token,
-                'amount': amount,
+                'amount': amount or "1000000",  # Default 1 USDC for quote
                 'prefer_intent_based': prefer_intent_based
             })
             
@@ -115,6 +155,16 @@ class LiFiWrapper:
                 return None
             
             quote = json.loads(result.stdout.strip())
+            
+            # Enhance quote with token registry info
+            token_info = get_token_id_from_address(from_chain, from_token)
+            if token_info:
+                quote['token_id'] = token_info[0]
+                quote['token_type'] = token_info[1]
+                quote['registered'] = True
+            else:
+                quote['registered'] = False
+            
             return quote
             
         except subprocess.TimeoutExpired:
