@@ -4,7 +4,7 @@
 
 **Production-Ready Multi-Chain Flash Loan Arbitrage with AI-Powered Intelligence**
 
-[![Version](https://img.shields.io/badge/version-4.2.0-blue.svg)](https://github.com/vegas-max/Titan2.0)
+[![Version](https://img.shields.io/badge/version-4.2.1-blue.svg)](https://github.com/vegas-max/Titan2.0)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-orange.svg)](https://soliditylang.org/)
 [![Hardhat](https://img.shields.io/badge/Hardhat-2.28.0-yellow.svg)](https://hardhat.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
@@ -64,7 +64,7 @@
 
 ---
 
-## 🆕 What's New in v4.2.0
+## 🆕 What's New in v4.2.1
 
 **🎉 Production-Ready Flash Arbitrage Executor & Complete Working System!**
 
@@ -192,7 +192,7 @@ cd Titan2.0
 
 ## 📋 Table of Contents
 
-- 🆕 [What's New in v4.2.0](#-whats-new-in-v420)
+- 🆕 [What's New in v4.2.1](#-whats-new-in-v421)
 - [Quick Start](#-quick-start) - **Start here for fast setup!**
 - [Overview](#-overview)
 - [Key Features](#-key-features)
@@ -303,7 +303,7 @@ The **simplest way** to get started - just one command after configuring .env:
 
 ```bash
 # Clone repository
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Configure .env (copy from template and add your keys)
 cp .env.example .env
@@ -327,7 +327,7 @@ Install everything and launch the complete system with command-line arguments:
 
 ```bash
 # Clone repository
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Run full-scale installation and launch
 ./install_and_run_titan.sh \
@@ -351,7 +351,7 @@ Get Titan running in 3 commands:
 
 ```bash
 # 1. Clone and enter directory
-git clone https://github.com/MavenSource/Titan.git && cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # 2. Run automated setup
 ./setup.sh
@@ -390,9 +390,9 @@ Titan 2.0 is a **production-ready, autonomous DeFi arbitrage system** that combi
 ### Core Capabilities
 
 #### 🌐 Multi-Chain Arbitrage
-- **15+ Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
+- **15 Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
 - **Cross-Chain Bridging**: Automated asset bridging via Li.Fi aggregator (15+ bridge protocols)
-- **40+ DEX Integration**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap, and more
+- **40+ DEX Integration**: Via aggregators (1inch, ParaSwap, Li.Fi) plus direct integration with Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap, and more
 - **Real-time Monitoring**: WebSocket connections for sub-second opportunity detection
 
 #### ⚡ Flash Loan Technology
@@ -429,7 +429,7 @@ Titan 2.0 is a **production-ready, autonomous DeFi arbitrage system** that combi
 
 | Category | Features |
 |----------|----------|
-| **Blockchain** | 15+ chains, 40+ DEXs, 2 flash loan providers, cross-chain bridges |
+| **Blockchain** | 15 chains, 40+ DEXs (via aggregators), 2 flash loan providers, cross-chain bridges |
 | **AI/ML** | Gas forecasting, Q-learning, profit optimization, graph pathfinding |
 | **Security** | Circuit breaker, simulation, MEV protection, multi-layer validation |
 | **Performance** | 7.5s execution, 99.2% uptime, 86% success rate, <$5 gas costs |
@@ -491,7 +491,7 @@ Flash loans allow borrowing large amounts of cryptocurrency without collateral, 
 ## ✨ Key Features
 
 ### 🌐 Multi-Chain Support
-- **10+ Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
+- **15 Blockchain Networks**: Ethereum, Polygon, Arbitrum, Optimism, Base, BSC, Avalanche, Fantom, Linea, Scroll, Mantle, ZKsync, Blast, Celo, opBNB
 - **Dual RPC Providers**: Infura + Alchemy for redundancy and reliability
 - **WebSocket Streaming**: Real-time mempool monitoring and block updates
 
@@ -507,7 +507,8 @@ Flash loans allow borrowing large amounts of cryptocurrency without collateral, 
 - **Profit Engine**: Advanced profit calculation with real-time simulation
 
 ### 🔄 DEX Aggregation
-- **40+ DEX Routers**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, and more
+- **40+ DEX Access**: Via aggregators (1inch, ParaSwap, Li.Fi, KyberSwap, OpenOcean, 0x)
+- **Direct Integration**: Uniswap V2/V3, Curve, QuickSwap, SushiSwap, Balancer, PancakeSwap
 - **Smart Routing**: Automatically finds the best execution path
 - **Multi-Protocol Support**: V2/V3 AMMs, Stable Swap, Concentrated Liquidity
 
@@ -2191,8 +2192,8 @@ If you prefer manual installation:
 #### 1. Clone the Repository
 
 ```bash
-git clone https://github.com/MavenSource/Titan.git
-cd Titan
+git clone https://github.com/vegas-max/Titan2.0.git
+cd Titan2.0
 ```
 
 #### 2. Install Node.js Dependencies
@@ -3961,44 +3962,59 @@ except Exception as e:
 ### Project Structure
 
 ```
-Titan/
-├── contracts/              # Solidity smart contracts
-│   ├── OmniArbExecutor.sol
-│   ├── interfaces/
-│   └── modules/
-├── core/                   # Core Python infrastructure
-│   ├── config.py
-│   ├── enum_matrix.py
-│   ├── token_discovery.py
-│   ├── titan_commander_core.py
-│   └── titan_simulation_engine.py
-├── execution/              # Node.js execution layer
-│   ├── bot.js
-│   ├── gas_manager.js
-│   ├── lifi_manager.js
-│   ├── omniarb_sdk_engine.js
-│   └── bloxroute_manager.js
-├── ml/                     # Machine learning & strategies
-│   ├── brain.py
-│   ├── dex_pricer.py
-│   ├── cortex/
-│   │   ├── forecaster.py
-│   │   ├── rl_optimizer.py
-│   │   └── feature_store.py
-│   └── strategies/
-│       └── instant_scalper.py
-├── monitoring/             # Real-time monitoring
-│   ├── MempoolHound.ts
-│   └── decoderWorker.js
-├── routing/                # Cross-chain routing
-│   └── bridge_aggregator.py
-├── scripts/                # Deployment & utilities
-│   └── deploy.js
-├── .env                    # Environment configuration
-├── package.json            # Node.js dependencies
-├── requirements.txt        # Python dependencies
-├── hardhat.config.js       # Hardhat configuration
-└── README.md               # This file
+Titan2.0/
+├── onchain/                    # Blockchain-executable components
+│   ├── contracts/              # Solidity smart contracts
+│   │   ├── FlashArbExecutor.sol
+│   │   ├── OmniArbExecutor.sol
+│   │   ├── interfaces/
+│   │   └── modules/
+│   ├── scripts/                # Deployment scripts
+│   │   └── deploy.js
+│   └── test/                   # Smart contract tests
+├── offchain/                   # Traditional computing components
+│   ├── core/                   # Core Python infrastructure
+│   │   ├── config.py
+│   │   ├── enum_matrix.py
+│   │   ├── token_discovery.py
+│   │   ├── titan_commander_core.py
+│   │   └── titan_simulation_engine.py
+│   ├── ml/                     # Machine learning & strategies
+│   │   ├── brain.py
+│   │   ├── dex_pricer.py
+│   │   ├── cortex/
+│   │   │   ├── forecaster.py
+│   │   │   ├── rl_optimizer.py
+│   │   │   └── feature_store.py
+│   │   └── strategies/
+│   │       └── instant_scalper.py
+│   ├── execution/              # Node.js execution layer
+│   │   ├── bot.js
+│   │   ├── gas_manager.js
+│   │   ├── lifi_manager.js
+│   │   ├── omniarb_sdk_engine.js
+│   │   └── bloxroute_manager.js
+│   ├── monitoring/             # Real-time monitoring
+│   │   ├── MempoolHound.ts
+│   │   └── decoderWorker.js
+│   └── routing/                # Cross-chain routing
+│       └── bridge_aggregator.py
+├── core-rust/                  # Rust performance cores (optional)
+│   └── src/
+│       ├── config.rs
+│       ├── commander.rs
+│       └── simulation_engine.rs
+├── core-go/                    # Go performance cores (optional)
+│   ├── config/
+│   ├── commander/
+│   └── simulation/
+├── signals/                    # File-based communication fallback
+├── data/                       # Persistent data storage
+├── .env                        # Environment configuration
+├── package.json                # Node.js dependencies
+├── requirements.txt            # Python dependencies
+├── hardhat.config.js           # Hardhat configuration
+└── README.md                   # This file
 ```
 
 ### Adding a New Chain
@@ -4009,7 +4025,7 @@ RPC_NEWCHAIN=https://newchain-rpc.com
 WSS_NEWCHAIN=wss://newchain-rpc.com
 ```
 
-2. **Update `core/config.py`:**
+2. **Update `offchain/core/config.py`:**
 ```python
 CHAINS = {
     999999: {  # New Chain ID
@@ -4041,14 +4057,14 @@ python test_phase1.py
 NEWDEX_ROUTER=0x...
 ```
 
-2. **Update `ml/dex_pricer.py`:**
+2. **Update `offchain/ml/dex_pricer.py`:**
 ```python
 def get_newdex_price(self, token_in, token_out, amount):
     router_addr = os.getenv('NEWDEX_ROUTER')
     # Implement pricing logic
 ```
 
-3. **Update `contracts/OmniArbExecutor.sol`:**
+3. **Update `onchain/contracts/OmniArbExecutor.sol`:**
 ```solidity
 if (protocols[i] == 5) { // NewDEX
     // Implement swap logic
@@ -4059,7 +4075,7 @@ if (protocols[i] == 5) { // NewDEX
 
 1. **Create new strategy file:**
 ```python
-# ml/strategies/my_strategy.py
+# offchain/ml/strategies/my_strategy.py
 
 class MyStrategy:
     def __init__(self, chain_id):
@@ -4076,9 +4092,9 @@ class MyStrategy:
 
 2. **Integrate with Brain:**
 ```python
-# ml/brain.py
+# offchain/ml/brain.py
 
-from ml.strategies.my_strategy import MyStrategy
+from offchain.ml.strategies.my_strategy import MyStrategy
 
 strategy = MyStrategy(chain_id)
 opportunities = strategy.scan()
@@ -4322,16 +4338,16 @@ SOFTWARE.
 
 ### Getting Help
 
-- **Issues**: [GitHub Issues](https://github.com/MavenSource/Titan/issues)
-- **Discussions**: [GitHub Discussions](https://github.com/MavenSource/Titan/discussions)
+- **Issues**: [GitHub Issues](https://github.com/vegas-max/Titan2.0/issues)
+- **Discussions**: [GitHub Discussions](https://github.com/vegas-max/Titan2.0/discussions)
 - **Documentation**: This README and inline code comments
 
 ### Contributing Ideas
 
 Have an idea for improvement? We'd love to hear it!
 
-1. Check [existing issues](https://github.com/MavenSource/Titan/issues)
-2. Open a [new issue](https://github.com/MavenSource/Titan/issues/new)
+1. Check [existing issues](https://github.com/vegas-max/Titan2.0/issues)
+2. Open a [new issue](https://github.com/vegas-max/Titan2.0/issues/new)
 3. Join the discussion
 
 ### Acknowledgments
@@ -4372,7 +4388,7 @@ This project builds on the incredible work of:
 
 **Built with ❤️ by the Titan Team**
 
-[GitHub](https://github.com/MavenSource/Titan) • [Documentation](https://github.com/MavenSource/Titan/wiki)
+[GitHub](https://github.com/vegas-max/Titan2.0) • [Documentation](https://github.com/vegas-max/Titan2.0/wiki)
 
 ⭐ **Star this repo if you find it useful!** ⭐
 
