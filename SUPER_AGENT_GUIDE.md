@@ -19,7 +19,8 @@ The **Super Agent System** is a creative, autonomous agent framework designed to
 - ✅ **Self-Healing**: Automatic detection and recovery from failures
 - ✅ **Resource Management**: Optimized resource allocation and scaling
 - ✅ **Automated Testing**: Integrated test execution for Hardhat and Python
-- ✅ **Build Automation**: Automated compilation and build processes
+- ✅ **Build Automation**: Automated compilation and build processes including Rust engine
+- ✅ **Boot-time Initialization**: Automatic build and startup on system boot
 - ✅ **Interactive Control**: CLI interface for manual management
 
 ## 🚀 Quick Start
@@ -27,6 +28,28 @@ The **Super Agent System** is a creative, autonomous agent framework designed to
 ### Installation
 
 The super agent system is integrated into the TITAN repository. No additional installation required.
+
+### Boot-Time Auto-Start (Recommended for Production)
+
+For automatic startup on system boot with full build:
+
+```bash
+# Option 1: Use the boot script (simplest)
+./boot_super_agent.sh
+
+# Option 2: Install as systemd service (Linux only)
+# See systemd/README.md for detailed instructions
+sudo systemctl enable titan-super-agent
+sudo systemctl start titan-super-agent
+```
+
+The super agent will automatically:
+1. Build the Rust engine (if Rust/Cargo is available)
+2. Install Node.js dependencies (if needed)
+3. Compile smart contracts
+4. Run health checks
+5. Start system components (if configured)
+6. Monitor and self-heal continuously
 
 ### Basic Usage
 
@@ -168,10 +191,20 @@ The orchestrator is the main coordinator with these capabilities:
   - Configurable delay between operations
 
 #### Build & Test
-- **build_project**: Compile smart contracts
-  - Hardhat compilation
+- **build_project**: Complete project build
+  - Rust engine compilation (if available)
+  - Python bindings via maturin (if available)
+  - Automatic dependency installation
+  - Hardhat smart contract compilation
   - Artifact generation
-  - Error reporting
+  - Comprehensive error reporting
+  
+- **build_rust_engine**: Dedicated Rust engine build
+  - Cargo-based compilation
+  - Release mode optimization
+  - Python wheel generation
+  - Automatic installation
+  - Graceful fallback if Rust not available
 
 - **run_tests**: Execute test suites
   - Hardhat tests
@@ -262,11 +295,48 @@ Each agent can be configured individually:
       "max_concurrent_tasks": 10,
       "heartbeat_interval": 30,
       "auto_restart_on_failure": true,
-      "max_restart_attempts": 3
+      "max_restart_attempts": 3,
+      "capabilities": [
+        "system_health_check",
+        "start_system",
+        "stop_system",
+        "restart_system",
+        "run_tests",
+        "build_project",
+        "build_rust_engine",
+        "deploy",
+        "monitor_performance",
+        "auto_scale",
+        "self_heal",
+        "optimize_resources"
+      ]
     }
   }
 }
 ```
+
+#### Boot-Time Configuration
+
+Configure automatic build and startup behavior:
+
+```json
+{
+  "system": {
+    "default_mode": "paper",
+    "auto_start_on_boot": true,
+    "run_build_on_boot": true,
+    "graceful_shutdown_timeout": 30,
+    "health_check_interval": 300
+  }
+}
+```
+
+**Key Settings:**
+- `auto_start_on_boot`: Enable automatic system startup when super agent boots
+- `run_build_on_boot`: Automatically build Rust engine and contracts on initialization
+- `default_mode`: Default system mode (paper or live)
+- `graceful_shutdown_timeout`: Time to wait for graceful shutdown before force kill
+- `health_check_interval`: Interval between automated health checks (seconds)
 
 ### Environment Variables
 

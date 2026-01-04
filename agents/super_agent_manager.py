@@ -78,6 +78,13 @@ class SuperAgentManager:
         
         self.running = True
         self.logger.info("✅ Super agent system initialized successfully")
+        
+        # Check if auto-build on boot is enabled
+        system_config = self.config.config.get("system", {})
+        if system_config.get("run_build_on_boot", False):
+            self.logger.info("🔨 Auto-build on boot is enabled, building project...")
+            self.build_project()
+        
         self.logger.info("=" * 70)
         return True
     

@@ -13,6 +13,7 @@
         "restart_system",
         "run_tests",
         "build_project",
+        "build_rust_engine",
         "deploy",
         "monitor_performance",
         "auto_scale",
@@ -115,7 +116,8 @@
   },
   "system": {
     "default_mode": "paper",
-    "auto_start_on_boot": false,
+    "auto_start_on_boot": true,
+    "run_build_on_boot": true,
     "graceful_shutdown_timeout": 30,
     "health_check_interval": 300
   },
