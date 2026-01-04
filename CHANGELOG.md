@@ -5,6 +5,27 @@ All notable changes to the Apex-Omega Titan project will be documented in this f
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Removed
+- **Hardhat Development Infrastructure** - Removed all Hardhat-related files and configuration as smart contracts are already deployed
+  - Deleted `hardhat.config.js` configuration file
+  - Deleted `package-lock.json` (regenerated without hardhat dependencies)
+  - Removed `onchain/` directory containing all smart contracts and deployment scripts
+  - Removed `contracts/` legacy contract directory
+  - Removed Hardhat and OpenZeppelin dependencies from `package.json`
+  - Removed compilation and deployment scripts from npm scripts
+  - Updated all installation and build scripts to remove contract compilation steps
+  - Updated documentation to remove contract deployment instructions
+  - Repository is now focused on bot execution with deployed contract addresses configured in `.env`
+
+### Changed
+- **Installation Process** - Simplified setup process by removing smart contract compilation step
+  - `npm install` now installs only execution dependencies (~15MB smaller)
+  - `npm test` runs only Python tests
+  - All startup scripts (`setup.sh`, `run_titan.sh`, etc.) no longer compile contracts
+  - Faster installation and setup time
+
 ## [4.2.1] - 2025-12-14
 
 ### Professional Security Audit Complete ✅
