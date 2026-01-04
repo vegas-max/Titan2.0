@@ -3,17 +3,11 @@ pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/utils/ReentrancyGuard.sol";
 import "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /*//////////////////////////////////////////////////////////////
                             INTERFACES
 //////////////////////////////////////////////////////////////*/
-
-interface IERC20 {
-    function balanceOf(address) external view returns (uint256);
-    function transfer(address to, uint256 amount) external returns (bool);
-    function approve(address spender, uint256 amount) external returns (bool);
-    function allowance(address owner, address spender) external view returns (uint256);
-}
 
 interface IBalancerVault {
     function flashLoan(
@@ -468,8 +462,7 @@ contract FlashArbExecutor is ReentrancyGuard {
         (uint24 fee, uint160 sqrtPriceLimitX96) = abi.decode(auxData, (uint24, uint160));
 
         // Use SafeERC20 for robust approval handling across all token types
-        IERC20(tokenIn).safeApprove(router, 0);  // Reset first
-        IERC20(tokenIn).safeApprove(router, amountIn);
+        IERC20(tokenIn).forceApprove(router, amountIn);
 
         IUniswapV3Router.ExactInputSingleParams memory params = IUniswapV3Router.ExactInputSingleParams({
             tokenIn: tokenIn,

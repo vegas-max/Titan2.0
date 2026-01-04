@@ -141,7 +141,7 @@ contract FlashArbExecutorV2 {
         uint256 amountOut
     );
 
-    event Paused(bool isPaused);
+    event PausedStateChanged(bool isPaused);
     event MinProfitUpdated(uint256 newMinProfit);
     event DexRouterUpdated(uint8 dexId, address router);
 
@@ -535,7 +535,7 @@ contract FlashArbExecutorV2 {
 
     function setPaused(bool _paused) external onlyOwner {
         paused = _paused;
-        emit Paused(_paused);
+        emit PausedStateChanged(_paused);
     }
 
     function rescueETH() external onlyOwner {
