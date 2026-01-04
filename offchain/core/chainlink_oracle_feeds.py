@@ -147,6 +147,9 @@ CHAINLINK_AGGREGATOR_ABI = json.loads("""
 ]
 """)
 
+# API Configuration
+API_TIMEOUT_SECONDS = int(os.getenv("ORACLE_API_TIMEOUT", "5"))
+
 #==============================================================================
 # External API Configuration
 #==============================================================================
@@ -194,7 +197,7 @@ def get_web3_for_chain(chain: str) -> Web3:
         raise KeyError(f"No RPC configured for chain: {chain}")
     rpc = RPC_MAP[chain]
     if not rpc:
-        raise KeyError(f"RPC not configured in environment for chain: {chain}")
+        raise ValueError(f"RPC URL not configured in environment for chain: {chain}. Please set the appropriate environment variable.")
     web3 = Web3(Web3.HTTPProvider(rpc))
     if not web3.is_connected():
         raise ConnectionError(f"Failed to connect to RPC for chain: {chain}")
@@ -253,13 +256,17 @@ def get_offchain_price(token_symbol: str) -> float:
         coingecko_id = COINGECKO_ID_MAP.get(token_symbol, token_symbol.lower())
         url = f"{COINGECKO_API_URL}/simple/price?ids={coingecko_id}&vs_currencies=usd"
         
-        # Check for API key
+        # Check for API key and validate format
         api_key = os.getenv("COINGECKO_API_KEY")
         headers = {}
         if api_key:
-            headers["x-cg-pro-api-key"] = api_key
+            # Basic validation: ensure API key is alphanumeric with hyphens
+            if api_key and api_key.replace('-', '').replace('_', '').isalnum():
+                headers["x-cg-pro-api-key"] = api_key
+            else:
+                logger.warning("CoinGecko API key format appears invalid, proceeding without it")
             
-        r = requests.get(url, headers=headers, timeout=5)
+        r = requests.get(url, headers=headers, timeout=API_TIMEOUT_SECONDS)
         r.raise_for_status()
         data = r.json()
         
@@ -269,18 +276,24 @@ def get_offchain_price(token_symbol: str) -> float:
     except Exception as e:
         logger.debug(f"Coingecko lookup failed for {token_symbol}: {e}")
         
-    # Fallback to Binance
-    try:
-        # Binance uses USDT pairs
-        symbol = f"{token_symbol}USDT"
-        url = f"{BINANCE_API_URL}/ticker/price?symbol={symbol}"
-        r = requests.get(url, timeout=5)
-        r.raise_for_status()
-        price = float(r.json()['price'])
-        logger.debug(f"📊 Binance price for {token_symbol}: ${price:.2f}")
-        return price
-    except Exception as e:
-        logger.debug(f"Binance lookup failed for {token_symbol}: {e}")
+    # Fallback to Binance with multiple pair attempts
+    binance_pairs = [
+        f"{token_symbol}USDT",
+        f"{token_symbol}BUSD",
+        f"{token_symbol}USD",
+    ]
+    
+    for symbol in binance_pairs:
+        try:
+            url = f"{BINANCE_API_URL}/ticker/price?symbol={symbol}"
+            r = requests.get(url, timeout=API_TIMEOUT_SECONDS)
+            r.raise_for_status()
+            price = float(r.json()['price'])
+            logger.debug(f"📊 Binance price for {token_symbol} ({symbol}): ${price:.2f}")
+            return price
+        except Exception as e:
+            logger.debug(f"Binance lookup failed for {symbol}: {e}")
+            continue
         
     logger.warning(f"⚠️ Could not fetch price for {token_symbol} from any source")
     return 0.0
