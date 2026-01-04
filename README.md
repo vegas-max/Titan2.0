@@ -3934,15 +3934,9 @@ opportunities = strategy.scan()
 python test_phase1.py
 ```
 
-**Run Hardhat Tests:**
+**Run Python Tests:**
 ```bash
-npx hardhat test
-```
-
-**Simulate Trades (Hardhat Fork):**
-```bash
-npx hardhat node  # Start local fork
-npx hardhat run scripts/test_trade.js --network localhost
+python -m pytest tests/
 ```
 
 ---
@@ -3954,11 +3948,6 @@ npx hardhat run scripts/test_trade.js --network localhost
 **Python Tests:**
 ```bash
 pytest tests/
-```
-
-**JavaScript Tests:**
-```bash
-npx hardhat test
 ```
 
 ### Integration Tests
@@ -4037,8 +4026,7 @@ Contributions are welcome! Please follow these guidelines:
 **JavaScript/Solidity:**
 - Use 2-space indentation
 - Add JSDoc comments to functions
-- Follow Solidity style guide
-- Run `npx hardhat compile` before committing
+- Follow Solidity style guide (for contract interactions)
 
 ### Testing Requirements
 

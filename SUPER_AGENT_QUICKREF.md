@@ -44,9 +44,7 @@ start paper   - Start Titan in paper trading mode
 start live    - Start Titan in live trading mode
 stop          - Stop all Titan components
 test all      - Run all test suites
-test hardhat  - Run Hardhat tests only
 test python   - Run Python tests only
-build         - Compile smart contracts
 quit          - Exit super agent system
 ```
 
@@ -64,7 +62,6 @@ quit          - Exit super agent system
 
 ```bash
 ./start_super_agent.sh once test
-./start_super_agent.sh once build
 ./start_super_agent.sh once health
 ```
 
@@ -129,11 +126,10 @@ tail -f logs/super_agent_*.log
 ### Tests failing
 ```bash
 # Run specific test suite
-🤖 super-agent> test hardhat
 🤖 super-agent> test python
 
-# Check build status
-🤖 super-agent> build
+# Check system status
+🤖 super-agent> status
 ```
 
 ## Advanced Usage
@@ -171,9 +167,6 @@ print(task.result)
 ```bash
 # Health check every hour
 0 * * * * cd /path/to/Titan2.0 && ./start_super_agent.sh once health >> /var/log/titan_health.log 2>&1
-
-# Daily build at 2 AM
-0 2 * * * cd /path/to/Titan2.0 && ./start_super_agent.sh once build >> /var/log/titan_build.log 2>&1
 
 # Test suite every 4 hours
 0 */4 * * * cd /path/to/Titan2.0 && ./start_super_agent.sh once test >> /var/log/titan_test.log 2>&1

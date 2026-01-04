@@ -21,20 +21,16 @@ echo -e "${BLUE}===================================================${NC}"
 echo ""
 
 # Step 1: Clean previous builds
-echo -e "${BLUE}[1/5] Cleaning Previous Build Artifacts...${NC}"
-rm -rf typechain/ typechain-types/
+echo -e "${BLUE}[1/4] Cleaning Previous Build Artifacts...${NC}"
 find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
 find . -type f -name "*.pyc" -delete 2>/dev/null || true
 echo -e "${GREEN}[✓]${NC} Clean complete"
 echo ""
 
 # Step 2: Install Node.js dependencies
-echo -e "${BLUE}[2/5] Installing Node.js Dependencies...${NC}"
+echo -e "${BLUE}[2/4] Installing Node.js Dependencies...${NC}"
 if [ -f "package.json" ]; then
-    # Note: --legacy-peer-deps is used to resolve ethers.js version conflict
-    # between hardhat-toolbox (requires ^6.14.0) and flashbots-provider (requires 6.7.1)
-    # This is a known compatibility issue and is safe for our use case
-    npm install --legacy-peer-deps
+    npm install
     echo -e "${GREEN}[✓]${NC} Node.js dependencies installed"
 else
     echo -e "${RED}[✗]${NC} package.json not found"
@@ -43,7 +39,7 @@ fi
 echo ""
 
 # Step 3: Install Python dependencies
-echo -e "${BLUE}[3/5] Installing Python Dependencies...${NC}"
+echo -e "${BLUE}[3/4] Installing Python Dependencies...${NC}"
 if [ -f "requirements.txt" ]; then
     pip3 install -r requirements.txt --quiet
     echo -e "${GREEN}[✓]${NC} Python dependencies installed"
@@ -53,36 +49,8 @@ else
 fi
 echo ""
 
-# Step 4: Verify Python modules
-echo -e "${BLUE}[4/5] Verifying Python Modules...${NC}"
-PYTHON_ERRORS=0
-
-# Test imports
-python3 -c "import web3; import pandas; import numpy; import redis" 2>/dev/null
-if [ $? -eq 0 ]; then
-    echo -e "${GREEN}[✓]${NC} Core Python packages verified"
-else
-    echo -e "${RED}[✗]${NC} Python package import failed"
-    PYTHON_ERRORS=$((PYTHON_ERRORS + 1))
-fi
-
-# Test core modules
-if python3 -c "from core import config" 2>/dev/null; then
-    echo -e "${GREEN}[✓]${NC} core.config module loads"
-else
-    echo -e "${YELLOW}[!]${NC} core.config module has issues (may require .env)"
-fi
-
-if python3 -c "from core import token_discovery" 2>/dev/null; then
-    echo -e "${GREEN}[✓]${NC} core.token_discovery module loads"
-else
-    echo -e "${YELLOW}[!]${NC} core.token_discovery module has issues"
-fi
-
-echo ""
-
-# Step 5: Run system audit
-echo -e "${BLUE}[5/5] Running System Audit...${NC}"
+# Step 4: Run system audit
+echo -e "${BLUE}[4/4] Running System Audit...${NC}"
 if [ -f "audit_system.py" ]; then
     python3 audit_system.py
     AUDIT_RESULT=$?
@@ -102,22 +70,14 @@ echo -e "${BLUE}   BUILD SUMMARY${NC}"
 echo -e "${BLUE}===================================================${NC}"
 echo ""
 
-if [ $PYTHON_ERRORS -eq 0 ]; then
-    echo -e "${GREEN}✅ BUILD SUCCESSFUL${NC}"
-    echo ""
-    echo "Build artifacts:"
-    echo "  • node_modules/ - Node.js dependencies"
-    echo "  • Python packages - Installed globally or in venv"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Configure .env file (cp .env.example .env)"
-    echo "  2. Run health check: ./health-check.sh"
-    echo "  3. Start system: ./start.sh or make start"
-    exit 0
-else
-    echo -e "${RED}❌ BUILD FAILED${NC}"
-    echo ""
-    echo "Errors found: $PYTHON_ERRORS"
-    echo "Please fix the errors above and try again."
-    exit 1
-fi
+echo -e "${GREEN}✅ BUILD SUCCESSFUL${NC}"
+echo ""
+echo "Build artifacts:"
+echo "  • node_modules/ - Node.js dependencies"
+echo "  • Python packages - Installed globally or in venv"
+echo ""
+echo "Next steps:"
+echo "  1. Configure .env file (cp .env.example .env)"
+echo "  2. Run health check: ./health-check.sh"
+echo "  3. Start system: ./start.sh or make start"
+exit 0

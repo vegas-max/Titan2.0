@@ -28,7 +28,6 @@ chmod +x setup.sh
 The setup script will:
 - ✅ Check prerequisites
 - ✅ Install dependencies (Node.js & Python)
-- ✅ Compile smart contracts
 - ✅ Create `.env` file from template
 - ✅ Verify Redis connection
 - ✅ Run system audit
@@ -45,9 +44,6 @@ npm install
 
 # Install Python dependencies
 pip3 install -r requirements.txt
-
-# Compile smart contracts
-npx hardhat compile
 
 # Create environment file
 cp .env.example .env
@@ -87,24 +83,17 @@ LIFI_API_KEY=your_lifi_api_key_here
 | **Li.Fi** | Cross-chain | [Get Key](https://li.fi/) | Free |
 | CoinGecko | Price feeds | [Get Key](https://coingecko.com/en/api) | Optional |
 
-### 3. Deploy Smart Contract
+### 3. Configure Contract Addresses
 
-Deploy to your preferred network:
-
-```bash
-# Deploy to Polygon (recommended for testing)
-npx hardhat run scripts/deploy.js --network polygon
-
-# Or deploy to other networks
-npx hardhat run scripts/deploy.js --network arbitrum
-npx hardhat run scripts/deploy.js --network optimism
-```
-
-Copy the deployed contract address and add it to `.env`:
+The smart contracts are already deployed. Add the deployed contract addresses to your `.env` file:
 
 ```env
-EXECUTOR_ADDRESS_POLYGON=0xYOUR_DEPLOYED_CONTRACT_ADDRESS
+# Contract addresses (already deployed on mainnet)
+EXECUTOR_ADDRESS_ETHEREUM=0xYOUR_ETHEREUM_CONTRACT_ADDRESS
+EXECUTOR_ADDRESS_POLYGON=0xYOUR_POLYGON_CONTRACT_ADDRESS
 ```
+
+Check the repository documentation or `.env.example` for the official deployed contract addresses.
 
 ## Starting the System
 
@@ -116,7 +105,6 @@ make start
 
 # Or manually start each component
 make setup    # First time setup
-make compile  # Compile contracts
 make health   # Check system health
 make start    # Launch system
 ```

@@ -43,7 +43,7 @@ command_exists() {
 }
 
 # Step 1: Check Prerequisites
-echo -e "${BLUE}[1/8] Checking Prerequisites...${NC}"
+echo -e "${BLUE}[1/7] Checking Prerequisites...${NC}"
 
 # Check Node.js
 if command_exists node; then
@@ -84,19 +84,16 @@ fi
 echo ""
 
 # Step 2: Install Node.js Dependencies
-echo -e "${BLUE}[2/8] Installing Node.js Dependencies...${NC}"
+echo -e "${BLUE}[2/7] Installing Node.js Dependencies...${NC}"
 if [ -f "package.json" ]; then
-    # Check if Yarn is available (better dependency resolution)
+    # Check if Yarn is available
     if command_exists yarn; then
-        print_status "Using Yarn for better dependency conflict resolution"
+        print_status "Using Yarn for dependency installation"
         yarn install
         print_status "Node.js dependencies installed via Yarn"
     else
-        # Note: --legacy-peer-deps is used to resolve ethers.js version conflict
-        # between hardhat-toolbox (requires ^6.14.0) and flashbots-provider (requires 6.7.1)
-        # This is a known compatibility issue and is safe for our use case
-        print_status "Using npm with --legacy-peer-deps flag"
-        npm install --legacy-peer-deps
+        print_status "Using npm for dependency installation"
+        npm install
         print_status "Node.js dependencies installed via npm"
         print_info "Tip: Install Yarn for better dependency resolution: npm install -g yarn"
     fi
@@ -107,7 +104,7 @@ fi
 echo ""
 
 # Step 3: Install Python Dependencies
-echo -e "${BLUE}[3/8] Installing Python Dependencies...${NC}"
+echo -e "${BLUE}[3/7] Installing Python Dependencies...${NC}"
 if [ -f "requirements.txt" ]; then
     pip3 install -r requirements.txt
     print_status "Python dependencies installed"
@@ -118,7 +115,7 @@ fi
 echo ""
 
 # Step 4: Setup Environment File
-echo -e "${BLUE}[4/8] Setting Up Environment Configuration...${NC}"
+echo -e "${BLUE}[4/7] Setting Up Environment Configuration...${NC}"
 if [ ! -f ".env" ]; then
     if [ -f ".env.example" ]; then
         cp .env.example .env
@@ -135,7 +132,7 @@ fi
 echo ""
 
 # Step 5: Check Redis Connection
-echo -e "${BLUE}[5/8] Verifying Redis Connection...${NC}"
+echo -e "${BLUE}[5/7] Verifying Redis Connection...${NC}"
 if command_exists redis-cli; then
     if redis-cli ping >/dev/null 2>&1; then
         print_status "Redis is running and accessible"
@@ -151,7 +148,7 @@ fi
 echo ""
 
 # Step 6: Create Data Directories
-echo -e "${BLUE}[6/8] Creating Data Directories...${NC}"
+echo -e "${BLUE}[6/7] Creating Data Directories...${NC}"
 mkdir -p data
 mkdir -p logs
 mkdir -p certs
@@ -159,7 +156,7 @@ print_status "Data directories created"
 echo ""
 
 # Step 7: Run System Audit
-echo -e "${BLUE}[7/8] Running System Audit...${NC}"
+echo -e "${BLUE}[7/7] Running System Audit...${NC}"
 if [ -f "audit_system.py" ]; then
     python3 audit_system.py
     if [ $? -eq 0 ]; then
@@ -172,8 +169,8 @@ else
 fi
 echo ""
 
-# Step 8: Display Next Steps
-echo -e "${BLUE}[8/8] Setup Complete!${NC}"
+# Display completion message and next steps
+echo -e "${BLUE}Setup Complete!${NC}"
 echo ""
 echo -e "${GREEN}===================================================${NC}"
 echo -e "${GREEN}   ✅ SETUP COMPLETED SUCCESSFULLY${NC}"

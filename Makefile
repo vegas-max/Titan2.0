@@ -4,7 +4,7 @@
 # Makefile for common operations
 # Usage: make <target>
 
-.PHONY: help install setup compile deploy test clean start stop health audit
+.PHONY: help install setup test clean start stop health audit
 
 # Default target
 help:
@@ -15,15 +15,9 @@ help:
 	@echo "Setup & Installation:"
 	@echo "  make setup      - Run complete automated setup"
 	@echo "  make install    - Install all dependencies"
-	@echo "  make compile    - Compile smart contracts"
 	@echo "  make build-rust - Build Rust core library"
 	@echo "  make build-go   - Build Go core binary"
 	@echo "  make build-core - Build both Rust and Go implementations"
-	@echo ""
-	@echo "Deployment:"
-	@echo "  make deploy-polygon   - Deploy to Polygon"
-	@echo "  make deploy-arbitrum  - Deploy to Arbitrum"
-	@echo "  make deploy-optimism  - Deploy to Optimism"
 	@echo ""
 	@echo "System Operations:"
 	@echo "  make start      - Start all Titan components"
@@ -56,37 +50,12 @@ setup:
 # Install dependencies
 install:
 	@echo "Installing Node.js dependencies..."
-	@npm install --legacy-peer-deps
+	@npm install
 	@echo "Installing Python dependencies..."
 	@pip3 install -r requirements.txt
 	@echo "✅ Dependencies installed"
 
-# Compile smart contracts
-compile:
-	@echo "Compiling smart contracts..."
-	@npx hardhat compile
-	@echo "✅ Contracts compiled"
-
-# Deploy targets
-deploy-polygon:
-	@echo "Deploying to Polygon..."
-	@npx hardhat run scripts/deploy.js --network polygon
-
-deploy-arbitrum:
-	@echo "Deploying to Arbitrum..."
-	@npx hardhat run scripts/deploy.js --network arbitrum
-
-deploy-optimism:
-	@echo "Deploying to Optimism..."
-	@npx hardhat run scripts/deploy.js --network optimism
-
-deploy-base:
-	@echo "Deploying to Base..."
-	@npx hardhat run scripts/deploy.js --network base
-
-deploy-ethereum:
-	@echo "Deploying to Ethereum..."
-	@npx hardhat run scripts/deploy.js --network ethereum
+# Deploy targets (removed - contracts already deployed)
 
 # Start system
 start:
@@ -144,10 +113,6 @@ test:
 # Clean build artifacts
 clean:
 	@echo "Cleaning build artifacts..."
-	@rm -rf artifacts/
-	@rm -rf cache/
-	@rm -rf typechain/
-	@rm -rf typechain-types/
 	@rm -rf node_modules/.cache/
 	@rm -rf __pycache__/
 	@find . -type d -name "__pycache__" -exec rm -rf {} + 2>/dev/null || true
@@ -156,8 +121,6 @@ clean:
 
 # Lint code
 lint:
-	@echo "Linting Solidity contracts..."
-	@npx hardhat check || true
 	@echo "Linting JavaScript..."
 	@npx eslint execution/*.js scripts/*.js --fix || true
 	@echo "Linting Python..."
