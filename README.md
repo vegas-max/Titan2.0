@@ -5,8 +5,6 @@
 **Production-Ready Multi-Chain Flash Loan Arbitrage with AI-Powered Intelligence**
 
 [![Version](https://img.shields.io/badge/version-4.2.1-blue.svg)](https://github.com/vegas-max/Titan2.0)
-[![Solidity](https://img.shields.io/badge/Solidity-0.8.24-orange.svg)](https://soliditylang.org/)
-[![Hardhat](https://img.shields.io/badge/Hardhat-2.28.0-yellow.svg)](https://hardhat.org/)
 [![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
 [![Python](https://img.shields.io/badge/Python-3.11+-blue.svg)](https://python.org/)
 [![Rust](https://img.shields.io/badge/Rust-1.70+-orange.svg)](https://rust-lang.org/)
@@ -243,8 +241,6 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
 ### 🏗️ Architecture & Development
-- **[onchain/README.md](onchain/README.md)** - 📜 Smart contracts documentation
-- **[onchain/contracts/SystemArchitecture.md](onchain/contracts/SystemArchitecture.md)** - 🏛️ Contract architecture
 - **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
 - **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
@@ -1035,28 +1031,6 @@ For detailed installation instructions, see [INSTALL.md](INSTALL.md).
 
 ```
 Titan2.0/
-├── onchain/                    # Blockchain-executable components
-│   ├── contracts/              # Solidity smart contracts
-│   │   ├── FlashArbExecutor.sol        # Primary flash loan executor
-│   │   ├── OmniArbExecutor.sol         # Alternative executor
-│   │   ├── interfaces/                 # Protocol interfaces
-│   │   │   ├── IAaveV3.sol            # Aave V3 flash loan interface
-│   │   │   ├── IB3.sol                # Balancer V3 vault interface
-│   │   │   ├── IUniV2.sol             # Uniswap V2 router interface
-│   │   │   ├── IUniV3.sol             # Uniswap V3 router interface
-│   │   │   └── ICurve.sol             # Curve pool interface
-│   │   ├── modules/                    # Reusable contract modules
-│   │   │   ├── SwapHandler.sol        # Universal swap execution
-│   │   │   ├── AaveHandler.sol        # Aave-specific logic
-│   │   │   └── BalancerHandler.sol    # Balancer-specific logic
-│   │   └── helpers/                    # Helper contracts
-│   ├── scripts/                # Deployment and utility scripts
-│   │   ├── deploy.js                  # Main deployment script
-│   │   ├── deployFlashArbExecutor.js  # FlashArbExecutor deployment
-│   │   ├── configureTokenRanks.js     # Token registry setup
-│   │   └── setupTokenRegistry.js      # Registry initialization
-│   ├── test/                   # Smart contract tests
-│   └── README.md               # Onchain documentation
 ├── offchain/                   # Traditional computing components
 │   ├── core/                   # Core infrastructure (Python)
 │   │   ├── config.py                  # Central configuration
@@ -1121,7 +1095,6 @@ Titan2.0/
 ├── .env.example                # Environment template
 ├── package.json                # Node.js dependencies
 ├── requirements.txt            # Python dependencies
-├── hardhat.config.js           # Hardhat configuration
 ├── Makefile                    # Build automation
 └── README.md                   # This file
 ```
@@ -2252,14 +2225,6 @@ redis-cli ping
 # Should return: PONG
 ```
 
-#### 5. Compile Smart Contracts
-
-```bash
-npx hardhat compile
-```
-
-This compiles `OmniArbExecutor.sol` and generates artifacts in `artifacts/`.
-
 ---
 
 ## ⚙️ Configuration
@@ -2313,15 +2278,7 @@ PRIVATE_KEY=0xYOUR_64_CHARACTER_PRIVATE_KEY_HERE
 - Store the private key in a secure password manager
 - Consider using a hardware wallet for production
 
-#### 3. Deploy Smart Contract
-
-```bash
-npx hardhat run scripts/deploy.js --network polygon
-```
-
-Copy the deployed address:
-```env
-EXECUTOR_ADDRESS=0xYOUR_DEPLOYED_CONTRACT_ADDRESS
+#### 3. Li.Fi API Key
 ```
 
 #### 4. API Keys
@@ -2531,83 +2488,6 @@ All output is color-coded, timestamped, and includes icons for easy visual scann
 Press `Ctrl+C` in each terminal to gracefully shut down each component.
 
 ---
-
-## 📜 Smart Contracts
-
-### OmniArbExecutor.sol
-
-The core contract that enables flash loan arbitrage across multiple protocols.
-
-#### Contract Architecture
-
-```solidity
-OmniArbExecutor (Ownable)
-├── Balancer V3 Integration
-│   ├── unlock() - Initiates flash loan
-│   └── onBalancerUnlock() - Callback handler
-├── Aave V3 Integration
-│   └── executeOperation() - Callback handler
-├── Universal Swap Engine
-│   └── _runRoute() - Multi-protocol execution
-└── Profit Management
-    └── withdraw() - Owner extraction
-```
-
-#### Deployment
-
-**Testnet (Polygon Mumbai):**
-```bash
-npx hardhat run scripts/deploy.js --network mumbai
-```
-
-**Mainnet (Polygon):**
-```bash
-npx hardhat run scripts/deploy.js --network polygon
-```
-
-**Verify on Etherscan:**
-```bash
-npx hardhat verify --network polygon DEPLOYED_ADDRESS \
-  "0xbA1333333333a1BA1108E8412f11850A5C319bA9" \
-  "0x794a61358D6845594F94dc1DB02A252b5b4814aD"
-```
-
-#### Key Features
-
-**1. Flash Loan Orchestration**
-- Supports both Balancer V3 (0% fee) and Aave V3 (0.05-0.09% fee)
-- Automatic source selection based on availability and cost
-- Callback-based execution model
-
-**2. Universal Swap Router**
-- Protocol-agnostic design with pluggable DEX modules
-- Supports encoded multi-step routes
-- Automatic approval management
-
-**3. Safety Mechanisms**
-- Owner-only execution (prevents unauthorized use)
-- Atomic transactions (all-or-nothing execution)
-- Implicit profit verification (reverts if loan can't be repaid)
-
-#### Gas Optimization
-
-- **Compiler Optimization**: 200 runs
-- **Via IR**: Enabled for complex route optimization
-- **Minimal Storage**: No persistent state beyond addresses
-- **Efficient Encoding**: ABI-encoded routes for minimal calldata
-
-#### Estimated Gas Costs
-
-| Operation | Gas Used | Cost @ 30 Gwei |
-|-----------|----------|----------------|
-| Balancer V3 Flash Loan | 180,000 | ~$0.80 |
-| + Uniswap V3 Swap | +120,000 | +$0.53 |
-| + Curve Swap | +90,000 | +$0.40 |
-| **Total Intra-Chain** | **~390,000** | **~$1.73** |
-| Cross-Chain Bridge | +150,000 | +$0.66 |
-| **Total Cross-Chain** | **~540,000** | **~$2.39** |
-
-*Note: Costs vary by network and congestion*
 
 ---
 
@@ -3963,15 +3843,6 @@ except Exception as e:
 
 ```
 Titan2.0/
-├── onchain/                    # Blockchain-executable components
-│   ├── contracts/              # Solidity smart contracts
-│   │   ├── FlashArbExecutor.sol
-│   │   ├── OmniArbExecutor.sol
-│   │   ├── interfaces/
-│   │   └── modules/
-│   ├── scripts/                # Deployment scripts
-│   │   └── deploy.js
-│   └── test/                   # Smart contract tests
 ├── offchain/                   # Traditional computing components
 │   ├── core/                   # Core Python infrastructure
 │   │   ├── config.py
@@ -4013,7 +3884,6 @@ Titan2.0/
 ├── .env                        # Environment configuration
 ├── package.json                # Node.js dependencies
 ├── requirements.txt            # Python dependencies
-├── hardhat.config.js           # Hardhat configuration
 └── README.md                   # This file
 ```
 
