@@ -237,15 +237,41 @@ class OmniBrain:
             tokens_list = TokenLoader.get_tokens(chain_id)
             
             if tokens_list:
+                # CRITICAL FIX: Ensure essential tokens (WETH, USDC, USDT, DAI, WBTC) are always included
+                # These are required for arbitrage routes and must be present regardless of position in list
+                essential_tokens = ['WETH', 'USDC', 'USDT', 'DAI', 'WBTC', 'ETH']
+                
                 # Convert to dict format {symbol: {address, decimals}}
                 self.inventory[chain_id] = {}
-                for token in tokens_list[:100]:  # Top 100 by liquidity
+                
+                # First, add all essential tokens if they exist
+                for token in tokens_list:
                     symbol = token['symbol']
-                    self.inventory[chain_id][symbol] = {
-                        'address': token['address'],
-                        'decimals': token['decimals']
-                    }
+                    if symbol in essential_tokens:
+                        self.inventory[chain_id][symbol] = {
+                            'address': token['address'],
+                            'decimals': token['decimals']
+                        }
+                
+                # Then add remaining tokens up to 100 total
+                for token in tokens_list:
+                    if len(self.inventory[chain_id]) >= 100:
+                        break
+                    symbol = token['symbol']
+                    if symbol not in self.inventory[chain_id]:
+                        self.inventory[chain_id][symbol] = {
+                            'address': token['address'],
+                            'decimals': token['decimals']
+                        }
+                
                 logger.info(f"   ✅ Loaded {len(self.inventory[chain_id])} tokens for chain {chain_id}")
+                # Log which essential tokens were found
+                found_essential = [t for t in essential_tokens if t in self.inventory[chain_id]]
+                if found_essential:
+                    logger.info(f"   🔑 Essential tokens loaded: {', '.join(found_essential)}")
+                missing_essential = [t for t in essential_tokens if t not in self.inventory[chain_id]]
+                if missing_essential:
+                    logger.warning(f"   ⚠️ Missing essential tokens: {', '.join(missing_essential)}")
             else:
                 # Fallback to static registry
                 logger.warning(f"   ⚠️ API failed, using static registry for chain {chain_id}")
