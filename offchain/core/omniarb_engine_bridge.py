@@ -35,6 +35,7 @@ class OmniArbEngine:
             # This file is in offchain/core, so go up 2 levels to project root
             current_dir = os.path.dirname(os.path.abspath(__file__))
             project_root = os.path.dirname(os.path.dirname(current_dir))
+            self.project_root = project_root
             rust_binary_path = os.path.join(
                 project_root, 
                 "core-rust", 
@@ -42,6 +43,9 @@ class OmniArbEngine:
                 "release", 
                 "omniarb_engine"
             )
+        else:
+            # Calculate project root from provided binary path
+            self.project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(rust_binary_path))))
         
         self.rust_binary = rust_binary_path
         self.available = os.path.exists(rust_binary_path)
@@ -82,14 +86,13 @@ class OmniArbEngine:
             logger.info("🚀 Running OmniArb Dual Turbo Rust Engine...")
             
             # Calculate project root (4 levels up from binary: binary -> release -> target -> core-rust -> project_root)
-            project_root = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(self.rust_binary))))
             
             result = subprocess.run(
                 [self.rust_binary],
                 capture_output=True,
                 text=True,
                 timeout=timeout,
-                cwd=project_root
+                cwd=self.project_root
             )
             
             if result.returncode != 0:
@@ -168,7 +171,11 @@ class OmniArbEngine:
                         }
                         routes.append(route)
                     except (ValueError, IndexError) as e:
-                        logger.warning(f"Failed to parse route line: {line} - {e}")
+                        logger.warning(
+                            f"Failed to parse route line: {line}\n"
+                            f"  Error: {e}\n"
+                            f"  Expected format: Chain-<origin> Chain-<dest> <token> <bridge> <tar> <onnx> <flanker> <liquidity>"
+                        )
             
             if "📊 Summary Statistics" in line:
                 in_routes_section = False

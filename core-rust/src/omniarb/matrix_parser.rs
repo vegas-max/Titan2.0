@@ -58,15 +58,33 @@ pub fn load_token_matrix(path: &str) -> Result<Vec<TokenEntry>, String> {
         // Parse CSV data
         let fields: Vec<&str> = trimmed.split(',').collect();
         if fields.len() == 8 {
+            // Parse with error checking
+            let chain_origin = fields[0].parse().unwrap_or_else(|e| {
+                eprintln!("Warning: Invalid chain_origin '{}': {}", fields[0], e);
+                0
+            });
+            let chain_dest = fields[1].parse().unwrap_or_else(|e| {
+                eprintln!("Warning: Invalid chain_dest '{}': {}", fields[1], e);
+                0
+            });
+            let liquidity_score = fields[6].parse().unwrap_or_else(|e| {
+                eprintln!("Warning: Invalid liquidity_score '{}': {}", fields[6], e);
+                0.0
+            });
+            let fee_tier = fields[7].parse().unwrap_or_else(|e| {
+                eprintln!("Warning: Invalid fee_tier '{}': {}", fields[7], e);
+                0.0
+            });
+            
             let entry = TokenEntry {
-                chain_origin: fields[0].parse().unwrap_or(0),
-                chain_dest: fields[1].parse().unwrap_or(0),
+                chain_origin,
+                chain_dest,
                 native_token: fields[2].to_string(),
                 dex_origin: fields[3].to_string(),
                 dex_dest: fields[4].to_string(),
                 bridge_protocol: fields[5].to_string(),
-                liquidity_score: fields[6].parse().unwrap_or(0.0),
-                fee_tier: fields[7].parse().unwrap_or(0.0),
+                liquidity_score,
+                fee_tier,
             };
             entries.push(entry);
         }

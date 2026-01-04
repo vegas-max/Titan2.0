@@ -40,7 +40,10 @@ fn main() {
         .filter(|(_, score, _, _)| *score >= 85.0)
         .collect();
 
-    top_opportunities.sort_by(|a, b| b.1.partial_cmp(&a.1).unwrap());
+    top_opportunities.sort_by(|a, b| {
+        // Use total_cmp for safe NaN handling
+        b.1.total_cmp(&a.1)
+    });
 
     println!("\n🔥 Top Arbitrage Routes (TAR Score >= 85):");
     println!("{:-<120}", "");

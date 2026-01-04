@@ -1,6 +1,14 @@
 use crate::omniarb::matrix_parser::TokenEntry;
 use crate::omniarb::data_fetcher::QuoteInfo;
 
+// Token tier classifications
+const TIER_1_TOKENS: &[&str] = &["USDC", "USDT", "DAI", "ETH", "WETH", "WBTC"];
+const TIER_2_TOKENS: &[&str] = &["MATIC", "AVAX", "BNB", "OP", "ARB", "LINK"];
+
+// Bridge tier classifications
+const TIER_1_BRIDGES: &[&str] = &["STARGATE", "ACROSS", "CCIP", "LIFI"];
+const TIER_2_BRIDGES: &[&str] = &["HOP", "SYNAPSE", "SOCKET", "LAYERZERO"];
+
 /// Calculate TAR (Token Analysis & Risk) Score
 /// 
 /// Score components:
@@ -37,12 +45,9 @@ fn calculate_token_quality(token: &str, liquidity_score: f64) -> f64 {
     let mut score = 0.0;
     
     // High-value stable tokens
-    let tier_1_tokens = ["USDC", "USDT", "DAI", "ETH", "WETH", "WBTC"];
-    let tier_2_tokens = ["MATIC", "AVAX", "BNB", "OP", "ARB", "LINK"];
-    
-    if tier_1_tokens.contains(&token) {
+    if TIER_1_TOKENS.contains(&token) {
         score += 20.0; // Premium tokens
-    } else if tier_2_tokens.contains(&token) {
+    } else if TIER_2_TOKENS.contains(&token) {
         score += 12.0; // Good tokens
     } else {
         score += 5.0;  // Other tokens
@@ -84,12 +89,9 @@ fn calculate_risk_score(bridge: &str, slippage: f64) -> f64 {
     let mut score = 0.0;
     
     // Bridge reliability (0-15 points)
-    let tier_1_bridges = ["STARGATE", "ACROSS", "CCIP", "LIFI"];
-    let tier_2_bridges = ["HOP", "SYNAPSE", "SOCKET", "LAYERZERO"];
-    
-    if tier_1_bridges.contains(&bridge) {
+    if TIER_1_BRIDGES.contains(&bridge) {
         score += 15.0;
-    } else if tier_2_bridges.contains(&bridge) {
+    } else if TIER_2_BRIDGES.contains(&bridge) {
         score += 10.0;
     } else {
         score += 5.0;
