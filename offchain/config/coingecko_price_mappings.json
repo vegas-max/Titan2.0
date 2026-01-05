@@ -1,0 +1,166 @@
+{
+  "description": "CoinGecko ID mappings for Polygon token universe USD price normalization",
+  "version": "1.0",
+  "chain": "Polygon",
+  "chain_id": 137,
+  "last_updated": "2026-01-05",
+  "api_base": "https://api.coingecko.com/api/v3",
+  "mappings": {
+    "0x2791bca1f2de4661ed88a30c99a7a9449aa84174": {
+      "symbol": "USDC",
+      "coingecko_id": "usd-coin",
+      "type": "stablecoin"
+    },
+    "0x3c499c542cef5e3811e1192ce70d8cc03d5c3359": {
+      "symbol": "USDC.e",
+      "coingecko_id": "usd-coin",
+      "type": "stablecoin"
+    },
+    "0xc2132d05d31c914a87c6611c10748aeb04b58e8f": {
+      "symbol": "USDT",
+      "coingecko_id": "tether",
+      "type": "stablecoin"
+    },
+    "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063": {
+      "symbol": "DAI",
+      "coingecko_id": "dai",
+      "type": "stablecoin"
+    },
+    "0x45c32fa6df82ead1e2ef74d17b76547eddfaff89": {
+      "symbol": "FRAX",
+      "coingecko_id": "frax",
+      "type": "stablecoin"
+    },
+    "0x0d500b1d8e8ef31e21c99d1db9a6444d3adf1270": {
+      "symbol": "WMATIC",
+      "coingecko_id": "matic-network",
+      "type": "native_wrapped"
+    },
+    "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619": {
+      "symbol": "WETH",
+      "coingecko_id": "weth",
+      "type": "bridged"
+    },
+    "0x1bfd67037b42cf73acf2047067bd4f2c47d9bfd6": {
+      "symbol": "WBTC",
+      "coingecko_id": "wrapped-bitcoin",
+      "type": "bridged"
+    },
+    "0xb5c064f955d8e7f38fe0460c556a72987494ee17": {
+      "symbol": "QUICK",
+      "coingecko_id": "quick",
+      "type": "dex_native"
+    },
+    "0x0b3f868e0be5597d5db7feb59e1cadbb0fdda50a": {
+      "symbol": "SUSHI",
+      "coingecko_id": "sushi",
+      "type": "dex_native"
+    },
+    "0x9a71012b13ca4d3d0cdc72a177df3ef03b0e76a3": {
+      "symbol": "BAL",
+      "coingecko_id": "balancer",
+      "type": "dex_native"
+    },
+    "0xd6df932a45c0f255f85145f286ea0b292b21c90b": {
+      "symbol": "AAVE",
+      "coingecko_id": "aave",
+      "type": "defi"
+    },
+    "0x172370d5cd63279efa6d502dab29171933a610af": {
+      "symbol": "CRV",
+      "coingecko_id": "curve-dao-token",
+      "type": "defi"
+    },
+    "0xb33eaad8d922b1083446dc23f610c2567fb5180f": {
+      "symbol": "UNI",
+      "coingecko_id": "uniswap",
+      "type": "defi"
+    },
+    "0x53e0bca35ec356bd5dddfebbd1fc0fd03fabad39": {
+      "symbol": "LINK",
+      "coingecko_id": "chainlink",
+      "type": "defi"
+    },
+    "0x8505b9d2254a7ae468c0e9dd10ccea3a837aef5c": {
+      "symbol": "COMP",
+      "coingecko_id": "compound-governance-token",
+      "type": "defi"
+    },
+    "0x50b728d8d964fd00c2d0aad81718b71311fef68a": {
+      "symbol": "SNX",
+      "coingecko_id": "havven",
+      "type": "defi"
+    },
+    "0xc3c7d422809852031b44ab29eec9f1eff2a58756": {
+      "symbol": "LDO",
+      "coingecko_id": "lido-dao",
+      "type": "defi"
+    },
+    "0xa1c57f48f0deb89f569dfbe6e2b7f46d33606fd4": {
+      "symbol": "MANA",
+      "coingecko_id": "decentraland",
+      "type": "altcoin"
+    },
+    "0x7227e371540cf7b8e512544ba6871472031f3335": {
+      "symbol": "ENJ",
+      "coingecko_id": "enjincoin",
+      "type": "altcoin"
+    },
+    "0xdbf31df14b66535af65aac99c32e9ea844e14501": {
+      "symbol": "REN",
+      "coingecko_id": "republic-protocol",
+      "type": "altcoin"
+    },
+    "0x0d8775f648430679a709e98d2b0cb6250d2887ef": {
+      "symbol": "BAT",
+      "coingecko_id": "basic-attention-token",
+      "type": "altcoin"
+    },
+    "0x3a58a54c066fdc0f2d55fc9c89f0415c92ebf3c4": {
+      "symbol": "stMATIC",
+      "coingecko_id": "lido-staked-matic",
+      "type": "liquid_staking"
+    },
+    "0xfa68fb4628dff1028cfec22b4162fccd0d45efb6": {
+      "symbol": "MaticX",
+      "coingecko_id": "stader-maticx",
+      "type": "liquid_staking"
+    },
+    "0xa3fa99a148fa48d14ed51d610c367c61876997f1": {
+      "symbol": "MAI",
+      "coingecko_id": "mimatic",
+      "type": "stablecoin"
+    },
+    "0xffa4d863c96e743a2e1513824ea006b8d0353c57": {
+      "symbol": "USDD",
+      "coingecko_id": "usdd",
+      "type": "stablecoin"
+    },
+    "0xe0b52e49357fd4daf2c15e02058dce6bc0057db4": {
+      "symbol": "agEUR",
+      "coingecko_id": "ageur",
+      "type": "stablecoin"
+    },
+    "0x385eeac5cb85a38a9a07a70c73e0a3271cfb54a7": {
+      "symbol": "GHST",
+      "coingecko_id": "aavegotchi",
+      "type": "polygon_native"
+    },
+    "0xbbba073c31bf03b8acf7c28ef0738decf3695683": {
+      "symbol": "SAND",
+      "coingecko_id": "the-sandbox",
+      "type": "polygon_native"
+    }
+  },
+  "usage_examples": {
+    "javascript": "const COINGECKO_ID_MAP = require('./coingecko_price_mappings.json'); const cgId = COINGECKO_ID_MAP.mappings[tokenAddress.toLowerCase()].coingecko_id;",
+    "python": "from offchain.config.coingecko_price_mappings import get_coingecko_id; cg_id = get_coingecko_id(token_address)",
+    "api_call": "https://api.coingecko.com/api/v3/simple/price?ids=matic-network,weth,usd-coin&vs_currencies=usd"
+  },
+  "notes": [
+    "All token addresses are lowercase for case-insensitive lookups",
+    "USDC and USDC.e both map to 'usd-coin' as they represent the same asset",
+    "Use this mapping for USD price normalization in arbitrage profit calculations",
+    "CoinGecko free tier: 10-50 calls/minute, use caching to avoid rate limits"
+  ]
+}
