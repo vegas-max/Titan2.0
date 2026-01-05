@@ -18,6 +18,68 @@ from offchain.core.token_config import (
 )
 
 
+def _get_default_decimals(symbol: str) -> int:
+    """Get default decimals for a token symbol"""
+    if symbol in ["USDC", "USDT"]:
+        return 6
+    elif symbol in ["WBTC"]:
+        return 8
+    else:
+        return 18
+
+
+def _add_legacy_mappings(registry):
+    """Add legacy token mappings for backward compatibility"""
+    # Polygon specific
+    if 137 in registry:
+        if "WNATIVE" in registry[137]:
+            # Alias WNATIVE as WMATIC on Polygon
+            registry[137]["WMATIC"] = registry[137]["WNATIVE"].copy()
+        # Add native MATIC placeholder
+        registry[137]["MATIC"] = {
+            "address": "0x0000000000000000000000000000000000001010",
+            "decimals": 18,
+            "native": True
+        }
+
+
+def _build_token_registry():
+    """Build token registry from centralized configuration"""
+    registry = {}
+    
+    for chain_id, config in CHAIN_CONFIGS.items():
+        registry[chain_id] = {}
+        tokens = config.get("tokens", [])
+        
+        for token in tokens:
+            # Get symbol from token ID
+            symbol = None
+            for name, member in UniversalTokenIds.__members__.items():
+                if member.value == token.id:
+                    symbol = name
+                    break
+            if not symbol:
+                for name, member in ChainTokenIds.__members__.items():
+                    if member.value == token.id:
+                        symbol = name
+                        break
+            
+            if symbol:
+                # Store canonical/wrapped tokens, prefer canonical
+                if symbol not in registry[chain_id] or token.type == TokenType.CANONICAL:
+                    registry[chain_id][symbol] = {
+                        "address": token.address,
+                        "decimals": _get_default_decimals(symbol),
+                        "token_id": token.id,
+                        "token_type": token.type
+                    }
+    
+    # Add legacy mappings for backward compatibility
+    _add_legacy_mappings(registry)
+    
+    return registry
+
+
 class TokenDiscovery:
     """
     Manages token inventory across multiple chains and identifies bridge-compatible assets.
@@ -30,70 +92,7 @@ class TokenDiscovery:
         "LINK", "UNI", "AAVE", "MATIC", "FRAX"
     ]
     
-    # Token addresses by chain - Now sourced from centralized config
-    @classmethod
-    def _build_token_registry(cls):
-        """Build token registry from centralized configuration"""
-        registry = {}
-        
-        for chain_id, config in CHAIN_CONFIGS.items():
-            registry[chain_id] = {}
-            tokens = config.get("tokens", [])
-            
-            for token in tokens:
-                # Get symbol from token ID
-                symbol = None
-                for name, member in UniversalTokenIds.__members__.items():
-                    if member.value == token.id:
-                        symbol = name
-                        break
-                if not symbol:
-                    for name, member in ChainTokenIds.__members__.items():
-                        if member.value == token.id:
-                            symbol = name
-                            break
-                
-                if symbol:
-                    # Store canonical/wrapped tokens, prefer canonical
-                    if symbol not in registry[chain_id] or token.type == TokenType.CANONICAL:
-                        registry[chain_id][symbol] = {
-                            "address": token.address,
-                            "decimals": cls._get_default_decimals(symbol),
-                            "token_id": token.id,
-                            "token_type": token.type
-                        }
-        
-        # Add legacy mappings for backward compatibility
-        cls._add_legacy_mappings(registry)
-        
-        return registry
-    
-    @staticmethod
-    def _get_default_decimals(symbol: str) -> int:
-        """Get default decimals for a token symbol"""
-        if symbol in ["USDC", "USDT"]:
-            return 6
-        elif symbol in ["WBTC"]:
-            return 8
-        else:
-            return 18
-    
-    @classmethod
-    def _add_legacy_mappings(cls, registry):
-        """Add legacy token mappings for backward compatibility"""
-        # Polygon specific
-        if 137 in registry:
-            if "WNATIVE" in registry[137]:
-                # Alias WNATIVE as WMATIC on Polygon
-                registry[137]["WMATIC"] = registry[137]["WNATIVE"].copy()
-            # Add native MATIC placeholder
-            registry[137]["MATIC"] = {
-                "address": "0x0000000000000000000000000000000000001010",
-                "decimals": 18,
-                "native": True
-            }
-    
-    # Build the registry at module load time
+    # Build the registry at module load time using module-level function
     TOKEN_REGISTRY = _build_token_registry()
     
     @classmethod
