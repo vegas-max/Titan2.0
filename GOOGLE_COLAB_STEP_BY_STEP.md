@@ -183,7 +183,7 @@ Private Key (hidden):
 - **Copy** your wallet private key from your checklist
 - **Paste** it here (text will be hidden for security)
 - Press Enter
-- **Important:** Do NOT include `0x` prefix if copying from MetaMask
+- **Note:** You can include or omit the `0x` prefix - the script will handle it correctly
 
 #### Prompt 3: Infura Project ID
 ```

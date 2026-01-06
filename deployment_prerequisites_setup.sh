@@ -74,6 +74,7 @@ read_with_default() {
     local default="$2"
     local var_name="$3"
     local secret="${4:-false}"
+    local value=""
     
     if [ "$secret" = "true" ]; then
         echo -ne "${BLUE}$prompt${NC}"
@@ -97,12 +98,18 @@ read_with_default() {
     fi
     
     eval "$var_name='$value'"
+    # Clear sensitive values from memory after assignment
+    if [ "$secret" = "true" ]; then
+        unset value
+    fi
 }
 
 # Function to validate private key format
+# Note: This function removes the 0x prefix if present
+# The cleaned key (without prefix) will be stored in the .env file
 validate_private_key() {
     local key="$1"
-    # Remove 0x prefix if present
+    # Remove 0x prefix if present for validation and storage
     key="${key#0x}"
     # Check if it's 64 hex characters
     if [[ $key =~ ^[0-9a-fA-F]{64}$ ]]; then
@@ -398,7 +405,9 @@ main() {
     echo -e "${CYAN}Your configuration:${NC}"
     echo ""
     echo "  Execution Mode:     ${config[EXECUTION_MODE]}"
-    echo "  Private Key:        ****...${config[PRIVATE_KEY]: -4}"
+    # Show last 4 characters of private key safely
+    local masked_key="${config[PRIVATE_KEY]}"
+    echo "  Private Key:        ****...${masked_key: -4}"
     echo ""
     echo "  RPC Providers:"
     echo "    Infura:           ${config[INFURA_PROJECT_ID]:0:8}..."
