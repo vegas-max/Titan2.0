@@ -7,8 +7,24 @@ Real-time dashboard server with WebSocket support for live updates.
 Provides multi-page interface for monitoring and controlling the TITAN system.
 """
 
-import os
+# Configure UTF-8 encoding for Windows console output
 import sys
+import os
+
+if sys.platform == 'win32':
+    # Set environment variable for Python IO encoding
+    os.environ['PYTHONIOENCODING'] = 'utf-8'
+    
+    # Reconfigure stdout and stderr to use UTF-8 encoding
+    if hasattr(sys.stdout, 'reconfigure'):
+        sys.stdout.reconfigure(encoding='utf-8', errors='replace')
+        sys.stderr.reconfigure(encoding='utf-8', errors='replace')
+    else:
+        # Fallback for older Python versions
+        import io
+        sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
+        sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import json
 import asyncio
 import logging
