@@ -64,7 +64,7 @@ class SuperAgentManager:
         log_level = os.getenv('LOG_LEVEL', 'INFO')
         
         # Create handlers with explicit UTF-8 encoding to support emoji on Windows
-        # The reconfigured stdout from the top of the file should be used here
+        # The stdout reconfiguration at the top of the file ensures proper encoding
         stream_handler = logging.StreamHandler(sys.stdout)
         
         file_handler = logging.FileHandler(
