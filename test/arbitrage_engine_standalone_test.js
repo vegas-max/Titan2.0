@@ -61,7 +61,7 @@ function assertNull(value, message) {
 const mockProvider = {
     estimateGas: async (tx) => {
         // Mock estimation - Router typically costs more than HFT
-        if (tx.to === '0xAF00000000000000000000000000000000000000') {
+        if (tx.to === '0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2') {
             return BigInt(150000); // HFT uses less gas
         } else {
             return BigInt(200000); // Router uses more gas
