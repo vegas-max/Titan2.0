@@ -221,7 +221,10 @@ cd Titan2.0
 Titan 2.0 includes extensive documentation organized by use case and experience level.
 
 ### 🚀 Quick Start (New Users)
-- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - 🆕 ⚡ Run in browser (no installation)
+- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - 🆕 ⭐ **Detailed step-by-step Colab walkthrough**
+- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - ⚡ Run in browser (no installation)
+- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - 📋 **Quick reference card**
+- **[deployment_prerequisites_setup.sh](deployment_prerequisites_setup.sh)** - 🎯 **Interactive setup wizard**
 - **[QUICKSTART.md](QUICKSTART.md)** - ⚡ 15-minute setup guide
 - **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - 🎯 Simplest installation method
 - **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - 📊 Interactive dashboard in 5 minutes
@@ -321,21 +324,25 @@ Or directly upload `Titan_Google_Colab.ipynb` to [Google Colab](https://colab.re
 - Paper mode trading
 - Quick demos
 
-**See [GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md) for complete instructions.**
+**Documentation:**
+- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - ⭐ **Detailed step-by-step walkthrough**
+- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - Complete Colab guide
+- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - Quick reference
 
 ---
 
 ### Option 1: One-Click Install and Run ⚡
 
-The **simplest local setup** - just one command after configuring .env:
+The **simplest local setup** - interactive wizard configures everything for you:
 
 ```bash
 # Clone repository
 git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
-# Configure .env (copy from template and add your keys)
-cp .env.example .env
-nano .env  # Add your PRIVATE_KEY, RPC endpoints, and LIFI_API_KEY
+# Run interactive setup wizard (creates .env automatically)
+./deployment_prerequisites_setup.sh
+
+# Windows users: Double-click SETUP_DEPLOYMENT_PREREQUISITES.bat
 
 # ONE-CLICK: Install everything and start!
 yarn install-and-run:yarn
@@ -343,11 +350,20 @@ yarn install-and-run:yarn
 # npm run install-and-run
 ```
 
+**The setup wizard will:**
+- ✅ Prompt you for all required values (API keys, private key, etc.)
+- ✅ Validate your inputs
+- ✅ Generate .env file automatically
+- ✅ Create deployment summary
+
 **For Windows:** Just double-click `run_titan.bat` or `run_titan_yarn.bat`
 
 This installs dependencies, compiles contracts, and starts the system automatically!
 
-**See [ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md) for detailed one-click options.**
+**See:**
+- **[deployment_prerequisites_setup.sh](deployment_prerequisites_setup.sh)** - Interactive setup wizard
+- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - Quick reference
+- **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - Detailed one-click options
 
 ### Option 2: Google Colab (No Installation)
 
