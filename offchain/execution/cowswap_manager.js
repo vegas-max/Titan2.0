@@ -18,6 +18,9 @@ class CoWSwapManager {
         this.provider = provider;
         this.apiUrl = this._getApiUrl(chainId);
         this.appCode = process.env.COWSWAP_APP_CODE || "titan-arbitrage";
+        // Fill system configuration: Allow partial fills or require atomic execution
+        // Default: false (safer for live trading - ensures all-or-nothing execution)
+        this.partiallyFillable = process.env.COWSWAP_PARTIALLY_FILLABLE === 'true';
     }
     
     /**
@@ -63,7 +66,7 @@ class CoWSwapManager {
                 receiver: userAddress,
                 appData: this._getAppData(), // App identifier
                 kind: "sell",
-                partiallyFillable: false,
+                partiallyFillable: this.partiallyFillable,
                 validTo: Math.floor(Date.now() / 1000) + 600 // 10 minutes
             };
             
@@ -119,7 +122,7 @@ class CoWSwapManager {
                 receiver: dummyAddress,
                 appData: this._getAppData(),
                 kind: "sell",
-                partiallyFillable: false,
+                partiallyFillable: this.partiallyFillable,
                 validTo: Math.floor(Date.now() / 1000) + 600
             };
             
