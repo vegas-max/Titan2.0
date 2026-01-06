@@ -27,6 +27,7 @@ if sys.platform == 'win32':
         import io
         sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding='utf-8', errors='replace')
         sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding='utf-8', errors='replace')
+
 import time
 import signal
 import logging
@@ -63,8 +64,8 @@ class SuperAgentManager:
         log_level = os.getenv('LOG_LEVEL', 'INFO')
         
         # Create handlers with explicit UTF-8 encoding to support emoji on Windows
+        # The stdout reconfiguration at the top of the file ensures proper encoding
         stream_handler = logging.StreamHandler(sys.stdout)
-        stream_handler.setStream(sys.stdout)  # Use the reconfigured stdout
         
         file_handler = logging.FileHandler(
             project_root / 'logs' / f'super_agent_{datetime.now().strftime("%Y%m%d")}.log',
