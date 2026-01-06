@@ -41,6 +41,17 @@ pub struct Config {
     pub lifi_supported_chains: Vec<u64>,
 }
 
+impl Default for Config {
+    fn default() -> Self {
+        Self::from_env().unwrap_or_else(|_| Config {
+            chains: HashMap::new(),
+            dex_routers: HashMap::new(),
+            intent_based_bridges: HashMap::new(),
+            lifi_supported_chains: vec![1, 137, 42161, 10, 8453],
+        })
+    }
+}
+
 impl Config {
     /// Load configuration from environment variables
     pub fn from_env() -> Result<Self, anyhow::Error> {
