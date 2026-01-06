@@ -4,8 +4,12 @@
 
 This module implements a strict deterministic logic system for evaluating arbitrage opportunities and selecting the optimal execution path between two smart contracts:
 
-- **HFT Executor (0xAF...)**: Optimized for direct pair swaps on Uniswap V2 forks
-- **Router Executor (0x44...)**: Supports complex multi-hop paths and various DEX types
+- **HFT Executor (0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2)**: Optimized for direct pair swaps on Uniswap V2 forks, bypasses routers for flash loans
+- **Router Executor (0x4442782681b668365334C3D2A6F004F0760DA393)**: Supports complex multi-hop paths and various DEX types, uses routers for flash loans
+
+Both are executors chosen for specific reasons:
+- HFT provides gas efficiency on simple V2-compatible swaps
+- Router handles complex multi-hop paths and non-V2 exchanges
 
 ## Architecture
 
@@ -77,7 +81,7 @@ Optimism:       Velodrome, ZipSwap
 
 ## Contract Interfaces
 
-### HFT Executor (0xAF...)
+### HFT Executor (0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2)
 
 **Function Signature**:
 ```solidity
@@ -99,7 +103,7 @@ const payload = iface.encodeFunctionData('startArbitrage', [
 ]);
 ```
 
-### Router Executor (0x44...)
+### Router Executor (0x4442782681b668365334C3D2A6F004F0760DA393)
 
 **Function Signature**:
 ```solidity
@@ -216,8 +220,8 @@ opportunity = {
 
 ```bash
 # Contract addresses
-HFT_CONTRACT_ADDRESS=0xAF...
-ROUTER_CONTRACT_ADDRESS=0x44...
+HFT_CONTRACT_ADDRESS=0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2
+ROUTER_CONTRACT_ADDRESS=0x4442782681b668365334C3D2A6F004F0760DA393
 ```
 
 ### Custom V2 DEX List

@@ -8,8 +8,10 @@
 const { ethers } = require('ethers');
 
 // Contract addresses (to be set via environment or config)
-const CONTRACT_HFT = process.env.HFT_CONTRACT_ADDRESS || '0xAF00000000000000000000000000000000000000';
-const CONTRACT_ROUTER = process.env.ROUTER_CONTRACT_ADDRESS || '0x4400000000000000000000000000000000000000';
+// Polygon HFT contract (BYPASSES using ROUTERS for Flash-loans)
+const CONTRACT_HFT = process.env.HFT_CONTRACT_ADDRESS || '0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2';
+// Polygon ROUTER Contract (uses ROUTERS for Flash-loans)
+const CONTRACT_ROUTER = process.env.ROUTER_CONTRACT_ADDRESS || '0x4442782681b668365334C3D2A6F004F0760DA393';
 
 // Known Uniswap V2 forks per chainId
 // This structure is intentionally chain-indexed so that isV2Compatible()
