@@ -61,16 +61,21 @@ class SuperAgentManager:
         (project_root / 'logs').mkdir(exist_ok=True)
         
         log_level = os.getenv('LOG_LEVEL', 'INFO')
+        
+        # Create handlers with explicit UTF-8 encoding to support emoji on Windows
+        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler.setStream(sys.stdout)  # Use the reconfigured stdout
+        
+        file_handler = logging.FileHandler(
+            project_root / 'logs' / f'super_agent_{datetime.now().strftime("%Y%m%d")}.log',
+            mode='a',
+            encoding='utf-8'  # Explicitly set UTF-8 encoding for file handler
+        )
+        
         logging.basicConfig(
             level=getattr(logging, log_level),
             format='%(asctime)s - %(levelname)s - [%(name)s] %(message)s',
-            handlers=[
-                logging.StreamHandler(sys.stdout),
-                logging.FileHandler(
-                    project_root / 'logs' / f'super_agent_{datetime.now().strftime("%Y%m%d")}.log',
-                    mode='a'
-                )
-            ]
+            handlers=[stream_handler, file_handler]
         )
     
     def initialize(self) -> bool:
