@@ -481,9 +481,49 @@ class OperationalDashboard:
         else:
             self.current_metrics["health_status"] = "HEALTHY"
     
+    def update_from_signal_files(self):
+        """Update metrics from signal files (replaces Redis)"""
+        try:
+            signals_dir = os.path.join(os.path.dirname(__file__), 'signals', 'outgoing')
+            processed_dir = os.path.join(os.path.dirname(__file__), 'signals', 'processed')
+            
+            # Read latest signal files
+            if os.path.exists(signals_dir):
+                signal_files = sorted([f for f in os.listdir(signals_dir) if f.endswith('.json')])
+                if signal_files:
+                    latest_file = os.path.join(signals_dir, signal_files[-1])
+                    try:
+                        with open(latest_file, 'r') as f:
+                            signal_data = json.load(f)
+                            
+                        # Update metrics from signal data
+                        if 'profit_usd' in signal_data:
+                            self.current_metrics['opportunities_profitable'] += 1
+                            
+                    except Exception as e:
+                        pass  # Ignore file read errors
+            
+            # Read processed signals for trade history
+            if os.path.exists(processed_dir):
+                processed_files = sorted([f for f in os.listdir(processed_dir) if f.endswith('.json')])[-10:]
+                for pf in processed_files:
+                    try:
+                        with open(os.path.join(processed_dir, pf), 'r') as f:
+                            trade_data = json.load(f)
+                            # Add to recent trades if not already there
+                            if len(self.recent_trades) == 0 or self.recent_trades[-1].get('timestamp') != trade_data.get('timestamp'):
+                                self.recent_trades.append(trade_data)
+                    except Exception:
+                        pass
+                        
+        except Exception as e:
+            pass  # Silent fail - dashboard should not crash
+    
     def update_from_redis(self):
-        """Update metrics from Redis"""
+        """DEPRECATED: Update metrics from Redis - kept for backwards compatibility"""
         if not self.redis_client:
+            # Use signal files instead
+            self.update_from_signal_files()
             return
         
         try:
@@ -495,17 +535,20 @@ class OperationalDashboard:
                 # This would be customized based on your actual Redis data structure
                 pass
         except Exception as e:
-            print(f"Error reading from Redis: {e}")
+            # Fallback to signal files on Redis error
+            self.update_from_signal_files()
     
     async def run(self):
         """Run the dashboard"""
         with Live(self.generate_layout(), refresh_per_second=1, console=self.console) as live:
             while self.running:
                 try:
-                    # Update data
+                    # Update data - prefer signal files over Redis
                     if self.redis_client:
                         self.update_from_redis()
                     else:
+                        # Use signal files directly (no Redis required)
+                        self.update_from_signal_files()
                         self.simulate_data_update()
                     
                     # Run sanity checks

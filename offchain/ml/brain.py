@@ -425,7 +425,8 @@ class OmniBrain:
 
     def _get_gas_price(self, chain_id):
         """
-        Get gas price with Alchemy fallback and safety ceiling.
+        Get gas price with multiple fallback mechanisms.
+        CRITICAL FIX: Never returns 0 - always provides a valid gas price estimate.
         Respects REAL_TIME_DATA_ENABLED configuration.
         """
         # If real-time data is disabled, use conservative static values
@@ -443,7 +444,18 @@ class OmniBrain:
             8453: os.getenv('ALCHEMY_RPC_BASE')
         }
         
-        # Always use Alchemy for supported chains to avoid rate limits
+        # Infura RPC endpoints as secondary fallback
+        infura_map = {
+            1: os.getenv('RPC_ETHEREUM'),
+            137: os.getenv('RPC_POLYGON'),
+            42161: os.getenv('RPC_ARBITRUM'),
+            10: os.getenv('RPC_OPTIMISM'),
+            8453: os.getenv('RPC_BASE'),
+            56: os.getenv('RPC_BSC'),
+            43114: os.getenv('RPC_AVALANCHE')
+        }
+        
+        # Try Alchemy first for supported chains
         if chain_id in alchemy_map and alchemy_map[chain_id]:
             try:
                 w3 = Web3(Web3.HTTPProvider(alchemy_map[chain_id], request_kwargs={'timeout': 5}))
@@ -458,7 +470,22 @@ class OmniBrain:
             except Exception as e:
                 logger.debug(f"Alchemy gas fetch failed for chain {chain_id}: {e}")
         
-        # Fallback to configured RPC
+        # Fallback 1: Try Infura/configured RPC
+        if chain_id in infura_map and infura_map[chain_id]:
+            try:
+                w3 = Web3(Web3.HTTPProvider(infura_map[chain_id], request_kwargs={'timeout': 5}))
+                wei_price = w3.eth.gas_price
+                gwei_price = w3.from_wei(wei_price, 'gwei')
+                
+                if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
+                    logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
+                    return float(self.MAX_GAS_PRICE_GWEI)
+                    
+                return gwei_price
+            except Exception as e:
+                logger.debug(f"Infura gas fetch failed for chain {chain_id}: {e}")
+        
+        # Fallback 2: Try existing web3 connection
         try:
             if chain_id in self.web3_connections:
                 w3 = self.web3_connections[chain_id]
@@ -471,10 +498,13 @@ class OmniBrain:
                     
                 return gwei_price
         except Exception as e:
-            logger.debug(f"Gas price fetch failed for chain {chain_id}: {e}")
+            logger.debug(f"Web3 connection gas fetch failed for chain {chain_id}: {e}")
         
-        # Silently return 0 if all RPCs fail (rate limited)
-        return 0.0
+        # CRITICAL FALLBACK: Return static conservative estimate instead of 0
+        # This ensures operations can continue even when all APIs fail
+        static_price = self.STATIC_GAS_PRICES.get(chain_id, 30.0)
+        logger.warning(f"⚠️ All gas price APIs failed for chain {chain_id}, using static fallback: {static_price} Gwei")
+        return static_price
 
     def _calculate_tar_score(self, token_sym, chain_id):
         """
@@ -998,9 +1028,8 @@ class OmniBrain:
                         revenue_usd = Decimal(step2_out) / Decimal(10**decimals)
                         cost_usd = Decimal(safe_amount) / Decimal(10**decimals)
                         
-                        gas_price_gwei = chain_gas_map.get(src_chain, 0)
-                        if gas_price_gwei == 0:
-                            continue  # Try next intermediary
+                        # Get gas price with fallback - will never be 0 after fix
+                        gas_price_gwei = chain_gas_map.get(src_chain, self.STATIC_GAS_PRICES.get(src_chain, 30.0))
                         
                         eth_price = Decimal("2000")
                         gas_cost_usd = Decimal(str(gas_price_gwei)) * Decimal("300000") * eth_price / Decimal("1e9")
