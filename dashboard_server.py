@@ -41,16 +41,8 @@ except ImportError:
     AIOHTTP_AVAILABLE = False
     print("WARNING: aiohttp not installed. Install with: pip install aiohttp aiohttp-cors")
 
-try:
-    import redis.asyncio as redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    try:
-        import redis
-        REDIS_AVAILABLE = True
-    except ImportError:
-        REDIS_AVAILABLE = False
-        print("WARNING: redis not installed. Install with: pip install redis")
+# Redis is no longer used - using file-based and SQLite cache
+REDIS_AVAILABLE = False
 
 from dotenv import load_dotenv
 load_dotenv()
@@ -73,7 +65,13 @@ class DashboardServer:
         self.port = port
         self.app = None
         self.websockets = set()
-        self.redis_client = None
+        
+        # Use cache manager instead of Redis
+        try:
+            from offchain.core.cache_manager import get_cache_manager
+            self.cache = get_cache_manager()
+        except ImportError:
+            self.cache = None
         
         # Data stores (optimized for real-time display)
         self.market_opportunities = deque(maxlen=100)
@@ -125,31 +123,9 @@ class DashboardServer:
         # Start time
         self.start_time = datetime.now()
         
-    async def setup_redis(self):
-        """Setup Redis connection for live data"""
-        if not REDIS_AVAILABLE:
-            logger.warning("Redis not available - running in simulation mode")
-            return
-        
-        try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            if REDIS_AVAILABLE and 'asyncio' in dir(redis):
-                self.redis_client = await redis.from_url(redis_url, decode_responses=True)
-            else:
-                import redis as redis_sync
-                self.redis_client = redis_sync.from_url(redis_url, decode_responses=True)
-            
-            # Test connection
-            if hasattr(self.redis_client, 'ping'):
-                if asyncio.iscoroutinefunction(self.redis_client.ping):
-                    await self.redis_client.ping()
-                else:
-                    self.redis_client.ping()
-            
-            logger.info("Redis connection established")
-        except Exception as e:
-            logger.warning(f"Failed to connect to Redis: {e}. Running in simulation mode.")
-            self.redis_client = None
+    async def setup_cache(self):
+        """Setup cache connection (no-op, cache manager is already initialized)"""
+        logger.info("Cache manager ready (using SQLite-based cache)")
     
     def _get_ml_models(self):
         """Lazy load ML models"""
@@ -757,8 +733,8 @@ echo "Please edit .env file with your configuration and start the system."
             logger.error("aiohttp not installed. Cannot start server.")
             return
         
-        # Setup Redis
-        await self.setup_redis()
+        # Setup cache (SQLite-based)
+        await self.setup_cache()
         
         # Create web application
         self.app = web.Application()

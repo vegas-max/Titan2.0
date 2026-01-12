@@ -4,7 +4,7 @@ TITAN Dashboard Integration Module
 ===================================
 
 Connects the TITAN system (brain.py and bot.js) to the interactive dashboard
-by publishing real-time data to Redis for dashboard consumption.
+by publishing real-time data to SQLite cache and JSON files for dashboard consumption.
 
 This module acts as a bridge between TITAN's operations and the dashboard server.
 """
@@ -17,42 +17,45 @@ import asyncio
 from datetime import datetime
 from pathlib import Path
 
-try:
-    import redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
-    print("WARNING: redis not installed. Install with: pip install redis")
-    sys.exit(1)
-
 from dotenv import load_dotenv
 load_dotenv()
+
+# Import cache manager
+try:
+    from offchain.core.cache_manager import get_cache_manager
+    CACHE_AVAILABLE = True
+except ImportError:
+    CACHE_AVAILABLE = False
+    print("WARNING: cache_manager not available")
 
 
 class DashboardIntegration:
     """
     Integration layer between TITAN system and dashboard.
-    Monitors TITAN operations and publishes to Redis for dashboard display.
+    Monitors TITAN operations and publishes to cache and files for dashboard display.
     """
     
     def __init__(self):
-        self.redis_client = None
+        self.cache = None
         self.running = True
         
-        # Connect to Redis
-        self._connect_redis()
+        # Setup data directories
+        self.data_dir = Path(__file__).parent / "data" / "dashboard"
+        self.data_dir.mkdir(parents=True, exist_ok=True)
+        
+        # Connect to cache
+        self._connect_cache()
     
-    def _connect_redis(self):
-        """Connect to Redis"""
+    def _connect_cache(self):
+        """Connect to cache manager"""
         try:
-            redis_url = os.getenv("REDIS_URL", "redis://localhost:6379")
-            self.redis_client = redis.from_url(redis_url, decode_responses=True)
-            self.redis_client.ping()
-            print("✓ Connected to Redis")
+            if CACHE_AVAILABLE:
+                self.cache = get_cache_manager()
+                print("✓ Connected to cache manager")
+            else:
+                print("⚠️  Cache manager not available, using file-only mode")
         except Exception as e:
-            print(f"ERROR: Failed to connect to Redis: {e}")
-            print("Make sure Redis is running: redis-server")
-            sys.exit(1)
+            print(f"ERROR: Failed to initialize cache: {e}")
     
     def publish_market_opportunity(self, opportunity: dict):
         """
@@ -75,18 +78,22 @@ class DashboardIntegration:
             opportunity['timestamp'] = datetime.now().isoformat()
             opportunity['id'] = f"opp_{int(time.time() * 1000000)}"
             
-            # Publish to dashboard channel
-            self.redis_client.publish(
-                'dashboard:market_opportunity',
-                json.dumps(opportunity)
-            )
+            # Write to file
+            opp_file = self.data_dir / "opportunities" / f"{opportunity['id']}.json"
+            opp_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(opp_file, 'w') as f:
+                json.dump(opportunity, f, indent=2)
             
-            # Store latest
-            self.redis_client.setex(
-                f"dashboard:opp:{opportunity['id']}",
-                300,  # 5 minute TTL
-                json.dumps(opportunity)
-            )
+            # Cache latest opportunity
+            if self.cache:
+                self.cache.set(f"opp:{opportunity['id']}", opportunity, ttl=300)
+                self.cache.set_metric("latest_opportunity", opportunity)
+            
+            # Keep only last 100 opportunity files
+            opp_files = sorted(list((self.data_dir / "opportunities").glob("*.json")))
+            if len(opp_files) > 100:
+                for old_file in opp_files[:-100]:
+                    old_file.unlink()
             
         except Exception as e:
             print(f"Error publishing market opportunity: {e}")
@@ -105,20 +112,21 @@ class DashboardIntegration:
             tx['id'] = tx.get('id') or f"tx_{int(time.time() * 1000000)}"
             tx['status'] = 'PENDING'
             
-            # Publish to dashboard channel
-            self.redis_client.publish(
-                'dashboard:executable_tx',
-                json.dumps(tx)
-            )
+            # Write to file
+            tx_file = self.data_dir / "pending_txs" / f"{tx['id']}.json"
+            tx_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(tx_file, 'w') as f:
+                json.dump(tx, f, indent=2)
             
-            # Add to executable queue
-            self.redis_client.lpush(
-                'dashboard:executable_queue',
-                json.dumps(tx)
-            )
-            
-            # Trim queue to last 50
-            self.redis_client.ltrim('dashboard:executable_queue', 0, 49)
+            # Cache in metrics
+            if self.cache:
+                self.cache.set(f"tx:{tx['id']}", tx, ttl=600)
+                # Maintain a list of pending tx IDs
+                pending = self.cache.get_metric("pending_txs") or []
+                pending.append(tx['id'])
+                # Keep only last 50
+                pending = pending[-50:]
+                self.cache.set_metric("pending_txs", pending)
             
         except Exception as e:
             print(f"Error publishing executable tx: {e}")
@@ -139,28 +147,37 @@ class DashboardIntegration:
         try:
             result['executed_at'] = datetime.now().isoformat()
             
-            # Publish to dashboard channel
-            self.redis_client.publish(
-                'dashboard:execution_result',
-                json.dumps(result)
-            )
+            # Write to file
+            result_file = self.data_dir / "execution_history" / f"{result['id']}.json"
+            result_file.parent.mkdir(parents=True, exist_ok=True)
+            with open(result_file, 'w') as f:
+                json.dump(result, f, indent=2)
             
-            # Add to execution history
-            self.redis_client.lpush(
-                'dashboard:execution_history',
-                json.dumps(result)
-            )
+            # Remove pending tx file if exists
+            pending_file = self.data_dir / "pending_txs" / f"{result['id']}.json"
+            if pending_file.exists():
+                pending_file.unlink()
             
-            # Trim history to last 100
-            self.redis_client.ltrim('dashboard:execution_history', 0, 99)
+            # Update cache
+            if self.cache:
+                # Add to execution history
+                history = self.cache.get_metric("execution_history") or []
+                history.append(result)
+                # Keep only last 100
+                history = history[-100:]
+                self.cache.set_metric("execution_history", history)
+                
+                # Remove from pending list
+                pending = self.cache.get_metric("pending_txs") or []
+                if result.get('id') in pending:
+                    pending.remove(result.get('id'))
+                    self.cache.set_metric("pending_txs", pending)
             
-            # Remove from executable queue if present
-            queue = self.redis_client.lrange('dashboard:executable_queue', 0, -1)
-            for item in queue:
-                tx = json.loads(item)
-                if tx.get('id') == result.get('id'):
-                    self.redis_client.lrem('dashboard:executable_queue', 1, item)
-                    break
+            # Keep only last 100 execution files
+            exec_files = sorted(list((self.data_dir / "execution_history").glob("*.json")))
+            if len(exec_files) > 100:
+                for old_file in exec_files[:-100]:
+                    old_file.unlink()
             
         except Exception as e:
             print(f"Error publishing execution result: {e}")
@@ -184,24 +201,23 @@ class DashboardIntegration:
                 - current_gas_price: float
         """
         try:
-            # Publish metrics update
-            self.redis_client.publish(
-                'dashboard:metrics_update',
-                json.dumps(metrics)
-            )
+            metrics['updated_at'] = datetime.now().isoformat()
             
-            # Store current metrics
-            self.redis_client.set(
-                'dashboard:current_metrics',
-                json.dumps(metrics)
-            )
+            # Write to file
+            metrics_file = self.data_dir / "current_metrics.json"
+            with open(metrics_file, 'w') as f:
+                json.dump(metrics, f, indent=2)
+            
+            # Update cache
+            if self.cache:
+                self.cache.set_metric("system_metrics", metrics)
             
         except Exception as e:
             print(f"Error updating metrics: {e}")
     
     def listen_for_controls(self, callback):
         """
-        Listen for control messages from dashboard
+        Listen for control messages from dashboard (file-based)
         
         Args:
             callback: Function to call with control action
@@ -211,20 +227,33 @@ class DashboardIntegration:
                       - "emergency_stop"
         """
         try:
-            pubsub = self.redis_client.pubsub()
-            pubsub.subscribe('system_control')
+            control_file = self.data_dir / "controls" / "pending_action.json"
+            control_file.parent.mkdir(parents=True, exist_ok=True)
             
-            print("✓ Listening for dashboard control messages...")
+            print("✓ Listening for dashboard control messages (file-based)...")
             
-            for message in pubsub.listen():
-                if message['type'] == 'message':
-                    try:
-                        data = json.loads(message['data'])
-                        action = data.get('action')
-                        if action:
-                            callback(action)
-                    except Exception as e:
-                        print(f"Error processing control message: {e}")
+            last_mtime = 0
+            while self.running:
+                try:
+                    if control_file.exists():
+                        mtime = control_file.stat().st_mtime
+                        if mtime > last_mtime:
+                            last_mtime = mtime
+                            with open(control_file, 'r') as f:
+                                data = json.load(f)
+                            
+                            action = data.get('action')
+                            if action:
+                                callback(action)
+                            
+                            # Remove processed control file
+                            control_file.unlink()
+                    
+                    time.sleep(1)
+                    
+                except Exception as e:
+                    print(f"Error processing control message: {e}")
+                    time.sleep(1)
                         
         except KeyboardInterrupt:
             print("\nStopping control listener...")

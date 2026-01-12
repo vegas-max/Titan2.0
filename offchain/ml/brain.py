@@ -487,6 +487,18 @@ class OmniBrain:
         if not self.real_time_data_enabled:
             return self.STATIC_GAS_PRICES.get(chain_id, 30.0)
         
+        # Try to get cache manager (initialize once for this call)
+        cache = None
+        try:
+            from offchain.core.cache_manager import get_cache_manager
+            cache = get_cache_manager()
+            # Try to get from cache first (60 second TTL)
+            cached_price = cache.get_gas_price(chain_id)
+            if cached_price > 0:
+                return cached_price
+        except Exception:
+            pass  # Cache not available, fetch fresh
+        
         import os
         
         # Alchemy RPC endpoints for major chains
@@ -518,7 +530,14 @@ class OmniBrain:
                 
                 if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
                     logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
-                    return float(self.MAX_GAS_PRICE_GWEI)
+                    gwei_price = float(self.MAX_GAS_PRICE_GWEI)
+                
+                # Cache the price for 60 seconds if cache available
+                if cache:
+                    try:
+                        cache.set_gas_price(chain_id, gwei_price, ttl=60)
+                    except Exception:
+                        pass
                     
                 return gwei_price
             except Exception as e:
@@ -548,7 +567,14 @@ class OmniBrain:
                 
                 if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
                     logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
-                    return float(self.MAX_GAS_PRICE_GWEI)
+                    gwei_price = float(self.MAX_GAS_PRICE_GWEI)
+                
+                # Cache the price for 60 seconds if cache available
+                if cache:
+                    try:
+                        cache.set_gas_price(chain_id, gwei_price, ttl=60)
+                    except Exception:
+                        pass
                     
                 return gwei_price
         except Exception as e:
