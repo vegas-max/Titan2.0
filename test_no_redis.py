@@ -21,7 +21,7 @@ def test_cache_manager():
         print("✓ Cache manager initialized")
         
         # Test basic cache
-        cache.set("test_key", {"value": 123}, ttl=10)
+        cache.set("test_key", {"value": 123}, ttl=2)  # 2 second TTL for faster testing
         result = cache.get("test_key")
         assert result == {"value": 123}, "Basic cache failed"
         print("✓ Basic caching works")
@@ -52,7 +52,7 @@ def test_cache_manager():
         
         # Test cleanup
         import time
-        time.sleep(11)  # Wait for test_key to expire
+        time.sleep(3)  # Wait for test_key to expire (2s TTL + 1s buffer)
         deleted = cache.cleanup_expired()
         print(f"✓ Cleanup removed {deleted} expired entries")
         

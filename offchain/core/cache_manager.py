@@ -64,7 +64,7 @@ class CacheManager:
     def _close_conn(self, conn):
         """Close connection if it's not the persistent one"""
         if conn is not self._conn:
-            self._close_conn(conn)
+            conn.close()
     
     def _init_db(self):
         """Initialize SQLite database with required tables"""
