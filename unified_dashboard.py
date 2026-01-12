@@ -571,13 +571,16 @@ class UnifiedDashboard:
                         with open(os.path.join(processed_dir, pf), 'r') as f:
                             trade_data = json.load(f)
                             # Add to recent trades if not already there
-                            if len(self.recent_trades) == 0 or self.recent_trades[-1].get('timestamp') != trade_data.get('timestamp'):
+                            # Check uniqueness by timestamp AND token symbol to avoid false positives
+                            trade_key = f"{trade_data.get('timestamp')}_{trade_data.get('token_symbol', '')}"
+                            existing_keys = [f"{t.get('timestamp')}_{t.get('token_symbol', '')}" for t in self.recent_trades]
+                            if trade_key not in existing_keys:
                                 self.recent_trades.append(trade_data)
                     except Exception:
                         pass
                         
-        except Exception:
-            pass  # Silent fail - dashboard should not crash
+        except Exception as e:
+            logger.debug(f"Signal file reading error: {e}")  # Log for troubleshooting
     
     def update_from_redis(self):
         """DEPRECATED: Update metrics from Redis - kept for backwards compatibility"""

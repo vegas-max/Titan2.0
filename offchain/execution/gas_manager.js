@@ -135,7 +135,9 @@ class GasManager {
                 }
                 
                 // If feeData is incomplete, throw to trigger retry
-                throw new Error("Incomplete fee data from provider");
+                if (!feeData.maxFeePerGas && !feeData.gasPrice) {
+                    throw new Error("Missing fee data from provider (no maxFeePerGas or gasPrice available)");
+                }
                 
             } catch (error) {
                 lastError = error;

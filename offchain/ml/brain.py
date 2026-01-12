@@ -50,7 +50,7 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 # Note: Celo uses BFT consensus but still requires PoA middleware for web3.py compatibility
 POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo
 
-def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(Exception,)):
+def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(ConnectionError, TimeoutError, OSError)):
     """
     Decorator for retrying functions with exponential backoff.
     
@@ -58,7 +58,7 @@ def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, excepti
         max_retries: Maximum number of retry attempts
         initial_delay: Initial delay in seconds
         backoff_factor: Multiplier for delay on each retry
-        exceptions: Tuple of exceptions to catch and retry
+        exceptions: Tuple of exceptions to catch and retry (connection-related only)
     """
     def decorator(func):
         @wraps(func)
@@ -389,8 +389,14 @@ class OmniBrain:
                             }
                         ))
                         
-                        # Test connection with a simple call
-                        w3.eth.block_number  # This will raise if connection fails
+                        # Test connection with a simple call and validate response
+                        try:
+                            block_num = w3.eth.block_number
+                            if block_num <= 0:
+                                raise ValueError(f"Invalid block number: {block_num}")
+                            logger.debug(f"Web3 health check passed - block: {block_num}")
+                        except Exception as health_err:
+                            raise ConnectionError(f"Health check failed: {health_err}")
                         
                         # PoA middleware removed - web3.py v7+ handles PoA chains automatically
                         self.web3_connections[cid] = w3
