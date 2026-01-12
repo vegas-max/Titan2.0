@@ -102,3 +102,10 @@ signals/incoming/*.json
 # Backup files
 backup-*.tar.gz
 *.backup
+
+# Cache and data files (SQLite-based caching)
+data/cache/*.db
+data/cache/*.db-journal
+data/dashboard/**/*.json
+signals/outgoing/*.json
+signals/processed/*.json
