@@ -9,6 +9,7 @@ from datetime import datetime
 from eth_abi import encode
 from decimal import Decimal, getcontext
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import wraps
 
 # Core Infrastructure
 from offchain.core.config import (
@@ -48,6 +49,34 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 # Chains requiring PoA middleware due to Proof-of-Authority consensus
 # Note: Celo uses BFT consensus but still requires PoA middleware for web3.py compatibility
 POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo
+
+def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(ConnectionError, TimeoutError, OSError)):
+    """
+    Decorator for retrying functions with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds
+        backoff_factor: Multiplier for delay on each retry
+        exceptions: Tuple of exceptions to catch and retry (connection-related only)
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            delay = initial_delay
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    if attempt == max_retries - 1:
+                        # Last attempt failed, re-raise
+                        raise
+                    logger.debug(f"Retry {attempt + 1}/{max_retries} for {func.__name__}: {e}")
+                    time.sleep(delay)
+                    delay *= backoff_factor
+            return None
+        return wrapper
+    return decorator
 
 def is_zero_address(address: str) -> bool:
     """
@@ -342,20 +371,45 @@ class OmniBrain:
             }
         return {'encoding': 'RAW_ADDRESSES'}
         
-        # B. Initialize Web3 with timeout protection
+        # B. Initialize Web3 with timeout protection and retry logic
         for cid, config in CHAINS.items():
             if config.get('rpc'):
-                try:
-                    # Add request timeout to prevent hanging
-                    w3 = Web3(Web3.HTTPProvider(
-                        config['rpc'],
-                        request_kwargs={'timeout': 30}  # 30 second timeout for RPC calls
-                    ))
-                    # PoA middleware removed - web3.py v7+ handles PoA chains automatically
-                    self.web3_connections[cid] = w3
-                    logger.debug(f"Web3 connection established for chain {cid}")
-                except Exception as e:
-                    logger.warning(f"Failed to initialize Web3 for chain {cid}: {e}")
+                retry_count = 0
+                max_retries = 3
+                while retry_count < max_retries:
+                    try:
+                        # Add request timeout to prevent hanging
+                        # Also add connection pooling for better reliability
+                        w3 = Web3(Web3.HTTPProvider(
+                            config['rpc'],
+                            request_kwargs={
+                                'timeout': 30,  # 30 second timeout for RPC calls
+                                'pool_connections': 10,  # Connection pool size
+                                'pool_maxsize': 10  # Max pool size
+                            }
+                        ))
+                        
+                        # Test connection with a simple call and validate response
+                        try:
+                            block_num = w3.eth.block_number
+                            if block_num <= 0:
+                                raise ValueError(f"Invalid block number: {block_num}")
+                            logger.debug(f"Web3 health check passed - block: {block_num}")
+                        except Exception as health_err:
+                            raise ConnectionError(f"Health check failed: {health_err}")
+                        
+                        # PoA middleware removed - web3.py v7+ handles PoA chains automatically
+                        self.web3_connections[cid] = w3
+                        logger.info(f"✅ Web3 connection established for chain {cid} ({config.get('name', 'Unknown')})")
+                        break  # Success, exit retry loop
+                        
+                    except Exception as e:
+                        retry_count += 1
+                        if retry_count >= max_retries:
+                            logger.warning(f"❌ Failed to initialize Web3 for chain {cid} after {max_retries} attempts: {e}")
+                        else:
+                            logger.debug(f"Retry {retry_count}/{max_retries} for chain {cid}: {e}")
+                            time.sleep(1 * retry_count)  # Exponential backoff
         
         # C. Initialize Advanced Features with web3 connections
         logger.info("⚡ Initializing advanced features...")
@@ -425,7 +479,8 @@ class OmniBrain:
 
     def _get_gas_price(self, chain_id):
         """
-        Get gas price with Alchemy fallback and safety ceiling.
+        Get gas price with multiple fallback mechanisms.
+        CRITICAL FIX: Never returns 0 - always provides a valid gas price estimate.
         Respects REAL_TIME_DATA_ENABLED configuration.
         """
         # If real-time data is disabled, use conservative static values
@@ -443,7 +498,18 @@ class OmniBrain:
             8453: os.getenv('ALCHEMY_RPC_BASE')
         }
         
-        # Always use Alchemy for supported chains to avoid rate limits
+        # Infura RPC endpoints as secondary fallback
+        infura_map = {
+            1: os.getenv('RPC_ETHEREUM'),
+            137: os.getenv('RPC_POLYGON'),
+            42161: os.getenv('RPC_ARBITRUM'),
+            10: os.getenv('RPC_OPTIMISM'),
+            8453: os.getenv('RPC_BASE'),
+            56: os.getenv('RPC_BSC'),
+            43114: os.getenv('RPC_AVALANCHE')
+        }
+        
+        # Try Alchemy first for supported chains
         if chain_id in alchemy_map and alchemy_map[chain_id]:
             try:
                 w3 = Web3(Web3.HTTPProvider(alchemy_map[chain_id], request_kwargs={'timeout': 5}))
@@ -458,7 +524,22 @@ class OmniBrain:
             except Exception as e:
                 logger.debug(f"Alchemy gas fetch failed for chain {chain_id}: {e}")
         
-        # Fallback to configured RPC
+        # Fallback 1: Try Infura/configured RPC
+        if chain_id in infura_map and infura_map[chain_id]:
+            try:
+                w3 = Web3(Web3.HTTPProvider(infura_map[chain_id], request_kwargs={'timeout': 5}))
+                wei_price = w3.eth.gas_price
+                gwei_price = w3.from_wei(wei_price, 'gwei')
+                
+                if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
+                    logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
+                    return float(self.MAX_GAS_PRICE_GWEI)
+                    
+                return gwei_price
+            except Exception as e:
+                logger.debug(f"Infura gas fetch failed for chain {chain_id}: {e}")
+        
+        # Fallback 2: Try existing web3 connection
         try:
             if chain_id in self.web3_connections:
                 w3 = self.web3_connections[chain_id]
@@ -471,10 +552,13 @@ class OmniBrain:
                     
                 return gwei_price
         except Exception as e:
-            logger.debug(f"Gas price fetch failed for chain {chain_id}: {e}")
+            logger.debug(f"Web3 connection gas fetch failed for chain {chain_id}: {e}")
         
-        # Silently return 0 if all RPCs fail (rate limited)
-        return 0.0
+        # CRITICAL FALLBACK: Return static conservative estimate instead of 0
+        # This ensures operations can continue even when all APIs fail
+        static_price = self.STATIC_GAS_PRICES.get(chain_id, 30.0)
+        logger.warning(f"⚠️ All gas price APIs failed for chain {chain_id}, using static fallback: {static_price} Gwei")
+        return static_price
 
     def _calculate_tar_score(self, token_sym, chain_id):
         """
@@ -998,9 +1082,8 @@ class OmniBrain:
                         revenue_usd = Decimal(step2_out) / Decimal(10**decimals)
                         cost_usd = Decimal(safe_amount) / Decimal(10**decimals)
                         
-                        gas_price_gwei = chain_gas_map.get(src_chain, 0)
-                        if gas_price_gwei == 0:
-                            continue  # Try next intermediary
+                        # Get gas price with fallback - will never be 0 after fix
+                        gas_price_gwei = chain_gas_map.get(src_chain, self.STATIC_GAS_PRICES.get(src_chain, 30.0))
                         
                         eth_price = Decimal("2000")
                         gas_cost_usd = Decimal(str(gas_price_gwei)) * Decimal("300000") * eth_price / Decimal("1e9")

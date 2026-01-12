@@ -84,62 +84,99 @@ class GasManager {
     
     /**
      * Get dynamic gas fees based on network conditions
+     * CRITICAL FIX: Added multiple fallback mechanisms to ensure gas price is always available
      * @param {string} speed - "SLOW", "STANDARD", or "RAPID"
      * @returns {Promise<object>} Gas fee object {maxFeePerGas, maxPriorityFeePerGas}
      */
     async getDynamicGasFees(speed = "STANDARD") {
-        try {
-            // Fetch current base fee from latest block
-            const feeData = await this.provider.getFeeData();
-            
-            if (!this.config.supportsEIP1559 || !feeData.maxFeePerGas) {
-                // Fallback to legacy gas price for non-EIP1559 chains
-                return {
-                    gasPrice: feeData.gasPrice
-                };
+        const maxRetries = 3;
+        let lastError = null;
+        
+        for (let attempt = 1; attempt <= maxRetries; attempt++) {
+            try {
+                // Fetch current base fee from latest block
+                const feeData = await this.provider.getFeeData();
+                
+                if (!this.config.supportsEIP1559 || !feeData.maxFeePerGas) {
+                    // Fallback to legacy gas price for non-EIP1559 chains
+                    if (feeData.gasPrice) {
+                        return {
+                            gasPrice: feeData.gasPrice
+                        };
+                    }
+                }
+                
+                // EIP-1559 Logic
+                if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
+                    const baseFee = feeData.maxFeePerGas;
+                    
+                    // Priority fee based on speed
+                    let priorityFeeGwei;
+                    switch (speed) {
+                        case "SLOW":
+                            priorityFeeGwei = this.config.maxPriorityFee * 0.5;
+                            break;
+                        case "RAPID":
+                            priorityFeeGwei = this.config.maxPriorityFee * 2;
+                            break;
+                        default: // STANDARD
+                            priorityFeeGwei = this.config.maxPriorityFee;
+                    }
+                    
+                    const priorityFee = ethers.parseUnits(priorityFeeGwei.toString(), "gwei");
+                    
+                    // Max fee = (baseFee * 2) + priorityFee (allows for base fee increase)
+                    const maxFee = (baseFee * 2n) + priorityFee;
+                    
+                    return {
+                        maxFeePerGas: maxFee,
+                        maxPriorityFeePerGas: priorityFee
+                    };
+                }
+                
+                // If feeData is incomplete, throw to trigger retry
+                if (!feeData.maxFeePerGas && !feeData.gasPrice) {
+                    throw new Error("Missing fee data from provider (no maxFeePerGas or gasPrice available)");
+                }
+                
+            } catch (error) {
+                lastError = error;
+                if (attempt < maxRetries) {
+                    console.warn(`⚠️ Gas Fee Fetch Attempt ${attempt} Failed: ${error.message}, retrying...`);
+                    await new Promise(resolve => setTimeout(resolve, 1000 * attempt)); // Exponential backoff
+                    continue;
+                }
             }
-            
-            // EIP-1559 Logic
-            const baseFee = feeData.maxFeePerGas;
-            
-            // Priority fee based on speed
-            let priorityFeeGwei;
-            switch (speed) {
-                case "SLOW":
-                    priorityFeeGwei = this.config.maxPriorityFee * 0.5;
-                    break;
-                case "RAPID":
-                    priorityFeeGwei = this.config.maxPriorityFee * 2;
-                    break;
-                default: // STANDARD
-                    priorityFeeGwei = this.config.maxPriorityFee;
-            }
-            
-            const priorityFee = ethers.parseUnits(priorityFeeGwei.toString(), "gwei");
-            
-            // Max fee = (baseFee * 2) + priorityFee (allows for base fee increase)
-            const maxFee = (baseFee * 2n) + priorityFee;
-            
-            return {
-                maxFeePerGas: maxFee,
-                maxPriorityFeePerGas: priorityFee
-            };
-            
-        } catch (error) {
-            console.error(`⚠️ Gas Fee Fetch Error: ${error.message}`);
-            
-            // Fallback to safe defaults
-            const fallbackPriority = ethers.parseUnits(
-                this.config.maxPriorityFee.toString(), 
-                "gwei"
-            );
-            const fallbackMax = ethers.parseUnits("100", "gwei"); // 100 Gwei cap
-            
-            return {
-                maxFeePerGas: fallbackMax,
-                maxPriorityFeePerGas: fallbackPriority
-            };
         }
+        
+        // CRITICAL FALLBACK: All retries failed, use static safe defaults
+        console.error(`⚠️ All Gas Fee API attempts failed: ${lastError?.message || 'Unknown error'}`);
+        console.log(`📊 Using static fallback gas prices for chain ${this.chainId}`);
+        
+        const fallbackPriority = ethers.parseUnits(
+            this.config.maxPriorityFee.toString(), 
+            "gwei"
+        );
+        
+        // Use chain-specific static values
+        const staticGasPrices = {
+            1: 30,    // Ethereum
+            137: 50,  // Polygon
+            42161: 0.1, // Arbitrum
+            10: 0.5,  // Optimism
+            8453: 0.5, // Base
+            56: 3.0   // BSC
+        };
+        
+        const baseGwei = staticGasPrices[this.chainId] || 30;
+        const fallbackMax = ethers.parseUnits(baseGwei.toString(), "gwei");
+        
+        return {
+            maxFeePerGas: fallbackMax,
+            maxPriorityFeePerGas: fallbackPriority,
+            gasPrice: fallbackMax,  // Also provide legacy format
+            isStaticFallback: true  // Flag to indicate fallback was used
+        };
     }
     
     /**
