@@ -425,12 +425,22 @@ class OmniBrain:
 
     def _get_gas_price(self, chain_id):
         """
-        Get gas price with Alchemy fallback and safety ceiling.
+        Get gas price with cache, Alchemy fallback and safety ceiling.
         Respects REAL_TIME_DATA_ENABLED configuration.
         """
         # If real-time data is disabled, use conservative static values
         if not self.real_time_data_enabled:
             return self.STATIC_GAS_PRICES.get(chain_id, 30.0)
+        
+        # Try to get from cache first (60 second TTL)
+        try:
+            from offchain.core.cache_manager import get_cache_manager
+            cache = get_cache_manager()
+            cached_price = cache.get_gas_price(chain_id)
+            if cached_price > 0:
+                return cached_price
+        except Exception:
+            pass  # Cache not available, fetch fresh
         
         import os
         
@@ -452,7 +462,13 @@ class OmniBrain:
                 
                 if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
                     logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
-                    return float(self.MAX_GAS_PRICE_GWEI)
+                    gwei_price = float(self.MAX_GAS_PRICE_GWEI)
+                
+                # Cache the price for 60 seconds
+                try:
+                    cache.set_gas_price(chain_id, gwei_price, ttl=60)
+                except Exception:
+                    pass
                     
                 return gwei_price
             except Exception as e:
@@ -467,14 +483,26 @@ class OmniBrain:
                 
                 if gwei_price > float(self.MAX_GAS_PRICE_GWEI):
                     logger.warning(f"⚠️ Gas price {gwei_price} exceeds max {self.MAX_GAS_PRICE_GWEI} on chain {chain_id}")
-                    return float(self.MAX_GAS_PRICE_GWEI)
+                    gwei_price = float(self.MAX_GAS_PRICE_GWEI)
+                
+                # Cache the price for 60 seconds
+                try:
+                    cache.set_gas_price(chain_id, gwei_price, ttl=60)
+                except Exception:
+                    pass
                     
                 return gwei_price
         except Exception as e:
             logger.debug(f"Gas price fetch failed for chain {chain_id}: {e}")
         
-        # Silently return 0 if all RPCs fail (rate limited)
-        return 0.0
+        # Final fallback: use static price and cache it
+        static_price = self.STATIC_GAS_PRICES.get(chain_id, 30.0)
+        try:
+            cache.set_gas_price(chain_id, static_price, ttl=300)  # Cache fallback for 5 min
+        except Exception:
+            pass
+        
+        return static_price
 
     def _calculate_tar_score(self, token_sym, chain_id):
         """

@@ -34,12 +34,8 @@ try:
 except ImportError:
     RICH_AVAILABLE = False
 
-# Try to import redis
-try:
-    import redis
-    REDIS_AVAILABLE = True
-except ImportError:
-    REDIS_AVAILABLE = False
+# Redis is no longer used - using file-based and SQLite cache
+REDIS_AVAILABLE = False
 
 try:
     from dotenv import load_dotenv
