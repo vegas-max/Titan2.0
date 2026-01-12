@@ -31,25 +31,45 @@ class CacheManager:
             db_path: Path to SQLite database file (default: data/cache.db)
             in_memory: Use in-memory SQLite database (for testing)
         """
+        self.in_memory = in_memory
+        
         if in_memory:
+            # In-memory database - keep persistent connection
             self.db_path = ":memory:"
+            self._conn = sqlite3.connect(self.db_path, check_same_thread=False)
         elif db_path:
             self.db_path = db_path
+            self._conn = None  # Will create connections as needed
         else:
             # Default cache location
             cache_dir = Path(__file__).parent.parent.parent / "data" / "cache"
             cache_dir.mkdir(parents=True, exist_ok=True)
             self.db_path = str(cache_dir / "titan_cache.db")
+            self._conn = None  # Will create connections as needed
         
         self.lock = threading.Lock()
         self._init_db()
         
         logger.info(f"📦 Cache Manager initialized: {self.db_path}")
     
+    def _get_conn(self):
+        """Get a database connection"""
+        if self._conn:
+            # Use persistent in-memory connection
+            return self._conn
+        else:
+            # Create new connection for file-based DB
+            return sqlite3.connect(self.db_path)
+    
+    def _close_conn(self, conn):
+        """Close connection if it's not the persistent one"""
+        if conn is not self._conn:
+            self._close_conn(conn)
+    
     def _init_db(self):
         """Initialize SQLite database with required tables"""
         with self.lock:
-            conn = sqlite3.connect(self.db_path)
+            conn = self._get_conn()
             cursor = conn.cursor()
             
             # Main cache table with TTL
@@ -86,7 +106,7 @@ class CacheManager:
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_gas_expires ON gas_prices(expires_at)")
             
             conn.commit()
-            conn.close()
+            self._close_conn(conn)
     
     def set(self, key: str, value: Any, ttl: int = 300) -> bool:
         """
@@ -102,7 +122,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -115,7 +135,7 @@ class CacheManager:
                 """, (key, value_json, expires_at, now))
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 return True
         except Exception as e:
@@ -135,7 +155,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -146,7 +166,7 @@ class CacheManager:
                 """, (key, now))
                 
                 row = cursor.fetchone()
-                conn.close()
+                self._close_conn(conn)
                 
                 if row:
                     value_json, _ = row
@@ -161,13 +181,13 @@ class CacheManager:
         """Delete a cache key"""
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 cursor.execute("DELETE FROM cache WHERE key = ?", (key,))
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 return True
         except Exception as e:
@@ -188,7 +208,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -200,7 +220,7 @@ class CacheManager:
                 """, (chain_id, price_gwei, now, expires_at))
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 return True
         except Exception as e:
@@ -220,7 +240,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -231,7 +251,7 @@ class CacheManager:
                 """, (chain_id, now))
                 
                 row = cursor.fetchone()
-                conn.close()
+                self._close_conn(conn)
                 
                 if row:
                     return row[0]
@@ -254,7 +274,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -266,7 +286,7 @@ class CacheManager:
                 """, (metric_name, value_json, now))
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 return True
         except Exception as e:
@@ -286,7 +306,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 cursor.execute("""
@@ -295,7 +315,7 @@ class CacheManager:
                 """, (metric_name,))
                 
                 row = cursor.fetchone()
-                conn.close()
+                self._close_conn(conn)
                 
                 if row:
                     return json.loads(row[0])
@@ -309,7 +329,7 @@ class CacheManager:
         """Get all metrics as a dictionary"""
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 cursor.execute("SELECT metric_name, metric_value FROM metrics")
@@ -319,7 +339,7 @@ class CacheManager:
                     name, value_json = row
                     metrics[name] = json.loads(value_json)
                 
-                conn.close()
+                self._close_conn(conn)
                 
                 return metrics
         except Exception as e:
@@ -335,7 +355,7 @@ class CacheManager:
         """
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -349,7 +369,7 @@ class CacheManager:
                 gas_deleted = cursor.rowcount
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 total_deleted = cache_deleted + gas_deleted
                 if total_deleted > 0:
@@ -364,7 +384,7 @@ class CacheManager:
         """Clear all cache data"""
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 cursor.execute("DELETE FROM cache")
@@ -372,7 +392,7 @@ class CacheManager:
                 cursor.execute("DELETE FROM metrics")
                 
                 conn.commit()
-                conn.close()
+                self._close_conn(conn)
                 
                 logger.info("Cache cleared")
                 return True
@@ -384,7 +404,7 @@ class CacheManager:
         """Get cache statistics"""
         try:
             with self.lock:
-                conn = sqlite3.connect(self.db_path)
+                conn = self._get_conn()
                 cursor = conn.cursor()
                 
                 now = time.time()
@@ -401,7 +421,7 @@ class CacheManager:
                 cursor.execute("SELECT COUNT(*) FROM metrics")
                 total_metrics = cursor.fetchone()[0]
                 
-                conn.close()
+                self._close_conn(conn)
                 
                 return {
                     "active_cache_entries": active_cache,

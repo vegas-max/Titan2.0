@@ -1,0 +1,14 @@
+{
+  "chain": "Polygon",
+  "token_pair": "USDC/USDT",
+  "strategy": "Flash Arb",
+  "profit_usd": 5.25,
+  "gas_cost": 0.75,
+  "net_profit": 4.5,
+  "executable": true,
+  "dex_a": "UniswapV3",
+  "dex_b": "Sushiswap",
+  "spread_bps": 15,
+  "timestamp": "2026-01-12T18:44:28.750936",
+  "id": "opp_1768243468750943"
+}

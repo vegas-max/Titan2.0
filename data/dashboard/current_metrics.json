@@ -1,0 +1,14 @@
+{
+  "status": "OPERATIONAL",
+  "uptime": 3600,
+  "total_scans": 1000,
+  "opportunities_found": 5,
+  "txs_executed": 2,
+  "total_profit": 10.5,
+  "total_gas": 1.5,
+  "net_profit": 9.0,
+  "success_rate": 1.0,
+  "avg_profit_per_tx": 5.25,
+  "current_gas_price": 30.0,
+  "updated_at": "2026-01-12T18:44:28.751354"
+}
