@@ -9,6 +9,7 @@ from datetime import datetime
 from eth_abi import encode
 from decimal import Decimal, getcontext
 from concurrent.futures import ThreadPoolExecutor, as_completed
+from functools import wraps
 
 # Core Infrastructure
 from offchain.core.config import (
@@ -48,6 +49,34 @@ ZERO_ADDRESS = "0x0000000000000000000000000000000000000000"
 # Chains requiring PoA middleware due to Proof-of-Authority consensus
 # Note: Celo uses BFT consensus but still requires PoA middleware for web3.py compatibility
 POA_CHAINS = [137, 56, 250, 42220]  # Polygon, BSC, Fantom, Celo
+
+def retry_with_backoff(max_retries=3, initial_delay=1, backoff_factor=2, exceptions=(Exception,)):
+    """
+    Decorator for retrying functions with exponential backoff.
+    
+    Args:
+        max_retries: Maximum number of retry attempts
+        initial_delay: Initial delay in seconds
+        backoff_factor: Multiplier for delay on each retry
+        exceptions: Tuple of exceptions to catch and retry
+    """
+    def decorator(func):
+        @wraps(func)
+        def wrapper(*args, **kwargs):
+            delay = initial_delay
+            for attempt in range(max_retries):
+                try:
+                    return func(*args, **kwargs)
+                except exceptions as e:
+                    if attempt == max_retries - 1:
+                        # Last attempt failed, re-raise
+                        raise
+                    logger.debug(f"Retry {attempt + 1}/{max_retries} for {func.__name__}: {e}")
+                    time.sleep(delay)
+                    delay *= backoff_factor
+            return None
+        return wrapper
+    return decorator
 
 def is_zero_address(address: str) -> bool:
     """
@@ -342,20 +371,39 @@ class OmniBrain:
             }
         return {'encoding': 'RAW_ADDRESSES'}
         
-        # B. Initialize Web3 with timeout protection
+        # B. Initialize Web3 with timeout protection and retry logic
         for cid, config in CHAINS.items():
             if config.get('rpc'):
-                try:
-                    # Add request timeout to prevent hanging
-                    w3 = Web3(Web3.HTTPProvider(
-                        config['rpc'],
-                        request_kwargs={'timeout': 30}  # 30 second timeout for RPC calls
-                    ))
-                    # PoA middleware removed - web3.py v7+ handles PoA chains automatically
-                    self.web3_connections[cid] = w3
-                    logger.debug(f"Web3 connection established for chain {cid}")
-                except Exception as e:
-                    logger.warning(f"Failed to initialize Web3 for chain {cid}: {e}")
+                retry_count = 0
+                max_retries = 3
+                while retry_count < max_retries:
+                    try:
+                        # Add request timeout to prevent hanging
+                        # Also add connection pooling for better reliability
+                        w3 = Web3(Web3.HTTPProvider(
+                            config['rpc'],
+                            request_kwargs={
+                                'timeout': 30,  # 30 second timeout for RPC calls
+                                'pool_connections': 10,  # Connection pool size
+                                'pool_maxsize': 10  # Max pool size
+                            }
+                        ))
+                        
+                        # Test connection with a simple call
+                        w3.eth.block_number  # This will raise if connection fails
+                        
+                        # PoA middleware removed - web3.py v7+ handles PoA chains automatically
+                        self.web3_connections[cid] = w3
+                        logger.info(f"✅ Web3 connection established for chain {cid} ({config.get('name', 'Unknown')})")
+                        break  # Success, exit retry loop
+                        
+                    except Exception as e:
+                        retry_count += 1
+                        if retry_count >= max_retries:
+                            logger.warning(f"❌ Failed to initialize Web3 for chain {cid} after {max_retries} attempts: {e}")
+                        else:
+                            logger.debug(f"Retry {retry_count}/{max_retries} for chain {cid}: {e}")
+                            time.sleep(1 * retry_count)  # Exponential backoff
         
         # C. Initialize Advanced Features with web3 connections
         logger.info("⚡ Initializing advanced features...")
