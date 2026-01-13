@@ -242,39 +242,13 @@ class DashboardServer:
         """Handle control button actions from dashboard"""
         logger.info(f"Control action received: {action}")
         
+        # In v5.0, control actions are logged but not executed (simulation mode)
         if action == 'pause_scanning':
-            # Publish pause command to Redis
-            if self.redis_client:
-                try:
-                    if asyncio.iscoroutinefunction(self.redis_client.publish):
-                        await self.redis_client.publish('system_control', json.dumps({'action': 'pause'}))
-                    else:
-                        self.redis_client.publish('system_control', json.dumps({'action': 'pause'}))
-                    await ws.send_json({"type": "control_response", "success": True, "message": "Scanning paused"})
-                except Exception as e:
-                    await ws.send_json({"type": "control_response", "success": False, "message": str(e)})
-        
+            await ws.send_json({"type": "control_response", "success": True, "message": "Scanning paused (simulation mode)"})
         elif action == 'resume_scanning':
-            if self.redis_client:
-                try:
-                    if asyncio.iscoroutinefunction(self.redis_client.publish):
-                        await self.redis_client.publish('system_control', json.dumps({'action': 'resume'}))
-                    else:
-                        self.redis_client.publish('system_control', json.dumps({'action': 'resume'}))
-                    await ws.send_json({"type": "control_response", "success": True, "message": "Scanning resumed"})
-                except Exception as e:
-                    await ws.send_json({"type": "control_response", "success": False, "message": str(e)})
-        
+            await ws.send_json({"type": "control_response", "success": True, "message": "Scanning resumed (simulation mode)"})
         elif action == 'emergency_stop':
-            if self.redis_client:
-                try:
-                    if asyncio.iscoroutinefunction(self.redis_client.publish):
-                        await self.redis_client.publish('system_control', json.dumps({'action': 'emergency_stop'}))
-                    else:
-                        self.redis_client.publish('system_control', json.dumps({'action': 'emergency_stop'}))
-                    await ws.send_json({"type": "control_response", "success": True, "message": "Emergency stop activated"})
-                except Exception as e:
-                    await ws.send_json({"type": "control_response", "success": False, "message": str(e)})
+            await ws.send_json({"type": "control_response", "success": True, "message": "Emergency stop activated (simulation mode)"})
     
     async def send_filtered_data(self, filters: dict, ws):
         """Send filtered data based on client filters"""
@@ -796,14 +770,9 @@ echo "Please edit .env file with your configuration and start the system."
                 cors.add(route)
         
         # Start data tasks
-        if self.redis_client:
-            # Use Redis listener for live data
-            asyncio.create_task(self.redis_listener())
-            logger.info("Using Redis for live data")
-        else:
-            # Use simulation for testing
-            asyncio.create_task(self.simulate_data())
-            logger.info("Using simulation data (Redis not available)")
+        # Always use simulation for testing (Redis removed in v5.0)
+        asyncio.create_task(self.simulate_data())
+        logger.info("Using simulation data for dashboard")
         
         # Start server
         runner = web.AppRunner(self.app)
