@@ -1,9 +1,15 @@
 {
-  "predictions_made": 5,
-  "predictions_correct": 1,
-  "accuracy": 100.0,
+  "predictions_made": 1,
+  "predictions_correct": 0,
+  "accuracy": 0.0,
   "mse": 0.0,
   "mae": 0.0,
-  "last_updated": "2026-01-02T23:30:46.083562",
-  "model_version": "2.0"
+  "last_updated": "2026-01-13T10:11:38.178268",
+  "model_version": "5.0",
+  "ai_enabled": true,
+  "min_confidence": 0.8,
+  "ensemble_accuracy": 0.0,
+  "feature_count": 27,
+  "training_samples": 0,
+  "adaptive_threshold": 0.8
 }

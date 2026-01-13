@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TITAN - Multi-Page Interactive Dashboard</title>
+    <title>TITAN v5.0 - Real-Time Dashboard with Advanced ML & MEV</title>
     <style>
         * {
             margin: 0;
@@ -52,6 +52,16 @@
             background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
+        }
+        
+        .version-badge {
+            font-size: 0.7em;
+            padding: 4px 8px;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            border-radius: 12px;
+            color: #000;
+            font-weight: bold;
+            margin-left: 10px;
         }
 
         .nav-tabs {
@@ -485,13 +495,14 @@
 <body>
     <!-- Top Navigation -->
     <nav class="top-nav">
-        <div class="logo">🚀 TITAN Dashboard</div>
+        <div class="logo">🚀 TITAN Dashboard<span class="version-badge">v5.0</span></div>
         <div class="nav-tabs">
             <button class="nav-tab active" data-page="overview">📊 Overview</button>
             <button class="nav-tab" data-page="market-scanner">🔍 Market Scanner</button>
             <button class="nav-tab" data-page="executable-txs">⚡ Executable TXs</button>
             <button class="nav-tab" data-page="live-execution">🎯 Live Execution</button>
             <button class="nav-tab" data-page="ml-analytics">🤖 ML Analytics</button>
+            <button class="nav-tab" data-page="mev-strategies">⚡ MEV Strategies</button>
             <button class="nav-tab" data-page="analytics">📈 Analytics</button>
             <button class="nav-tab" data-page="deployment">☁️ Deployment</button>
         </div>
@@ -789,21 +800,21 @@
                             <tr>
                                 <td>🔮 Market Forecaster</td>
                                 <td><span class="status-badge success">Active</span></td>
-                                <td>v2.0</td>
+                                <td>v5.0</td>
                                 <td id="mlForecasterLastUpdate">-</td>
                                 <td><span class="profit-positive" id="mlForecasterPerf">Excellent</span></td>
                             </tr>
                             <tr>
                                 <td>🧠 RL Optimizer</td>
                                 <td><span class="status-badge success">Learning</span></td>
-                                <td>v2.0</td>
+                                <td>v5.0</td>
                                 <td id="mlRLLastUpdate">-</td>
                                 <td><span class="profit-positive" id="mlRLPerf">Improving</span></td>
                             </tr>
                             <tr>
                                 <td>💾 Feature Store</td>
                                 <td><span class="status-badge success">Active</span></td>
-                                <td>v2.0</td>
+                                <td>v5.0</td>
                                 <td id="mlFSLastUpdate">-</td>
                                 <td><span class="profit-positive" id="mlFSPerf">Healthy</span></td>
                             </tr>
@@ -813,7 +824,246 @@
             </div>
         </div>
 
-        <!-- Page 6: Analytics -->
+        <!-- Page 6: MEV Strategies -->
+        <div id="mev-strategies" class="page">
+            <div class="card">
+                <div class="card-header">
+                    <h3 class="card-title">⚡ MEV Strategies - Version 5.0</h3>
+                    <div class="live-indicator">
+                        <div class="live-dot"></div>
+                        <span>REAL-TIME</span>
+                    </div>
+                </div>
+
+                <!-- MEV Overview -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">📊 MEV Strategy Performance</h4>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">💰 Total MEV Captured</div>
+                            <div class="metric-value positive" id="mevTotalCaptured">$0.00</div>
+                            <div class="metric-change">Across all strategies</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⚡ Active Strategies</div>
+                            <div class="metric-value neutral" id="mevActiveStrategies">13</div>
+                            <div class="metric-change">Running concurrently</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🎯 Success Rate</div>
+                            <div class="metric-value positive" id="mevSuccessRate">0%</div>
+                            <div class="metric-change">Successful extractions</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">📈 Avg MEV/Block</div>
+                            <div class="metric-value neutral" id="mevAvgPerBlock">$0.00</div>
+                            <div class="metric-change">Average extraction</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Strategy Breakdown -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">🔧 Individual Strategy Performance</h4>
+                    </div>
+                    <table class="data-table">
+                        <thead>
+                            <tr>
+                                <th>Strategy</th>
+                                <th>Status</th>
+                                <th>Opportunities</th>
+                                <th>Executed</th>
+                                <th>Success Rate</th>
+                                <th>Total Profit</th>
+                                <th>Avg Profit</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>🔄 Sandwich Attacks</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevSandwichOpps">0</td>
+                                <td id="mevSandwichExec">0</td>
+                                <td id="mevSandwichRate">0%</td>
+                                <td><span class="profit-positive" id="mevSandwichProfit">$0.00</span></td>
+                                <td id="mevSandwichAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>⚡ Front-Running</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevFrontRunOpps">0</td>
+                                <td id="mevFrontRunExec">0</td>
+                                <td id="mevFrontRunRate">0%</td>
+                                <td><span class="profit-positive" id="mevFrontRunProfit">$0.00</span></td>
+                                <td id="mevFrontRunAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🔙 Back-Running</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevBackRunOpps">0</td>
+                                <td id="mevBackRunExec">0</td>
+                                <td id="mevBackRunRate">0%</td>
+                                <td><span class="profit-positive" id="mevBackRunProfit">$0.00</span></td>
+                                <td id="mevBackRunAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🌊 Liquidations</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevLiquidationOpps">0</td>
+                                <td id="mevLiquidationExec">0</td>
+                                <td id="mevLiquidationRate">0%</td>
+                                <td><span class="profit-positive" id="mevLiquidationProfit">$0.00</span></td>
+                                <td id="mevLiquidationAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>💎 NFT Sniping</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevNFTOpps">0</td>
+                                <td id="mevNFTExec">0</td>
+                                <td id="mevNFTRate">0%</td>
+                                <td><span class="profit-positive" id="mevNFTProfit">$0.00</span></td>
+                                <td id="mevNFTAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🎲 JIT Liquidity</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevJITOpps">0</td>
+                                <td id="mevJITExec">0</td>
+                                <td id="mevJITRate">0%</td>
+                                <td><span class="profit-positive" id="mevJITProfit">$0.00</span></td>
+                                <td id="mevJITAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🔮 Oracle Arbitrage</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevOracleOpps">0</td>
+                                <td id="mevOracleExec">0</td>
+                                <td id="mevOracleRate">0%</td>
+                                <td><span class="profit-positive" id="mevOracleProfit">$0.00</span></td>
+                                <td id="mevOracleAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>📊 Statistical Arbitrage</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevStatArbOpps">0</td>
+                                <td id="mevStatArbExec">0</td>
+                                <td id="mevStatArbRate">0%</td>
+                                <td><span class="profit-positive" id="mevStatArbProfit">$0.00</span></td>
+                                <td id="mevStatArbAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>⚡ Flash Loan Arbitrage</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevFlashLoanOpps">0</td>
+                                <td id="mevFlashLoanExec">0</td>
+                                <td id="mevFlashLoanRate">0%</td>
+                                <td><span class="profit-positive" id="mevFlashLoanProfit">$0.00</span></td>
+                                <td id="mevFlashLoanAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🌉 Cross-Chain MEV</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevCrossChainOpps">0</td>
+                                <td id="mevCrossChainExec">0</td>
+                                <td id="mevCrossChainRate">0%</td>
+                                <td><span class="profit-positive" id="mevCrossChainProfit">$0.00</span></td>
+                                <td id="mevCrossChainAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>⛽ Gas Price Auction</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevGasAuctionOpps">0</td>
+                                <td id="mevGasAuctionExec">0</td>
+                                <td id="mevGasAuctionRate">0%</td>
+                                <td><span class="profit-positive" id="mevGasAuctionProfit">$0.00</span></td>
+                                <td id="mevGasAuctionAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🚀 Token Launch Sniping</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevTokenLaunchOpps">0</td>
+                                <td id="mevTokenLaunchExec">0</td>
+                                <td id="mevTokenLaunchRate">0%</td>
+                                <td><span class="profit-positive" id="mevTokenLaunchProfit">$0.00</span></td>
+                                <td id="mevTokenLaunchAvg">$0.00</td>
+                            </tr>
+                            <tr>
+                                <td>🌾 DeFi Yield Farming MEV</td>
+                                <td><span class="status-badge success">Active</span></td>
+                                <td id="mevYieldFarmingOpps">0</td>
+                                <td id="mevYieldFarmingExec">0</td>
+                                <td id="mevYieldFarmingRate">0%</td>
+                                <td><span class="profit-positive" id="mevYieldFarmingProfit">$0.00</span></td>
+                                <td id="mevYieldFarmingAvg">$0.00</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <!-- MEV Protection Status -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">🛡️ MEV Protection & Anti-Detection</h4>
+                    </div>
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <div class="metric-label">🔒 Flashbots Integration</div>
+                            <div class="metric-value neutral" id="mevFlashbots">Enabled</div>
+                            <div class="metric-change">Private transaction pool</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🎭 Transaction Obfuscation</div>
+                            <div class="metric-value neutral" id="mevObfuscation">Active</div>
+                            <div class="metric-change">Anti-detection layer</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">⏱️ Timing Optimization</div>
+                            <div class="metric-value neutral" id="mevTiming">Adaptive</div>
+                            <div class="metric-change">Smart block positioning</div>
+                        </div>
+                        <div class="metric-card">
+                            <div class="metric-label">🧠 ML Strategy Selection</div>
+                            <div class="metric-value positive" id="mevMLSelection">Enabled</div>
+                            <div class="metric-change">AI-powered selection</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent MEV Captures -->
+                <div class="card" style="margin-top: 20px;">
+                    <div class="card-header">
+                        <h4 class="card-title">🎯 Recent MEV Captures</h4>
+                    </div>
+                    <div style="max-height: 400px; overflow-y: auto;">
+                        <table class="data-table">
+                            <thead>
+                                <tr>
+                                    <th>Time</th>
+                                    <th>Strategy</th>
+                                    <th>Chain</th>
+                                    <th>Target TX</th>
+                                    <th>MEV Extracted</th>
+                                    <th>Gas Cost</th>
+                                    <th>Net Profit</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mevCapturesTable">
+                                <tr>
+                                    <td colspan="7" style="text-align: center; color: var(--text-secondary);">
+                                        No MEV captures yet. Monitoring mempool...
+                                    </td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Page 7: Analytics -->
         <div id="analytics" class="page">
             <div class="card">
                 <div class="card-header">
@@ -850,7 +1100,7 @@
             </div>
         </div>
 
-        <!-- Page 7: Cloud Deployment Configuration -->
+        <!-- Page 8: Cloud Deployment Configuration -->
         <div id="deployment" class="page">
             <div class="card">
                 <div class="card-header">

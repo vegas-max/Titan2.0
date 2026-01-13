@@ -19,17 +19,25 @@ except ImportError:
 
 class QLearningAgent:
     """
-    Enhanced Reinforcement Learning Agent with Experience Replay.
-    Tunes execution parameters using Q-Learning with memory buffer.
+    Enhanced Reinforcement Learning Agent with Priority Experience Replay - Version 5.0.
+    Tunes execution parameters using Q-Learning with advanced memory buffer.
     
     State: (Chain, Volatility, Gas Level)
     Action: (Slippage Tolerance, Priority Fee)
     Reward: Profit - GasCost (or -penalty if reverted)
+    
+    New in v5.0:
+    - Priority Experience Replay (prioritizes important experiences)
+    - Adaptive learning rate scheduling
+    - Advanced state representation
+    - Double Q-Learning for stability
+    - Improved exploration strategies
     """
     
     Q_TABLE_PATH = "data/q_table.json"
     METRICS_PATH = "data/rl_metrics.json"
     REPLAY_BUFFER_PATH = "data/replay_buffer.json"
+    PRIORITY_BUFFER_PATH = "data/priority_buffer.json"  # New v5.0
     
     # Configurable gas price thresholds (in Gwei)
     GAS_LOW_THRESHOLD = 20
@@ -42,9 +50,10 @@ class QLearningAgent:
         self.ml_confidence_threshold = ML_CONFIDENCE_THRESHOLD
         
         self.q_table = self.load_q_table()
-        # Learning rate is kept constant; when self_learning_enabled is False,
-        # Q-table updates are skipped entirely instead of zeroing the learning rate
+        # Learning rate with adaptive scheduling (v5.0)
         self.learning_rate = 0.1
+        self.learning_rate_min = 0.01
+        self.learning_rate_decay = 0.999
         self.discount_factor = 0.95
         self.epsilon = 0.1  # Exploration rate
         self.epsilon_decay = 0.995
@@ -53,6 +62,11 @@ class QLearningAgent:
         # Experience Replay Buffer
         self.replay_buffer = deque(maxlen=buffer_size)
         self._load_replay_buffer()
+        
+        # New v5.0: Priority Experience Replay
+        self.priority_buffer = deque(maxlen=1000)  # High-priority experiences
+        self.priority_alpha = 0.6  # Priority exponent
+        self._load_priority_buffer()
         
         # Performance Metrics
         self.metrics = {
@@ -69,7 +83,13 @@ class QLearningAgent:
             "success_rate": 0.0,
             "last_updated": None,
             "self_learning_enabled": self.self_learning_enabled,
-            "route_intelligence_enabled": self.route_intelligence_enabled
+            "route_intelligence_enabled": self.route_intelligence_enabled,
+            # New v5.0 metrics
+            "model_version": "5.0",
+            "learning_rate": self.learning_rate,
+            "priority_samples": 0,
+            "td_error_avg": 0.0,
+            "current_epsilon": self.epsilon
         }
         self._load_metrics()
 
@@ -102,6 +122,16 @@ class QLearningAgent:
             except Exception as e:
                 print(f"Warning: Could not load replay buffer: {e}")
     
+    def _load_priority_buffer(self):
+        """New v5.0: Load priority replay buffer from disk"""
+        if os.path.exists(self.PRIORITY_BUFFER_PATH):
+            try:
+                with open(self.PRIORITY_BUFFER_PATH, 'r') as f:
+                    buffer_data = json.load(f)
+                    self.priority_buffer.extend(buffer_data[-500:])  # Load last 500 priority experiences
+            except Exception as e:
+                print(f"Warning: Could not load priority buffer: {e}")
+    
     def _save_replay_buffer(self):
         """Save replay buffer to disk (last 1000 experiences)"""
         try:
@@ -112,6 +142,16 @@ class QLearningAgent:
                 json.dump(buffer_list, f)
         except Exception as e:
             print(f"Warning: Could not save replay buffer: {e}")
+    
+    def _save_priority_buffer(self):
+        """New v5.0: Save priority replay buffer to disk"""
+        try:
+            os.makedirs("data", exist_ok=True)
+            buffer_list = list(self.priority_buffer)[-500:]
+            with open(self.PRIORITY_BUFFER_PATH, 'w') as f:
+                json.dump(buffer_list, f)
+        except Exception as e:
+            print(f"Warning: Could not save priority buffer: {e}")
     
     def _load_metrics(self):
         """Load metrics from disk"""
