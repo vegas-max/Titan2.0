@@ -128,9 +128,12 @@ make build-core
 
 ## CI/CD Operations in Codespace
 
-All CI/CD operations from `.github/workflows/` can be run locally in Codespace:
+All CI/CD operations from `.github/workflows/` can be run locally in Codespace.
 
-### Run CI Checks
+**See [CI_CD_OPERATIONS.md](./CI_CD_OPERATIONS.md) for a complete guide.**
+
+### Quick CI/CD Commands
+
 ```bash
 # Install dependencies (same as CI)
 npm ci
@@ -138,32 +141,11 @@ pip install -r requirements.txt
 
 # Run system audit (same as CI)
 python audit_system.py
-```
 
-### Run Tests
-```bash
-# Python tests
+# Run tests
 make test
 
-# Rust tests
-make test-rust
-
-# Go tests
-make test-go
-
-# All tests
-make test-core
-```
-
-### Build Operations
-```bash
-# Build Rust core
-make build-rust
-
-# Build Go core
-make build-go
-
-# Build all
+# Build operations
 make build-core
 ```
 
