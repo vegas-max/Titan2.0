@@ -206,6 +206,30 @@ Windows Subsystem for Linux provides the best experience:
    start_titan_full.bat
    ```
 
+#### Option 3: Developer Comprehensive Rebuild (Windows)
+
+For developers who need to rebuild all components from scratch:
+
+```batch
+# Interactive rebuild script for all components
+COMPREHENSIVE_REPO_REBUILD.bat
+```
+
+This script provides step-by-step rebuilding of:
+- Configuration profiles (lightweight/ARM/high-performance)
+- Rust modules (core-rust/)
+- Go packages (core-go/)
+- Python execution engine
+- Node.js routing layer
+- Agents framework
+- Test suite
+
+**Use this when:**
+- Setting up a development environment
+- Switching between configuration profiles
+- Rebuilding after major codebase changes
+- Verifying all components build correctly
+
 ---
 
 ## Dependency Installation
