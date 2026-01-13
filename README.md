@@ -326,6 +326,8 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 
 Run TITAN in your browser without any local installation:
 
+#### Paper Mode (Testing/Learning) - Recommended for beginners
+
 ```bash
 # Windows: Double-click
 LAUNCH_GOOGLE_COLAB.bat
@@ -349,8 +351,39 @@ Or directly upload `Titan_Google_Colab.ipynb` to [Google Colab](https://colab.re
 - Paper mode trading
 - Quick demos
 
+#### Live Mode (Real Trading) - 🆕 **For experienced users**
+
+```bash
+# Windows: Double-click
+LAUNCH_LIVE_EXECUTION_COLAB.bat
+
+# Linux/Mac: Run
+./launch_live_execution_colab.sh
+```
+
+Or directly upload `Titan_Live_Execution_Colab.ipynb` to [Google Colab](https://colab.research.google.com/)
+
+**⚠️ WARNING: This executes REAL blockchain transactions with REAL money!**
+
+**Features:**
+- ✅ Complete automated build system
+- ✅ Live execution with real blockchain transactions
+- ✅ Comprehensive execution journal (drum) for tracking
+- ✅ Real-time monitoring dashboard
+- ✅ Safety systems and circuit breakers
+- ✅ Performance metrics and profit tracking
+- ✅ Emergency stop capability
+
+**Perfect for:**
+- Live trading with flash loans
+- Real-time arbitrage execution
+- Production trading operations
+- Advanced users ready for live execution
+
 **Documentation:**
-- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - ⭐ **Detailed step-by-step walkthrough**
+- **[LIVE_EXECUTION_GUIDE.md](LIVE_EXECUTION_GUIDE.md)** - ⭐ **Complete live execution guide (26KB)**
+- **[LIVE_EXECUTION_QUICKREF.md](LIVE_EXECUTION_QUICKREF.md)** - Quick reference card
+- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - Detailed step-by-step walkthrough
 - **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - Complete Colab guide
 - **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - Quick reference
 
