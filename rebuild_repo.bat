@@ -3,7 +3,7 @@ setlocal enabledelayedexpansion
 
 REM **** Step 1: Configuration Setup ****
 echo ================================
-echo [Step 1/8] Configuration Profiles
+echo [Step 1/9] Configuration Profiles
 echo ================================
 set /p CONFIG_PROFILE="Enter your configuration profile (lightweight/ARM/high-performance): "
 echo [INFO] Using configuration profile: %CONFIG_PROFILE%
@@ -21,9 +21,9 @@ if /I "%EDIT_CONFIG%"=="y" (
     notepad config\%CONFIG_FILE%
 )
 
-REM **** Step 1.5: Install Repository Dependencies ****
+REM **** Step 2: Install Repository Dependencies ****
 echo ================================
-echo [Step 1.5/8] Installing Repository Dependencies
+echo [Step 2/9] Installing Repository Dependencies
 echo ================================
 echo [INFO] Installing Python and Node.js dependencies from repository root...
 
@@ -57,9 +57,9 @@ if errorlevel 1 (
     )
 )
 
-REM **** Step 2: Build core-rust modules ****
+REM **** Step 3: Build core-rust modules ****
 echo ================================
-echo [Step 2/8] Building Rust Modules
+echo [Step 3/9] Building Rust Modules
 echo ================================
 REM Check if Rust is installed
 where rustc >nul 2>nul
@@ -68,23 +68,34 @@ if errorlevel 1 (
     pause
     exit /b 1
 )
+if not exist core-rust (
+    echo [ERROR] core-rust directory not found!
+    pause
+    exit /b 1
+)
 cd core-rust
 echo [INFO] Building Rust library...
 cargo build --release
 if errorlevel 1 (
     echo [ERROR] Rust build failed. Check core-rust/README.md
+    cd ..
     pause
     exit /b 1
 )
 cd ..
 
-REM **** Step 3: Build core-go packages ****
+REM **** Step 4: Build core-go packages ****
 echo ================================
-echo [Step 3/8] Building Go Packages
+echo [Step 4/9] Building Go Packages
 echo ================================
 where go >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] Go is not installed. Please install: https://go.dev/doc/install
+    pause
+    exit /b 1
+)
+if not exist core-go (
+    echo [ERROR] core-go directory not found!
     pause
     exit /b 1
 )
@@ -93,64 +104,89 @@ echo [INFO] Compiling Go packages and standalone binaries...
 go build .
 if errorlevel 1 (
     echo [ERROR] Go build failed. Check core-go/README.md
+    cd ..
     pause
     exit /b 1
 )
 cd ..
 
-REM **** Step 4: Build/Configure execution engine ****
+REM **** Step 5: Build/Configure execution engine ****
 echo ================================
-echo [Step 4/8] Setting Up Arbitrage Engine (execution)
+echo [Step 5/9] Setting Up Arbitrage Engine (execution)
 echo ================================
-cd execution
-echo [INFO] Execution layer uses JavaScript/Node.js arbitrage engines.
-echo [INFO] Node.js dependencies will be installed from repository root.
-echo [INFO] See execution/README.md for standalone engine usage.
-cd ..
-
-REM **** Step 5: Routing Setup ****
-echo ================================
-echo [Step 5/8] Routing Engine & Bridge Aggregation
-echo ================================
-cd routing
-echo [INFO] Routing layer uses Python modules for bridge aggregation.
-echo [INFO] Python dependencies will be installed from repository root requirements.txt.
-echo [INFO] See routing/README.md for Li.Fi integration details.
-cd ..
-
-REM **** Step 6: Autonomous Agent Framework ****
-echo ================================
-echo [Step 6/8] Agents Framework & Super Agent
-echo ================================
-cd agents
-echo [INFO] Building/starting agent orchestration (see agents/README.md)
-REM Example commands here: python agent.py or go build . etc.
-cd ..
-
-REM **** Step 7: Test Suite ****
-echo ================================
-echo [Step 7/8] Running Test Suite
-echo ================================
-cd test
-REM Prompt for which tests to run
-set /p TEST_TYPE="Run all tests or specific type? (all/unit/integration/functional): "
-if /I "%TEST_TYPE%"=="all" (
-    echo [INFO] Running ALL tests...
-    echo [INFO] See test/README.md for test execution commands.
+if not exist execution (
+    echo [WARN] execution directory not found! Skipping this step.
 ) else (
-    echo [INFO] Running %TEST_TYPE% tests...
-    echo [INFO] See test/README.md for specific test commands.
+    cd execution
+    echo [INFO] Execution layer uses JavaScript/Node.js arbitrage engines.
+    echo [INFO] Node.js dependencies will be installed from repository root.
+    echo [INFO] See execution/README.md for standalone engine usage.
+    cd ..
 )
-cd ..
 
-REM **** Step 8: Documentation & Contribution Guidelines ****
+REM **** Step 6: Routing Setup ****
 echo ================================
-echo [Step 8/8] Documentation Reference
+echo [Step 6/9] Routing Engine & Bridge Aggregation
 echo ================================
-cd docs
-echo [INFO] Open docs/README.md for technical documentation, templates, and guidelines.
-notepad README.md
-cd ..
+if not exist routing (
+    echo [WARN] routing directory not found! Skipping this step.
+) else (
+    cd routing
+    echo [INFO] Routing layer uses Python modules for bridge aggregation.
+    echo [INFO] Python dependencies will be installed from repository root requirements.txt.
+    echo [INFO] See routing/README.md for Li.Fi integration details.
+    cd ..
+)
+
+REM **** Step 7: Autonomous Agent Framework ****
+echo ================================
+echo [Step 7/9] Agents Framework & Super Agent
+echo ================================
+if not exist agents (
+    echo [WARN] agents directory not found! Skipping this step.
+) else (
+    cd agents
+    echo [INFO] Building/starting agent orchestration (see agents/README.md)
+    REM Example commands here: python agent.py or go build . etc.
+    cd ..
+)
+
+REM **** Step 8: Test Suite ****
+echo ================================
+echo [Step 8/9] Running Test Suite
+echo ================================
+if not exist test (
+    echo [WARN] test directory not found! Skipping this step.
+) else (
+    cd test
+    REM Prompt for which tests to run
+    set /p TEST_TYPE="Run all tests or specific type? (all/unit/integration/functional): "
+    if /I "%TEST_TYPE%"=="all" (
+        echo [INFO] Running ALL tests...
+        echo [INFO] See test/README.md for test execution commands.
+    ) else (
+        echo [INFO] Running %TEST_TYPE% tests...
+        echo [INFO] See test/README.md for specific test commands.
+    )
+    cd ..
+)
+
+REM **** Step 9: Documentation & Contribution Guidelines ****
+echo ================================
+echo [Step 9/9] Documentation Reference
+echo ================================
+if not exist docs (
+    echo [WARN] docs directory not found! Skipping this step.
+) else (
+    cd docs
+    echo [INFO] Open docs/README.md for technical documentation, templates, and guidelines.
+    if exist README.md (
+        notepad README.md
+    ) else (
+        echo [WARN] docs/README.md not found!
+    )
+    cd ..
+)
 
 echo ==========================================================
 echo [DONE] Repo rebuild and setup sequence complete. Review outputs above.
