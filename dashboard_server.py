@@ -464,6 +464,30 @@ class DashboardServer:
             return web.json_response(performance)
         return web.json_response({})
     
+    async def mev_metrics_handler(self, request):
+        """API endpoint for MEV strategy metrics - Version 5.0"""
+        try:
+            from offchain.ml.strategies.mev_strategies import mev_manager
+            metrics = mev_manager.get_all_metrics()
+            return web.json_response(metrics)
+        except Exception as e:
+            logger.error(f"Error getting MEV metrics: {e}")
+            return web.json_response({
+                "total_mev_captured": 0.0,
+                "active_strategies": 7,
+                "strategies": {}
+            })
+    
+    async def mev_recent_captures_handler(self, request):
+        """API endpoint for recent MEV captures - Version 5.0"""
+        try:
+            from offchain.ml.strategies.mev_strategies import mev_manager
+            captures = mev_manager.get_recent_captures(limit=20)
+            return web.json_response({"captures": captures})
+        except Exception as e:
+            logger.error(f"Error getting MEV captures: {e}")
+            return web.json_response({"captures": []})
+    
     async def deployment_config_handler(self, request):
         """API endpoint for cloud deployment configuration"""
         # Get current environment configuration
@@ -755,6 +779,10 @@ echo "Please edit .env file with your configuration and start the system."
         self.app.router.add_get('/api/feature-importance', self.feature_importance_handler)
         self.app.router.add_get('/api/chain-performance', self.chain_performance_handler)
         self.app.router.add_get('/api/token-performance', self.token_performance_handler)
+        # New v5.0: MEV Strategy endpoints
+        self.app.router.add_get('/api/mev-metrics', self.mev_metrics_handler)
+        self.app.router.add_get('/api/mev-captures', self.mev_recent_captures_handler)
+        # Deployment endpoints
         self.app.router.add_get('/api/deployment-config', self.deployment_config_handler)
         self.app.router.add_post('/api/generate-deployment-script', self.generate_deployment_script_handler)
         
