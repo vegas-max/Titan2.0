@@ -72,6 +72,7 @@ where python >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] Python is not installed. Please install: https://www.python.org/downloads/
     pause
+    exit /b 1
 )
 
 set /p VENV_CREATE="Create a new Python virtual environment? (y/n): "
@@ -100,6 +101,7 @@ if exist package.json (
     if errorlevel 1 (
         echo [ERROR] Node.js/npm not installed. Please install: https://nodejs.org/
         pause
+        exit /b 1
     ) else (
         npm install
     )
