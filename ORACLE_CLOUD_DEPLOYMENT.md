@@ -72,6 +72,9 @@ The ARM-based VM.Standard.A1.Flex instance is **highly recommended** because:
    ```bash
    ssh-keygen -t rsa -b 4096 -C "your_email@example.com"
    ```
+   - **📚 Detailed SSH Key Guide:** See [ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md)
+   - **⚠️ Important:** SSH keys are for YOUR use to connect to YOUR instance
+   - **⚠️ Never commit SSH keys to this repository!**
 
 3. **Git** (to clone the repository)
 
