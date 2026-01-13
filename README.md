@@ -22,6 +22,26 @@
 
 ---
 
+## 🎯 New to Titan? Start Here!
+
+> **First time user?** Don't get overwhelmed! We have a simple getting started guide.
+
+### 👉 **[GETTING_STARTED.md](GETTING_STARTED.md)** - Choose your installation path (5 min read)
+
+This guide helps you choose the best setup method for your needs:
+- 🌐 **Browser-based** (Google Colab - No installation required)
+- 💻 **Local installation** (Full control and customization)
+- ☁️ **Cloud deployment** (Oracle Cloud free tier)
+- 🚀 **One-click install** (Windows users)
+
+### 📖 Quick Links for New Users:
+- **Step-by-step setup:** [SETUP.md](SETUP.md)
+- **15-minute quick start:** [QUICKSTART.md](QUICKSTART.md)
+- **Understand trading modes:** [MAINNET_MODES.md](MAINNET_MODES.md)
+- **Security essentials:** [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)
+
+---
+
 ## 📋 Table of Contents
 
 ### Getting Started
@@ -220,6 +240,10 @@ cd Titan2.0
 
 Titan 2.0 includes extensive documentation organized by use case and experience level.
 
+### 🎯 First-Time Users (START HERE!)
+- **[GETTING_STARTED.md](GETTING_STARTED.md)** - 🆕 ⭐ **Choose your installation path (5 min read)**
+- **[SETUP.md](SETUP.md)** - 🆕 ⭐ **Complete step-by-step setup guide**
+
 ### 🚀 Quick Start (New Users)
 - **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - 🆕 ⭐ **Detailed step-by-step Colab walkthrough**
 - **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - ⚡ Run in browser (no installation)
@@ -288,10 +312,11 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[NO_REDIS_QUICKSTART.md](NO_REDIS_QUICKSTART.md)** - 📁 Run without Redis
 
 > 💡 **Recommended Reading Path**: 
-> 1. New Users → QUICKSTART.md → MAINNET_MODES.md → SECURITY_SUMMARY.md
-> 2. Developers → SystemArchitecture.md → offchain/README.md → CORE_REBUILD_README.md
-> 3. Operators → OPERATIONS_GUIDE.md → GO_LIVE_CHECKLIST.md → MONITORING_ALERTING.md
-> 4. Cloud Deployers → ORACLE_QUICKSTART.md → ORACLE_DEPLOYMENT_CHECKLIST.md
+> 1. **First-Time Users** → GETTING_STARTED.md → SETUP.md → QUICKSTART.md → MAINNET_MODES.md
+> 2. **Developers** → GETTING_STARTED.md → SETUP.md → offchain/README.md → CORE_REBUILD_README.md
+> 3. **Operators** → GETTING_STARTED.md → OPERATIONS_GUIDE.md → GO_LIVE_CHECKLIST.md → MONITORING_ALERTING.md
+> 4. **Cloud Deployers** → GETTING_STARTED.md → ORACLE_QUICKSTART.md → ORACLE_DEPLOYMENT_CHECKLIST.md
+> 5. **Security-Focused** → SECURITY_SUMMARY.md → AUDIT_REPORT.md → GO_LIVE_CHECKLIST.md
 
 ---
 
