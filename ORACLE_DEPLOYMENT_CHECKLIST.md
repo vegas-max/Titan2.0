@@ -18,6 +18,8 @@ Complete checklist for deploying Titan to Oracle Cloud Always Free tier.
   ```
   - Public key: `~/.ssh/id_rsa.pub`
   - Private key: `~/.ssh/id_rsa`
+  - **📚 Detailed Guide:** See [ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md)
+  - **⚠️ Important:** These are for YOUR use only - NEVER commit to repository!
 
 ### API Keys & Credentials Ready
 - [ ] **Wallet Private Key**

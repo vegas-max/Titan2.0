@@ -10,6 +10,9 @@ Before you start, have these ready:
 
 1. ✅ Oracle Cloud Free Tier account (https://www.oracle.com/cloud/free/)
 2. ✅ SSH key pair (`ssh-keygen -t rsa -b 4096`)
+   - **Need help?** See [ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md)
+   - **Important:** SSH keys are for YOUR use to connect to YOUR instance
+   - **Never commit SSH keys to this repository!**
 3. ✅ Wallet private key (dedicated wallet, NOT your main one)
 4. ✅ API keys ready:
    - Infura Project ID

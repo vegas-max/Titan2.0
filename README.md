@@ -260,6 +260,9 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ☁️ Oracle Cloud deployment (15 min)
 - **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud guide
 - **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ Deployment checklist
+- **[ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md)** - 🔑 SSH key setup guide
+- **[ORACLE_SERVER_DETAILS_FAQ.md](ORACLE_SERVER_DETAILS_FAQ.md)** - ❓ FAQ: Server details & SSH keys
+- **[ORACLE_ENV_CONFIGURATION_GUIDE.md](ORACLE_ENV_CONFIGURATION_GUIDE.md)** - ⚙️ Environment configuration
 
 ### 📘 Operations & Management
 - **[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)** - 📘 Comprehensive operations manual

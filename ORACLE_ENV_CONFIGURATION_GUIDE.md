@@ -2,6 +2,8 @@
 
 **Quick Answer:** Yes, the `.env` file is **automatically created and pre-configured** during deployment, but you **must add your credentials** before the system is 100% ready.
 
+**Note:** This guide is about configuring the `.env` file on your Oracle Cloud instance. For SSH key setup to connect to your instance, see [ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md).
+
 ---
 
 ## ✅ What's Automatically Configured
