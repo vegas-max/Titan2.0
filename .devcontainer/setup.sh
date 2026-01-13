@@ -75,11 +75,26 @@ echo ""
 
 # Step 2: Install Node.js dependencies
 echo "Step 2: Installing Node.js dependencies..."
-if npm ci; then
-    print_success "Node.js dependencies installed"
+if [ -f "package-lock.json" ]; then
+    if npm ci; then
+        print_success "Node.js dependencies installed"
+    else
+        print_warning "npm ci failed, trying with npm install..."
+        if npm install; then
+            print_success "Node.js dependencies installed"
+        else
+            print_error "Failed to install Node.js dependencies"
+            exit 1
+        fi
+    fi
 else
-    print_error "Failed to install Node.js dependencies"
-    exit 1
+    print_info "No package-lock.json found, using npm install..."
+    if npm install; then
+        print_success "Node.js dependencies installed"
+    else
+        print_error "Failed to install Node.js dependencies"
+        exit 1
+    fi
 fi
 echo ""
 

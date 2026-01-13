@@ -85,10 +85,6 @@
     "PYTHONUNBUFFERED": "1"
   },
 
-  "mounts": [
-    "source=${localWorkspaceFolder}/.env,target=/workspaces/${localWorkspaceFolderBasename}/.env,type=bind,consistency=cached"
-  ],
-
   "runArgs": [
     "--cap-add=SYS_PTRACE",
     "--security-opt",
