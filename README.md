@@ -452,6 +452,32 @@ make audit      # Run system audit
 
 **See [INSTALL.md](INSTALL.md) for platform-specific installation instructions.**
 
+### Developer Tools: Comprehensive Rebuild Script
+
+For developers working on the Titan codebase who need to rebuild all components from scratch:
+
+**Windows:**
+```batch
+# Comprehensive rebuild of all components
+COMPREHENSIVE_REPO_REBUILD.bat
+```
+
+This interactive script guides you through:
+- Configuration profile setup
+- Building Rust modules (core-rust/)
+- Building Go packages (core-go/)
+- Setting up Python execution engine
+- Configuring Node.js routing
+- Setting up the agents framework
+- Running the test suite
+- Accessing documentation
+
+**Perfect for:**
+- Setting up a development environment
+- Rebuilding after major updates
+- Verifying all components build correctly
+- Testing different configuration profiles (lightweight/ARM/high-performance)
+
 ---
 
 ## 🎯 Overview & Features
