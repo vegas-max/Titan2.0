@@ -21,6 +21,42 @@ if /I "%EDIT_CONFIG%"=="y" (
     notepad config\%CONFIG_FILE%
 )
 
+REM **** Step 1.5: Install Repository Dependencies ****
+echo ================================
+echo [Step 1.5/8] Installing Repository Dependencies
+echo ================================
+echo [INFO] Installing Python and Node.js dependencies from repository root...
+
+REM Install Python dependencies
+where python >nul 2>nul
+if errorlevel 1 (
+    echo [WARN] Python is not installed. Python dependencies will be skipped.
+    echo [WARN] Please install Python: https://www.python.org/downloads/
+) else (
+    if exist requirements.txt (
+        echo [INFO] Installing Python dependencies from requirements.txt...
+        pip install -r requirements.txt
+        if errorlevel 1 (
+            echo [WARN] Python dependency installation had issues. Review output above.
+        )
+    )
+)
+
+REM Install Node.js dependencies
+where npm >nul 2>nul
+if errorlevel 1 (
+    echo [WARN] Node.js/npm is not installed. Node.js dependencies will be skipped.
+    echo [WARN] Please install Node.js: https://nodejs.org/
+) else (
+    if exist package.json (
+        echo [INFO] Installing Node.js dependencies from package.json...
+        npm install
+        if errorlevel 1 (
+            echo [WARN] Node.js dependency installation had issues. Review output above.
+        )
+    )
+)
+
 REM **** Step 2: Build core-rust modules ****
 echo ================================
 echo [Step 2/8] Building Rust Modules
@@ -67,25 +103,9 @@ echo ================================
 echo [Step 4/8] Setting Up Arbitrage Engine (execution)
 echo ================================
 cd execution
-echo [INFO] Install Python modules (PyO3, etc.) if required.
-where python >nul 2>nul
-if errorlevel 1 (
-    echo [ERROR] Python is not installed. Please install: https://www.python.org/downloads/
-    pause
-)
-
-set /p VENV_CREATE="Create a new Python virtual environment? (y/n): "
-if /I "%VENV_CREATE%"=="y" (
-    python -m venv venv
-    call venv\Scripts\activate
-)
-REM If requirements.txt exists, install packages
-if exist requirements.txt (
-    pip install -r requirements.txt
-)
-echo [INFO] Building/Starting execution API...
-REM Example: python main.py --config ../config/%CONFIG_FILE%
-echo [INFO] (Adjust launch command as per execution/README.md)
+echo [INFO] Execution layer uses JavaScript/Node.js arbitrage engines.
+echo [INFO] Node.js dependencies will be installed from repository root.
+echo [INFO] See execution/README.md for standalone engine usage.
 cd ..
 
 REM **** Step 5: Routing Setup ****
@@ -93,19 +113,9 @@ echo ================================
 echo [Step 5/8] Routing Engine & Bridge Aggregation
 echo ================================
 cd routing
-echo [INFO] Ensure dependencies are installed (see routing/README.md)
-REM Example: npm install
-if exist package.json (
-    where npm >nul 2>nul
-    if errorlevel 1 (
-        echo [ERROR] Node.js/npm not installed. Please install: https://nodejs.org/
-        pause
-    ) else (
-        npm install
-    )
-)
-REM Example build/run, adjust as needed
-REM npm run build
+echo [INFO] Routing layer uses Python modules for bridge aggregation.
+echo [INFO] Python dependencies will be installed from repository root requirements.txt.
+echo [INFO] See routing/README.md for Li.Fi integration details.
 cd ..
 
 REM **** Step 6: Autonomous Agent Framework ****
@@ -126,10 +136,10 @@ REM Prompt for which tests to run
 set /p TEST_TYPE="Run all tests or specific type? (all/unit/integration/functional): "
 if /I "%TEST_TYPE%"=="all" (
     echo [INFO] Running ALL tests...
-    REM Example: python -m unittest discover
+    echo [INFO] See test/README.md for test execution commands.
 ) else (
     echo [INFO] Running %TEST_TYPE% tests...
-    REM Implement actual test commands by reading test/README.md
+    echo [INFO] See test/README.md for specific test commands.
 )
 cd ..
 
