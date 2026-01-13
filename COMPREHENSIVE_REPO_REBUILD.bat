@@ -12,8 +12,20 @@ set /p CONFIG_FILE="Enter the config JSON filename (e.g., config.json): "
 if exist config\%CONFIG_FILE% (
     echo [INFO] Found config file: config\%CONFIG_FILE%
 ) else (
-    echo [WARN] Config file not found, please create or verify location in config/README.md
-    pause
+    echo [WARN] Config file not found at config\%CONFIG_FILE%
+    echo [INFO] Available config files in config/:
+    dir /b config\*.json 2>nul
+    echo.
+    echo [INFO] You can continue without a config file, or you can:
+    echo   1. Create the config file later
+    echo   2. Use the root config.json instead
+    echo   3. Exit and create the config file now
+    set /p CONTINUE="Do you want to continue anyway? (y/n): "
+    if /I not "%CONTINUE%"=="y" (
+        echo [INFO] Exiting. Please create your config file in config/ and run this script again.
+        pause
+        exit /b 0
+    )
 )
 REM Optionally let the user edit/view the config file
 set /p EDIT_CONFIG="Do you want to edit the config file? (y/n): "
@@ -118,9 +130,9 @@ if exist requirements.txt (
         pause
     )
 )
-echo [INFO] Building/Starting execution API...
-REM Example: python main.py --config ../config/%CONFIG_FILE%
-echo [INFO] (Adjust launch command as per execution/README.md)
+echo [INFO] Python execution engine setup complete.
+echo [INFO] To start the engine manually, run commands per execution/README.md
+echo [INFO] Example: python main.py --config ../config/%CONFIG_FILE%
 cd ..
 
 REM **** Step 5: Routing Setup ****
@@ -151,9 +163,11 @@ if exist package.json (
             pause
         )
     )
+) else (
+    echo [INFO] No package.json found in routing/ - dependencies may not be needed
 )
-REM Example build/run, adjust as needed
-REM npm run build
+echo [INFO] Routing layer setup complete.
+echo [INFO] If build is needed, run: npm run build (adjust per routing/README.md)
 cd ..
 
 REM **** Step 6: Autonomous Agent Framework ****
@@ -167,8 +181,9 @@ if not exist agents (
     exit /b 1
 )
 cd agents
-echo [INFO] Building/starting agent orchestration (see agents/README.md)
-REM Example commands here: python agent.py or go build . etc.
+echo [INFO] Agents framework directory accessed.
+echo [INFO] To start agents, follow commands in agents/README.md
+echo [INFO] Common commands: python super_agent_manager.py or python demo.py
 cd ..
 
 REM **** Step 7: Test Suite ****
@@ -183,13 +198,16 @@ if not exist test (
 )
 cd test
 REM Prompt for which tests to run
-set /p TEST_TYPE="Run all tests or specific type? (all/unit/integration/functional): "
-if /I "%TEST_TYPE%"=="all" (
+set /p TEST_TYPE="Run all tests or specific type? (all/unit/integration/functional/skip): "
+if /I "%TEST_TYPE%"=="skip" (
+    echo [INFO] Skipping tests...
+) else if /I "%TEST_TYPE%"=="all" (
     echo [INFO] Running ALL tests...
-    REM Example: python -m unittest discover
+    echo [INFO] To run tests, execute commands from test/README.md
+    echo [INFO] Example: npm test or mocha *.test.js
 ) else (
     echo [INFO] Running %TEST_TYPE% tests...
-    REM Implement actual test commands by reading test/README.md
+    echo [INFO] To run specific tests, follow instructions in test/README.md
 )
 cd ..
 
