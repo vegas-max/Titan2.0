@@ -56,6 +56,7 @@ cargo build --release
 if errorlevel 1 (
     echo [ERROR] Rust build failed. Check core-rust/README.md
     pause
+    cd ..
     exit /b 1
 )
 cd ..
@@ -82,6 +83,7 @@ go build .
 if errorlevel 1 (
     echo [ERROR] Go build failed. Check core-go/README.md
     pause
+    cd ..
     exit /b 1
 )
 cd ..
@@ -102,6 +104,7 @@ where python >nul 2>nul
 if errorlevel 1 (
     echo [ERROR] Python is not installed. Please install: https://www.python.org/downloads/
     pause
+    cd ..
     exit /b 1
 )
 
