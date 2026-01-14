@@ -573,7 +573,7 @@ if __name__ == "__main__":
     with open('COMPREHENSIVE_EXECUTION_PATHS_DIAGRAM.md', 'w') as f:
         f.write(content)
     
-    print(f"✅ Generated comprehensive execution paths documentation")
+    print("✅ Generated comprehensive execution paths documentation")
     print(f"✅ File size: {len(content)} characters")
     print(f"✅ Line count: {len(content.splitlines())}")
-    print(f"✅ Location: COMPREHENSIVE_EXECUTION_PATHS_DIAGRAM.md")
+    print("✅ Location: COMPREHENSIVE_EXECUTION_PATHS_DIAGRAM.md")
