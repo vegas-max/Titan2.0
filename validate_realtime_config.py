@@ -58,7 +58,9 @@ class ConfigValidator:
             try:
                 interval_val = int(interval)
                 if interval_val < 1 or interval_val > 60:
-                    self.warnings.append(f"⚠️  REAL_DATA_POLLING_INTERVAL={interval}s (recommended: 1-10s)")
+                    self.errors.append(f"❌ REAL_DATA_POLLING_INTERVAL={interval}s must be 1-60s")
+                elif interval_val > 10:
+                    self.warnings.append(f"⚠️  REAL_DATA_POLLING_INTERVAL={interval}s (recommended: 1-10s for optimal responsiveness)")
             except ValueError:
                 self.errors.append(f"❌ Invalid REAL_DATA_POLLING_INTERVAL: {interval}")
     
@@ -139,9 +141,12 @@ class ConfigValidator:
         # Check if Rust engine is available
         try:
             import titan_core
-            self.passed.append("✅ Rust engine (titan_core) is available")
+            self.passed.append("✅ Rust engine (titan_core) Python wrapper is available")
         except ImportError:
-            self.warnings.append("⚠️  Rust engine not installed - run ./build_rust_engine.sh")
+            self.warnings.append("⚠️  Rust engine not installed - run ./build_rust_engine.sh for performance boost")
+        
+        # Note: Full Rust HTTP server availability would require checking if the server is running
+        # This can be done separately when starting the system
     
     def validate_signal_output(self):
         """Validate signal output directory"""

@@ -92,7 +92,7 @@ def test_orchestrator_import():
     try:
         from mainnet_orchestrator import MainnetOrchestrator, ExecutionMode
         print("✅ MainnetOrchestrator class imported successfully")
-        print(f"✅ Execution modes available: {ExecutionMode.PAPER}, {ExecutionMode.LIVE}")
+        print(f"✅ Execution modes available: PAPER, LIVE")
         print("✅ Orchestrator module import test passed\n")
         
     except Exception as e:
