@@ -11,6 +11,7 @@
 [![Go](https://img.shields.io/badge/Go-1.21+-00ADD8.svg)](https://golang.org/)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 [![Status](https://img.shields.io/badge/Status-Production%20Ready-brightgreen.svg)](https://github.com/vegas-max/Titan2.0/releases)
+[![Ready](https://img.shields.io/badge/Ready_for_Benchmarking_&_Live_Trading-TRUE-success.svg)](https://github.com/vegas-max/Titan2.0)
 
 *A battle-tested, enterprise-grade DeFi arbitrage system leveraging AI, flash loans, and cross-chain technology to autonomously identify and execute profitable trading opportunities across 15+ blockchain networks.*
 
@@ -39,6 +40,7 @@ This guide helps you choose the best setup method for your needs:
 - **15-minute quick start:** [QUICKSTART.md](QUICKSTART.md)
 - **Understand trading modes:** [MAINNET_MODES.md](MAINNET_MODES.md)
 - **Security essentials:** [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)
+- **Check system ready state:** [READY_STATE_DOCUMENTATION.md](READY_STATE_DOCUMENTATION.md)
 
 ---
 

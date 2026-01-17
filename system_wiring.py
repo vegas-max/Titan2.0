@@ -143,6 +143,7 @@ class SystemIntegrationManager:
     def __init__(self):
         self.mode = os.getenv('EXECUTION_MODE', 'PAPER').upper()
         self.config = self._load_configuration()
+        self.config_file = Path('config.json')
         self.status = {
             'initialized': False,
             'components': {},
@@ -323,6 +324,17 @@ class SystemIntegrationManager:
         print("="*70)
         print(f"  Execution Mode: {self.mode}")
         print(f"  Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
+        
+        # Check ready state from config.json
+        try:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config_data = json.load(f)
+                ready_state = config_data.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
+                ready_icon = "✅" if ready_state else "❌"
+                print(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
+        except (FileNotFoundError, json.JSONDecodeError):
+            print(f"  Ready for Benchmarking & Live Trading: ⚠️  Configuration unavailable")
+        
         print("")
         
         print("  🔧 COMPONENT STATUS")
