@@ -81,6 +81,7 @@ impl ExecutionEngine {
         println!("=== Execution Engine Stats ===");
         println!("Total Executed: {}", self.total_executed);
         println!("Total Blocked: {}", self.total_blocked);
+        // Note: Prometheus counters are thread-safe and may include metrics from other engine instances
         println!("Routes Evaluated: {}", ROUTES_EVALUATED.get());
         println!("Routes Blocked: {}", ROUTES_BLOCKED.get());
         println!("Routes Executed: {}", ROUTES_EXECUTED.get());

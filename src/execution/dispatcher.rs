@@ -82,7 +82,7 @@ pub fn dispatch_route(
             DispatchDecision::Skip(reason)
         }
         ExecutionDecision::BuildOnly => {
-            // Build transaction but don't execute
+            // Build transaction for simulation/testing (still counts as executed for metrics)
             ROUTES_EXECUTED.inc();
             DispatchDecision::Execute
         }
