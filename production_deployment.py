@@ -49,6 +49,7 @@ class ProductionDeploymentManager:
         self.deployment_config = {}
         self.validation_results = {}
         self.feature_status = {}
+        self.config_file = Path('config.json')
         
     def validate_rpc_endpoints(self) -> Tuple[bool, List[str]]:
         """Validate all RPC endpoints are configured"""
@@ -263,6 +264,54 @@ class ProductionDeploymentManager:
             Path(dir_path).mkdir(parents=True, exist_ok=True)
             logger.info(f"   ✅ {dir_path}")
     
+    def update_system_ready_state(self, is_ready: bool):
+        """Update the system_status.ready_for_benchmarking_and_live_trading flag in config.json"""
+        logger.info("🎯 Updating system ready state...")
+        
+        temp_file = None
+        try:
+            # Load current config
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+            
+            # Ensure system_status section exists
+            if 'system_status' not in config:
+                config['system_status'] = {}
+            
+            # Update the ready state
+            config['system_status']['ready_for_benchmarking_and_live_trading'] = is_ready
+            config['system_status']['status_message'] = (
+                "System is fully operational and ready for benchmarking and live trading" 
+                if is_ready 
+                else "System requires configuration before benchmarking and live trading"
+            )
+            config['system_status']['last_validated'] = datetime.now().isoformat() + 'Z'
+            
+            # Write atomically by writing to temp file and renaming
+            temp_file = self.config_file.with_suffix('.tmp')
+            with open(temp_file, 'w', encoding='utf-8') as f:
+                json.dump(config, f, indent=2)
+            
+            # Atomic rename
+            temp_file.replace(self.config_file)
+            temp_file = None  # Successfully replaced, no cleanup needed
+            
+            status_icon = "✅" if is_ready else "❌"
+            logger.info(f"   {status_icon} Ready for benchmarking and live trading: {is_ready}")
+            
+            return True
+            
+        except (FileNotFoundError, PermissionError, json.JSONDecodeError, OSError) as e:
+            logger.error(f"   ❌ Failed to update ready state: {e}")
+            return False
+        finally:
+            # Clean up temp file if it still exists
+            if temp_file and temp_file.exists():
+                try:
+                    temp_file.unlink()
+                except OSError:
+                    pass  # Best effort cleanup
+    
     def generate_deployment_report(self) -> str:
         """Generate comprehensive deployment report"""
         report = []
@@ -271,6 +320,17 @@ class ProductionDeploymentManager:
         report.append("=" * 70)
         report.append(f"  Generated: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
         report.append(f"  Mode: {os.getenv('EXECUTION_MODE', 'PAPER')}")
+        
+        # Add ready state from config
+        try:
+            with open(self.config_file, 'r', encoding='utf-8') as f:
+                config = json.load(f)
+                ready_state = config.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
+                ready_icon = "✅" if ready_state else "❌"
+                report.append(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
+        except (FileNotFoundError, json.JSONDecodeError) as e:
+            report.append(f"  Ready for Benchmarking & Live Trading: ⚠️  Unknown (Error reading config)")
+        
         report.append("")
         
         # RPC Status
@@ -345,6 +405,11 @@ class ProductionDeploymentManager:
         
         # 7. Setup directories
         self.setup_directories()
+        logger.info("")
+        
+        # 8. Update ready state in config.json
+        system_ready = all_valid and not any('not configured' in w.lower() for w in all_warnings)
+        self.update_system_ready_state(system_ready)
         logger.info("")
         
         # Print warnings
