@@ -4,7 +4,7 @@
 # Makefile for common operations
 # Usage: make <target>
 
-.PHONY: help install setup test clean start stop health audit
+.PHONY: help install setup test clean start stop health audit military-audit validated-build
 
 # Default target
 help:
@@ -13,11 +13,12 @@ help:
 	@echo "===================================================="
 	@echo ""
 	@echo "Setup & Installation:"
-	@echo "  make setup      - Run complete automated setup"
-	@echo "  make install    - Install all dependencies"
-	@echo "  make build-rust - Build Rust core library"
-	@echo "  make build-go   - Build Go core binary"
-	@echo "  make build-core - Build both Rust and Go implementations"
+	@echo "  make setup             - Run complete automated setup"
+	@echo "  make install           - Install all dependencies"
+	@echo "  make validated-build   - Build with military-style validation (RECOMMENDED)"
+	@echo "  make build-rust        - Build Rust core library"
+	@echo "  make build-go          - Build Go core binary"
+	@echo "  make build-core        - Build both Rust and Go implementations"
 	@echo ""
 	@echo "System Operations:"
 	@echo "  make start      - Start all Titan components"
@@ -28,6 +29,7 @@ help:
 	@echo "  make restart    - Restart the system"
 	@echo "  make health     - Check system health"
 	@echo "  make audit      - Run system audit"
+	@echo "  make military-audit    - Run military-style module validation"
 	@echo ""
 	@echo "Development:"
 	@echo "  make test       - Run tests"
@@ -103,6 +105,17 @@ health:
 audit:
 	@echo "Running system audit..."
 	@python3 audit_system.py
+
+# Run military-style module validation
+military-audit:
+	@echo "Running military-style module validation..."
+	@python3 military_audit.py
+
+# Validated build with military-style checks
+validated-build:
+	@echo "Running validated build with military-style module checks..."
+	@chmod +x build_with_validation.sh
+	@./build_with_validation.sh
 
 # Run tests
 test:
