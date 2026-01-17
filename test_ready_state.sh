@@ -6,7 +6,11 @@ echo "=========================================="
 echo ""
 
 echo "1. Checking config.json directly:"
-python3 -c "import json; config = json.load(open('config.json')); print(f\"   Ready state: {config['system_status']['ready_for_benchmarking_and_live_trading']}\")"
+if python3 check_ready_state.py > /dev/null 2>&1; then
+    python3 -c "import json; config = json.load(open('config.json')); print(f\"   Ready state: {config['system_status']['ready_for_benchmarking_and_live_trading']}\")" 2>/dev/null || echo "   Error reading config"
+else
+    echo "   Error: check_ready_state.py failed"
+fi
 echo ""
 
 echo "2. Running check_ready_state.py:"

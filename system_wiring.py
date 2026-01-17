@@ -332,8 +332,8 @@ class SystemIntegrationManager:
                 ready_state = config_data.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
                 ready_icon = "✅" if ready_state else "❌"
                 print(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
-            print(f"  Ready for Benchmarking & Live Trading: ⚠️  Unknown (Error: {e})")
+        except (FileNotFoundError, json.JSONDecodeError, KeyError):
+            print(f"  Ready for Benchmarking & Live Trading: ⚠️  Configuration unavailable")
         
         print("")
         

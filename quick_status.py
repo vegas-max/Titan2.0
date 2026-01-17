@@ -19,8 +19,11 @@ try:
         ready_state = config.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
         ready_icon = "✅" if ready_state else "❌"
         print(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
-except (FileNotFoundError, json.JSONDecodeError, KeyError):
-    print(f"  Ready for Benchmarking & Live Trading: ⚠️  Unable to determine")
+except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+    # Log error for debugging but show user-friendly message
+    import sys
+    print(f"  Ready for Benchmarking & Live Trading: ⚠️  Unable to determine", file=sys.stderr)
+    print(f"  (Error: {type(e).__name__})", file=sys.stderr)
 
 print()
 

@@ -268,6 +268,7 @@ class ProductionDeploymentManager:
         """Update the system_status.ready_for_benchmarking_and_live_trading flag in config.json"""
         logger.info("🎯 Updating system ready state...")
         
+        temp_file = None
         try:
             # Load current config
             with open(self.config_file, 'r', encoding='utf-8') as f:
@@ -293,6 +294,7 @@ class ProductionDeploymentManager:
             
             # Atomic rename
             temp_file.replace(self.config_file)
+            temp_file = None  # Successfully replaced, no cleanup needed
             
             status_icon = "✅" if is_ready else "❌"
             logger.info(f"   {status_icon} Ready for benchmarking and live trading: {is_ready}")
@@ -302,6 +304,13 @@ class ProductionDeploymentManager:
         except (FileNotFoundError, PermissionError, json.JSONDecodeError, OSError) as e:
             logger.error(f"   ❌ Failed to update ready state: {e}")
             return False
+        finally:
+            # Clean up temp file if it still exists
+            if temp_file and temp_file.exists():
+                try:
+                    temp_file.unlink()
+                except OSError:
+                    pass  # Best effort cleanup
     
     def generate_deployment_report(self) -> str:
         """Generate comprehensive deployment report"""
