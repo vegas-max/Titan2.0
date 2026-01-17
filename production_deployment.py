@@ -328,7 +328,7 @@ class ProductionDeploymentManager:
                 ready_state = config.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
                 ready_icon = "✅" if ready_state else "❌"
                 report.append(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
-        except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
+        except (FileNotFoundError, json.JSONDecodeError) as e:
             report.append(f"  Ready for Benchmarking & Live Trading: ⚠️  Unknown (Error reading config)")
         
         report.append("")
