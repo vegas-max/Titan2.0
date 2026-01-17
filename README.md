@@ -31,6 +31,7 @@
 
 This guide helps you choose the best setup method for your needs:
 - 🌐 **Browser-based** (Google Colab - No installation required)
+- ☁️ **GitHub Codespaces** (Cloud development environment with zero setup)
 - 💻 **Local installation** (Full control and customization)
 - ☁️ **Cloud deployment** (Oracle Cloud free tier)
 - 🚀 **One-click install** (Windows users)
@@ -285,6 +286,7 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[SETUP.md](SETUP.md)** - 🆕 ⭐ **Complete step-by-step setup guide**
 
 ### 🚀 Quick Start (New Users)
+- **[.devcontainer/README.md](.devcontainer/README.md)** - 🆕 ☁️ **GitHub Codespaces setup (zero installation)**
 - **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - 🆕 ⭐ **Detailed step-by-step Colab walkthrough**
 - **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - ⚡ Run in browser (no installation)
 - **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - 📋 **Quick reference card**
@@ -365,7 +367,33 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 
 ## ⚡ Quick Start
 
-### Option 0: Google Colab (No Installation Required) 🆕 **EASIEST!**
+### Option 0: GitHub Codespaces (Cloud Development - Zero Setup) 🆕 **FASTEST!**
+
+Start developing in seconds with a fully configured cloud environment:
+
+1. **Click** the green "Code" button on GitHub
+2. **Select** "Open with Codespaces" → "New codespace"
+3. **Wait** 3-5 minutes for automatic setup
+4. **Start coding** - all dependencies pre-installed!
+
+```bash
+# Once Codespace is ready
+make help          # View all commands
+make health        # Check system status
+make test          # Run tests
+```
+
+**[📖 Codespaces Documentation](.devcontainer/README.md)**
+
+**Perfect for:**
+- Quick testing and development
+- CI/CD workflow validation
+- Learning the codebase
+- Contributing to the project
+
+---
+
+### Option 1: Google Colab (Browser Execution - No Installation) 🆕 **EASIEST!**
 
 Run TITAN in your browser without any local installation:
 
