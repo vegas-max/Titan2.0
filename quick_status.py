@@ -2,6 +2,7 @@
 Quick System Status Report
 """
 import os
+import json
 from pathlib import Path
 from datetime import datetime
 
@@ -10,6 +11,17 @@ print("  🚀 TITAN SYSTEM STATUS REPORT")
 print("="*70)
 print(f"  Time: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}")
 print(f"  Mode: {os.getenv('EXECUTION_MODE', 'PAPER')}")
+
+# Check ready state from config.json
+try:
+    with open('config.json', 'r', encoding='utf-8') as f:
+        config = json.load(f)
+        ready_state = config.get('system_status', {}).get('ready_for_benchmarking_and_live_trading', False)
+        ready_icon = "✅" if ready_state else "❌"
+        print(f"  Ready for Benchmarking & Live Trading: {ready_icon} {ready_state}")
+except Exception as e:
+    print(f"  Ready for Benchmarking & Live Trading: ⚠️  Unable to determine")
+
 print()
 
 # Check signals
