@@ -1,6 +1,13 @@
 [package]
-name = "titan2"
+name = "omni_scanner_rs"
 version = "0.1.0"
 edition = "2021"
 
 [dependencies]
+tokio = { version = "1.35", features = ["full"] }
+lazy_static = "1.4"
+prometheus = { version = "0.13", features = ["process"] }
+
+[[bin]]
+name = "omni_scanner_rs"
+path = "src/main.rs"
