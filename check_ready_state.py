@@ -40,7 +40,7 @@ def check_ready_state():
         
         return ready_state
         
-    except Exception as e:
+    except (FileNotFoundError, json.JSONDecodeError, KeyError) as e:
         print(f"❌ Error reading config: {e}")
         return False
 

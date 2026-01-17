@@ -299,7 +299,7 @@ class ProductionDeploymentManager:
             
             return True
             
-        except Exception as e:
+        except (FileNotFoundError, PermissionError, json.JSONDecodeError, OSError) as e:
             logger.error(f"   ❌ Failed to update ready state: {e}")
             return False
     
