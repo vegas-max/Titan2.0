@@ -345,8 +345,11 @@ class MilitaryAudit:
         try:
             from web3 import Web3
             
-            # Try to connect to a public RPC
-            rpc_url = os.getenv('RPC_POLYGON') or "https://polygon-rpc.com"
+            # Only test RPC if configured - don't use public fallback for security
+            rpc_url = os.getenv('RPC_POLYGON')
+            if not rpc_url:
+                gate.record_test("RPC connection test", False, "RPC_POLYGON not configured in .env")
+                return gate.tests_failed == 0
             
             start = time.time()
             w3 = Web3(Web3.HTTPProvider(rpc_url))
@@ -458,13 +461,23 @@ class MilitaryAudit:
             
         # Test 3: Node.js runtime
         try:
-            result = subprocess.run(['node', '--version'], capture_output=True, text=True, timeout=5)
-            if result.returncode == 0:
-                version = result.stdout.strip()
-                gate.record_test("Node.js runtime available", True)
-                logger.info(f"Node.js version: {version}")
+            # Validate that node exists before calling
+            node_path = '/usr/bin/node'
+            if not os.path.exists(node_path):
+                # Try to find node in PATH
+                import shutil
+                node_path = shutil.which('node')
+            
+            if node_path:
+                result = subprocess.run([node_path, '--version'], capture_output=True, text=True, timeout=5)
+                if result.returncode == 0:
+                    version = result.stdout.strip()
+                    gate.record_test("Node.js runtime available", True)
+                    logger.info(f"Node.js version: {version}")
+                else:
+                    gate.record_test("Node.js runtime available", False, "Node not found")
             else:
-                gate.record_test("Node.js runtime available", False, "Node not found")
+                gate.record_test("Node.js runtime available", False, "Node.js not in PATH")
         except Exception as e:
             gate.record_test("Node.js runtime available", False, str(e))
             

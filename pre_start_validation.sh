@@ -45,6 +45,13 @@ fi
 
 # Run validation if needed
 if [ "$should_validate" = true ]; then
+    # Check if Python 3 is available
+    if ! command -v python3 >/dev/null 2>&1; then
+        echo -e "\n${RED}✗ Python 3 not found${NC}"
+        echo -e "${RED}  Please install Python 3.11 or higher${NC}\n"
+        exit 1
+    fi
+    
     if python3 military_audit.py; then
         echo -e "\n${GREEN}✓ Military audit PASSED${NC}"
         # Mark validation timestamp
