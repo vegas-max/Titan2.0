@@ -286,9 +286,13 @@ class ProductionDeploymentManager:
             )
             config['system_status']['last_validated'] = datetime.now().isoformat() + 'Z'
             
-            # Write back to file
-            with open(self.config_file, 'w', encoding='utf-8') as f:
+            # Write atomically by writing to temp file and renaming
+            temp_file = self.config_file.with_suffix('.tmp')
+            with open(temp_file, 'w', encoding='utf-8') as f:
                 json.dump(config, f, indent=2)
+            
+            # Atomic rename
+            temp_file.replace(self.config_file)
             
             status_icon = "✅" if is_ready else "❌"
             logger.info(f"   {status_icon} Ready for benchmarking and live trading: {is_ready}")
