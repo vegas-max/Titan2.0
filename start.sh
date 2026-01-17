@@ -19,6 +19,23 @@ echo -e "${BLUE}   APEX-OMEGA TITAN: SYSTEM BOOT${NC}"
 echo -e "${BLUE}===================================================${NC}"
 echo ""
 
+# Run pre-start validation (unless explicitly skipped)
+if [ -z "$SKIP_VALIDATION" ]; then
+    echo -e "${YELLOW}Running pre-start validation...${NC}"
+    if [ -f "pre_start_validation.sh" ]; then
+        if ! ./pre_start_validation.sh; then
+            echo -e "${RED}[✗] Pre-start validation failed${NC}"
+            echo "Fix validation errors before starting the system"
+            echo "Or set SKIP_VALIDATION=1 to bypass (not recommended)"
+            exit 1
+        fi
+    else
+        echo -e "${YELLOW}[!] pre_start_validation.sh not found, skipping validation${NC}"
+    fi
+else
+    echo -e "${YELLOW}[!] Validation skipped (SKIP_VALIDATION set)${NC}"
+fi
+
 # Check if .env exists
 if [ ! -f ".env" ]; then
     echo -e "${YELLOW}[!] .env file not found${NC}"
