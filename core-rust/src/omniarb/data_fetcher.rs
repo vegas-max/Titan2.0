@@ -2,12 +2,22 @@ use crate::omniarb::matrix_parser::TokenEntry;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
+/// QuoteInfo using integer micro-units for precision
+/// All percentages are in basis points (1/10000)
+/// All USD values are in micro-dollars (1/1000000)
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct QuoteInfo {
-    pub spread_percentage: f64,
-    pub slippage_estimate: f64,
-    pub gas_cost_usd: f64,
-    pub available_liquidity: f64,
+    /// Spread percentage in basis points (1 bp = 0.01%)
+    pub spread_bps: u64,
+    /// Slippage estimate in basis points
+    pub slippage_bps: u64,
+    /// Gas cost in micro-USD (USD * 1e6)
+    pub gas_cost_micro_usd: u64,
+    /// Available liquidity in micro-USD
+    pub liquidity_micro_usd: u128,
+    /// Decimal precision for normalization
+    pub token0_decimals: u8,
+    pub token1_decimals: u8,
 }
 
 /// Fetch live bridge quotes for token matrix entries
@@ -35,75 +45,91 @@ pub fn fetch_live_quotes(token_matrix: &[TokenEntry]) -> Vec<QuoteInfo> {
 /// - Socket API: https://api.socket.tech/v2/quote
 /// - Across API: https://across.to/api/suggested-fees
 /// 
+/// IMPORTANT: Uses integer math to avoid precision loss
 fn simulate_bridge_quote(entry: &TokenEntry) -> QuoteInfo {
-    // Base spread from liquidity and fee tier
-    let base_spread = (entry.liquidity_score / 100.0) * 2.0 - entry.fee_tier;
+    // Convert liquidity_score and fee_tier to integer basis points
+    // liquidity_score is 0-100, fee_tier is decimal percentage
+    let liquidity_score_bps = (entry.liquidity_score * 100.0) as u64; // 0-10000 bps
+    let fee_tier_bps = (entry.fee_tier * 100.0) as u64; // percentage to bps
     
-    // Add some variance based on token and bridge
-    let token_factor = get_token_volatility(&entry.native_token);
-    let bridge_factor = get_bridge_efficiency(&entry.bridge_protocol);
+    // Base spread calculation in basis points
+    // base_spread = (liquidity/100 * 2) - fee_tier converted to bps
+    let base_spread_bps = ((liquidity_score_bps * 2) / 100).saturating_sub(fee_tier_bps);
     
-    let spread = (base_spread * token_factor * bridge_factor).max(0.0);
+    // Add variance based on token and bridge (use integer multipliers)
+    let token_factor_bps = get_token_volatility_bps(&entry.native_token);
+    let bridge_factor_bps = get_bridge_efficiency_bps(&entry.bridge_protocol);
     
-    // Slippage is inversely proportional to liquidity
-    let slippage = (100.0 - entry.liquidity_score) / 100.0 * 2.0;
+    // Multiply and scale: (spread * factor1 * factor2) / (10000 * 10000)
+    let spread_bps = ((base_spread_bps as u128 * token_factor_bps as u128 * bridge_factor_bps as u128) 
+                      / (10000 * 10000)) as u64;
     
-    // Gas costs vary by destination chain
-    let gas_cost = estimate_gas_cost(entry.chain_dest);
+    // Slippage in basis points (inversely proportional to liquidity)
+    // slippage = ((100 - liquidity_score) / 100 * 2) * 10000 bps
+    let slippage_bps = ((10000 - liquidity_score_bps) * 2 * 10000) / 10000;
     
-    // Available liquidity based on score
-    let liquidity = entry.liquidity_score * 10000.0; // Scale to USD
+    // Gas costs in micro-USD (USD * 1e6)
+    let gas_cost_micro_usd = estimate_gas_cost_micro_usd(entry.chain_dest);
+    
+    // Available liquidity in micro-USD
+    // liquidity_score (0-100) * 10000 USD = up to 1M USD
+    let liquidity_micro_usd = (entry.liquidity_score * 10000.0 * 1_000_000.0) as u128;
     
     QuoteInfo {
-        spread_percentage: spread,
-        slippage_estimate: slippage,
-        gas_cost_usd: gas_cost,
-        available_liquidity: liquidity,
+        spread_bps,
+        slippage_bps,
+        gas_cost_micro_usd,
+        liquidity_micro_usd,
+        token0_decimals: 18, // Default to 18, should be fetched from chain
+        token1_decimals: 18,
     }
 }
 
-fn get_token_volatility(token: &str) -> f64 {
+/// Get token volatility factor in basis points (10000 = 1.0x)
+fn get_token_volatility_bps(token: &str) -> u64 {
     let stable_tokens = ["USDC", "USDT", "DAI"];
     let low_vol_tokens = ["ETH", "WETH", "WBTC"];
     
     if stable_tokens.contains(&token) {
-        1.0 // Stablecoins - low volatility
+        10000 // Stablecoins - 1.0x (low volatility)
     } else if low_vol_tokens.contains(&token) {
-        1.1 // Major tokens - moderate volatility
+        11000 // Major tokens - 1.1x (moderate volatility)
     } else {
-        1.3 // Alt tokens - higher volatility
+        13000 // Alt tokens - 1.3x (higher volatility)
     }
 }
 
-fn get_bridge_efficiency(bridge: &str) -> f64 {
+/// Get bridge efficiency factor in basis points (10000 = 1.0x)
+fn get_bridge_efficiency_bps(bridge: &str) -> u64 {
     let efficient_bridges = ["STARGATE", "ACROSS", "CCIP"];
     let standard_bridges = ["HOP", "SYNAPSE", "LIFI"];
     
     if efficient_bridges.contains(&bridge) {
-        1.15 // Premium bridges - better rates
+        11500 // Premium bridges - 1.15x (better rates)
     } else if standard_bridges.contains(&bridge) {
-        1.0 // Standard bridges
+        10000 // Standard bridges - 1.0x
     } else {
-        0.9 // Other bridges - less efficient
+        9000 // Other bridges - 0.9x (less efficient)
     }
 }
 
-fn estimate_gas_cost(chain_id: u64) -> f64 {
-    // Gas costs by chain (USD)
-    let gas_costs: HashMap<u64, f64> = [
-        (1, 15.0),      // Ethereum - expensive
-        (137, 0.5),     // Polygon - cheap
-        (42161, 0.8),   // Arbitrum - cheap
-        (10, 1.0),      // Optimism - cheap
-        (8453, 0.5),    // Base - cheap
-        (56, 0.3),      // BSC - very cheap
-        (43114, 2.0),   // Avalanche - moderate
+/// Estimate gas cost in micro-USD (USD * 1e6) for precision
+fn estimate_gas_cost_micro_usd(chain_id: u64) -> u64 {
+    // Gas costs by chain in micro-USD (1 USD = 1,000,000 micro-USD)
+    let gas_costs: HashMap<u64, u64> = [
+        (1, 15_000_000),      // Ethereum - $15 expensive
+        (137, 500_000),       // Polygon - $0.50 cheap
+        (42161, 800_000),     // Arbitrum - $0.80 cheap
+        (10, 1_000_000),      // Optimism - $1.00 cheap
+        (8453, 500_000),      // Base - $0.50 cheap
+        (56, 300_000),        // BSC - $0.30 very cheap
+        (43114, 2_000_000),   // Avalanche - $2.00 moderate
     ]
     .iter()
     .cloned()
     .collect();
     
-    *gas_costs.get(&chain_id).unwrap_or(&5.0)
+    *gas_costs.get(&chain_id).unwrap_or(&5_000_000) // Default $5
 }
 
 /// Async version for real API integration (future enhancement)
@@ -140,6 +166,9 @@ mod tests {
         
         let quotes = fetch_live_quotes(&entries);
         assert_eq!(quotes.len(), 1);
-        assert!(quotes[0].spread_percentage >= 0.0);
+        assert!(quotes[0].spread_bps < 100000); // Reasonable spread (< 1000%)
+        assert!(quotes[0].slippage_bps < 100000); // Reasonable slippage
+        assert!(quotes[0].gas_cost_micro_usd > 0); // Has gas cost
+        assert!(quotes[0].liquidity_micro_usd > 0); // Has liquidity
     }
 }

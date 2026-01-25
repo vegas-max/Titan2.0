@@ -150,9 +150,9 @@ class TitanBot {
             console.log("ℹ️  Paper mode: Skipping wallet validation");
         }
         
-        // Validate gas configuration
-        const maxBaseFee = parseFloat(process.env.MAX_BASE_FEE_GWEI);
-        if (isNaN(maxBaseFee) || maxBaseFee <= 0) {
+        // Validate gas configuration (use integer gwei for precision)
+        const maxBaseFeeGwei = parseInt(process.env.MAX_BASE_FEE_GWEI || '500', 10);
+        if (isNaN(maxBaseFeeGwei) || maxBaseFeeGwei <= 0) {
             console.warn('⚠️ Invalid MAX_BASE_FEE_GWEI, using default 500 gwei');
         }
         
@@ -453,12 +453,12 @@ class TitanBot {
                 const gasStrategy = signal.ai_params?.priority > 50 ? 'RAPID' : 'STANDARD';
                 const fees = await gasMgr.getDynamicGasFees(gasStrategy);
                 
-                // Validate gas fees are reasonable (using same limit as GasManager)
-                const MAX_GAS_FEE_GWEI = parseFloat(process.env.MAX_BASE_FEE_GWEI || '500');
-                const maxFeeGwei = parseFloat(ethers.formatUnits(fees.maxFeePerGas || fees.gasPrice || 0n, 'gwei'));
+                // Validate gas fees are reasonable (use BigInt for precision)
+                const MAX_GAS_FEE_GWEI = BigInt(process.env.MAX_BASE_FEE_GWEI || '500');
+                const maxFeePerGasGwei = (fees.maxFeePerGas || fees.gasPrice || 0n) / BigInt(1e9);
                 
-                if (maxFeeGwei > MAX_GAS_FEE_GWEI) {
-                    console.log(`🛑 Gas fees too high (${maxFeeGwei} gwei), aborting. Max allowed: ${MAX_GAS_FEE_GWEI} gwei`);
+                if (maxFeePerGasGwei > MAX_GAS_FEE_GWEI) {
+                    console.log(`🛑 Gas fees too high (${maxFeePerGasGwei} gwei), aborting. Max allowed: ${MAX_GAS_FEE_GWEI} gwei`);
                     return;
                 }
                 
@@ -843,15 +843,19 @@ class TitanBot {
                 console.log(`   Gas used: ${receipt.gasUsed.toString()}`);
                 console.log(`   Block: ${receipt.blockNumber}`);
                 
-                // Calculate actual profit
+                // Calculate actual profit using integer micro-dollars for precision
                 const gasUsed = receipt.gasUsed;
                 const gasPrice = receipt.gasPrice || tx.maxFeePerGas;
                 const gasCostWei = gasUsed * gasPrice;
                 const gasCostEth = ethers.formatEther(gasCostWei);
                 
-                // Use configurable ETH price or conservative estimate
-                const ethPriceUSD = parseFloat(process.env.ETH_PRICE_USD || '2000');
-                const estimatedGasCostUSD = parseFloat(gasCostEth) * ethPriceUSD;
+                // Use configurable ETH price (store as integer cents to avoid float)
+                const ethPriceCents = parseInt(process.env.ETH_PRICE_USD || '2000', 10) * 100; // USD * 100
+                // Convert gasCostEth to micro-ETH for precision: ETH * 1e6
+                const gasCostMicroEth = BigInt(Math.floor(parseFloat(gasCostEth) * 1e6));
+                // Calculate gas cost in cents: (micro-ETH * cents-per-ETH) / 1e6
+                const gasCostCents = Number((gasCostMicroEth * BigInt(ethPriceCents)) / BigInt(1e6));
+                const estimatedGasCostUSD = gasCostCents / 100; // Convert cents back to dollars
                 
                 console.log(`   Gas cost: ${gasCostEth} ETH (~$${estimatedGasCostUSD.toFixed(2)})`);
                 

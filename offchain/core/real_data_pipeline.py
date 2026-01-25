@@ -116,6 +116,7 @@ class RealDataPipeline:
     def _handle_pool_update(self, dex_name: str, chain: str, data: Dict):
         """
         Handle pool update from WebSocket
+        Extract block number and ensure data is block-synchronized
         
         Args:
             dex_name: Name of the DEX
@@ -125,6 +126,9 @@ class RealDataPipeline:
         try:
             self.stats['updates_received'] += 1
             
+            # Extract block number if available
+            block_number = data.get('block_number') or data.get('blockNumber')
+            
             # Extract pool data based on GraphQL subscription format
             if 'data' in data and 'pools' in data['data']:
                 pools = data['data']['pools']
@@ -133,7 +137,9 @@ class RealDataPipeline:
                     pool_id = pool.get('id')
                     if pool_id:
                         cache_key = f"{dex_name}:{chain}:{pool_id}"
-                        self.pool_cache[cache_key] = {
+                        
+                        # Store with block number for synchronization
+                        pool_data = {
                             'dex': dex_name,
                             'chain': chain,
                             'pool_address': pool_id,
@@ -144,11 +150,14 @@ class RealDataPipeline:
                             'reserve_usd': pool.get('reserveUSD'),
                             'volume_usd': pool.get('volumeUSD'),
                             'tx_count': pool.get('txCount'),
+                            'block_number': block_number,  # Critical for synchronization
                             'timestamp': datetime.now().isoformat(),
                             'source': 'websocket'
                         }
                         
-                        logger.debug(f"📊 Updated pool {pool_id[:8]}... on {dex_name}/{chain}")
+                        self.pool_cache[cache_key] = pool_data
+                        
+                        logger.debug(f"📊 Updated pool {pool_id[:8]}... on {dex_name}/{chain} @ block {block_number}")
                         
         except Exception as e:
             logger.error(f"Error handling pool update from {dex_name}/{chain}: {e}")
@@ -158,15 +167,17 @@ class RealDataPipeline:
         self,
         chain_id: int,
         pool_address: str,
-        dex_type: str = 'uniswap_v2'
+        dex_type: str = 'uniswap_v2',
+        block_number: Optional[int] = None
     ) -> Optional[Dict]:
         """
-        Get real-time pool reserves
+        Get real-time pool reserves with block synchronization
         
         Args:
             chain_id: Chain ID
             pool_address: Pool contract address
             dex_type: Type of DEX ('uniswap_v2', 'uniswap_v3', 'curve', etc.)
+            block_number: Optional specific block number for synchronization
             
         Returns:
             Dictionary with pool reserve data or None if unavailable
@@ -179,13 +190,22 @@ class RealDataPipeline:
             if cache_key in self.pool_cache:
                 cached_data = self.pool_cache[cache_key]
                 
-                # Check if cache is fresh (< 10 seconds old)
-                cache_time = datetime.fromisoformat(cached_data['timestamp'])
-                age_seconds = (datetime.now() - cache_time).total_seconds()
-                
-                if age_seconds < 10:
-                    logger.debug(f"📦 Using cached pool data (age: {age_seconds:.1f}s)")
-                    return cached_data
+                # If specific block requested, verify it matches
+                if block_number is not None:
+                    cached_block = cached_data.get('block_number')
+                    if cached_block != block_number:
+                        logger.debug(f"Block mismatch: cached={cached_block}, requested={block_number}")
+                    else:
+                        logger.debug(f"📦 Using cached pool data from block {block_number}")
+                        return cached_data
+                else:
+                    # Check if cache is fresh (< 10 seconds old)
+                    cache_time = datetime.fromisoformat(cached_data['timestamp'])
+                    age_seconds = (datetime.now() - cache_time).total_seconds()
+                    
+                    if age_seconds < 10:
+                        logger.debug(f"📦 Using cached pool data (age: {age_seconds:.1f}s)")
+                        return cached_data
             
             # Fall back to direct query
             logger.debug(f"🔍 Querying pool {pool_address[:8]}... directly")
@@ -214,9 +234,13 @@ class RealDataPipeline:
                 return None
             
             if result:
-                # Add to cache
+                # Add block number and timestamp to result
                 result['timestamp'] = datetime.now().isoformat()
                 result['source'] = 'direct_query'
+                if block_number is not None:
+                    result['block_number'] = block_number
+                    
+                # Add to cache
                 self.pool_cache[cache_key] = result
                 
             return result
@@ -225,6 +249,25 @@ class RealDataPipeline:
             logger.error(f"Error getting pool reserves: {e}")
             self.stats['errors'] += 1
             return None
+    
+    def get_pools_by_block(self, block_number: int) -> List[Dict]:
+        """
+        Get all pools from a specific block number
+        Ensures all data is synchronized to same block
+        
+        Args:
+            block_number: Block number to query
+            
+        Returns:
+            List of pool data from this block
+        """
+        pools = []
+        for cache_key, pool_data in self.pool_cache.items():
+            if pool_data.get('block_number') == block_number:
+                pools.append(pool_data)
+        
+        logger.debug(f"Found {len(pools)} pools at block {block_number}")
+        return pools
     
     async def scan_opportunities(
         self,

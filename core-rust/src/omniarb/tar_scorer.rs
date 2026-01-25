@@ -18,7 +18,7 @@ const TIER_2_BRIDGES: &[&str] = &["HOP", "SYNAPSE", "SOCKET", "LAYERZERO"];
 /// 
 /// # Arguments
 /// * `entry` - Token matrix entry
-/// * `quote` - Live quote information
+/// * `quote` - Live quote information (using integer basis points)
 /// 
 /// # Returns
 /// TAR score (0-100, higher is better)
@@ -30,11 +30,15 @@ pub fn calculate_tar_score(entry: &TokenEntry, quote: &QuoteInfo) -> f64 {
     score += token_score;
     
     // A - Arbitrage Efficiency (0-35 points)
-    let arb_score = calculate_arbitrage_efficiency(entry.fee_tier, quote.spread_percentage);
+    // Convert basis points to percentage for calculation
+    let spread_percentage = quote.spread_bps as f64 / 100.0;
+    let arb_score = calculate_arbitrage_efficiency(entry.fee_tier, spread_percentage);
     score += arb_score;
     
     // R - Risk Assessment (0-30 points)
-    let risk_score = calculate_risk_score(&entry.bridge_protocol, quote.slippage_estimate);
+    // Convert basis points to percentage for calculation
+    let slippage_percentage = quote.slippage_bps as f64 / 100.0;
+    let risk_score = calculate_risk_score(&entry.bridge_protocol, slippage_percentage);
     score += risk_score;
     
     // Cap at 100
@@ -127,10 +131,12 @@ mod tests {
         };
         
         let quote = QuoteInfo {
-            spread_percentage: 1.5,
-            slippage_estimate: 0.3,
-            gas_cost_usd: 5.0,
-            available_liquidity: 1000000.0,
+            spread_bps: 150, // 1.5%
+            slippage_bps: 30, // 0.3%
+            gas_cost_micro_usd: 5_000_000, // $5
+            liquidity_micro_usd: 1_000_000_000_000, // $1M
+            token0_decimals: 6,
+            token1_decimals: 18,
         };
         
         let score = calculate_tar_score(&entry, &quote);
