@@ -847,16 +847,20 @@ class TitanBot {
                 const gasUsed = receipt.gasUsed;
                 const gasPrice = receipt.gasPrice || tx.maxFeePerGas;
                 const gasCostWei = gasUsed * gasPrice;
-                const gasCostEth = ethers.formatEther(gasCostWei);
                 
                 // Use configurable ETH price (store as integer cents to avoid float)
                 const ethPriceCents = parseInt(process.env.ETH_PRICE_USD || '2000', 10) * 100; // USD * 100
-                // Convert gasCostEth to micro-ETH for precision: ETH * 1e6
-                const gasCostMicroEth = BigInt(Math.floor(parseFloat(gasCostEth) * 1e6));
+                
+                // Convert Wei to micro-ETH using BigInt to avoid precision loss
+                // 1 ETH = 1e18 Wei, 1 micro-ETH = 1e12 Wei
+                const gasCostMicroEth = gasCostWei / BigInt(1e12);
+                
                 // Calculate gas cost in cents: (micro-ETH * cents-per-ETH) / 1e6
                 const gasCostCents = Number((gasCostMicroEth * BigInt(ethPriceCents)) / BigInt(1e6));
                 const estimatedGasCostUSD = gasCostCents / 100; // Convert cents back to dollars
                 
+                // Format for display
+                const gasCostEth = ethers.formatEther(gasCostWei);
                 console.log(`   Gas cost: ${gasCostEth} ETH (~$${estimatedGasCostUSD.toFixed(2)})`);
                 
                 const expectedProfit = signal.metrics?.profit_usd || 0;

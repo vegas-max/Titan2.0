@@ -1,7 +1,9 @@
 """
 WebSocket Manager for Real-Time DEX Data
 Manages WebSocket connections to DEX subgraphs and pool data streaming
-Tracks block numbers for synchronization
+Tracks block numbers for synchronization - ensures all pool data used in 
+route computation comes from the same block number to prevent arbitrage
+detection across inconsistent states
 """
 
 import asyncio
