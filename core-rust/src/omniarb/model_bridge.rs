@@ -65,8 +65,9 @@ fn extract_features(entry: &TokenEntry, quote: &QuoteInfo) -> ModelFeatures {
     // Liquidity score (normalized)
     let liquidity_score = entry.liquidity_score;
     
-    // Spread score (0-100)
-    let spread_score = (quote.spread_percentage * 20.0).min(100.0);
+    // Spread score (0-100): Convert basis points to percentage
+    let spread_percentage = quote.spread_bps as f64 / 100.0;
+    let spread_score = (spread_percentage * 20.0).min(100.0);
     
     // Bridge reliability score
     let bridge_score = get_bridge_score(&entry.bridge_protocol);
@@ -74,11 +75,13 @@ fn extract_features(entry: &TokenEntry, quote: &QuoteInfo) -> ModelFeatures {
     // Token quality score
     let token_score = get_token_score(&entry.native_token);
     
-    // Slippage penalty (inverse)
-    let slippage_penalty = quote.slippage_estimate * 50.0;
+    // Slippage penalty (inverse): Convert basis points to percentage
+    let slippage_percentage = quote.slippage_bps as f64 / 100.0;
+    let slippage_penalty = slippage_percentage * 50.0;
     
-    // Gas efficiency (inverse of cost, normalized)
-    let gas_efficiency = (20.0 - quote.gas_cost_usd.min(20.0)) / 20.0 * 100.0;
+    // Gas efficiency (inverse of cost, normalized): Convert micro-USD to USD
+    let gas_cost_usd = quote.gas_cost_micro_usd as f64 / 1_000_000.0;
+    let gas_efficiency = (20.0 - gas_cost_usd.min(20.0)) / 20.0 * 100.0;
     
     ModelFeatures {
         liquidity_score,
@@ -137,10 +140,12 @@ mod tests {
         };
         
         let quote = QuoteInfo {
-            spread_percentage: 1.5,
-            slippage_estimate: 0.3,
-            gas_cost_usd: 5.0,
-            available_liquidity: 1000000.0,
+            spread_bps: 150,  // 1.5%
+            slippage_bps: 30,  // 0.3%
+            gas_cost_micro_usd: 5_000_000,  // $5
+            liquidity_micro_usd: 1_000_000_000_000,  // $1M
+            token0_decimals: 18,
+            token1_decimals: 6,
         };
         
         let prediction = run_tar_onnx(&entry, &quote);
@@ -161,10 +166,12 @@ mod tests {
         };
         
         let quote = QuoteInfo {
-            spread_percentage: 1.2,
-            slippage_estimate: 0.5,
-            gas_cost_usd: 8.0,
-            available_liquidity: 500000.0,
+            spread_bps: 120,  // 1.2%
+            slippage_bps: 50,  // 0.5%
+            gas_cost_micro_usd: 8_000_000,  // $8
+            liquidity_micro_usd: 500_000_000_000,  // $500K
+            token0_decimals: 18,
+            token1_decimals: 18,
         };
         
         let prediction = run_flanker(&entry, &quote);

@@ -1,13 +1,16 @@
 """
 WebSocket Manager for Real-Time DEX Data
 Manages WebSocket connections to DEX subgraphs and pool data streaming
+Tracks block numbers for synchronization - ensures all pool data used in 
+route computation comes from the same block number to prevent arbitrage
+detection across inconsistent states
 """
 
 import asyncio
 import json
 import logging
 import os
-from typing import Dict, Callable, List, Any
+from typing import Dict, Callable, List, Any, Optional
 from datetime import datetime
 from collections import defaultdict
 
@@ -22,6 +25,7 @@ except ImportError:
 class WebSocketManager:
     """
     Manages WebSocket connections to multiple DEX endpoints for real-time data
+    Tracks block numbers for synchronization to ensure all pool data is from same block
     """
     
     def __init__(self, config: Dict):
@@ -41,6 +45,10 @@ class WebSocketManager:
         # Track connection health
         self.connection_health = {}
         self.last_message_time = {}
+        
+        # Block synchronization tracking
+        self.current_block_numbers = {}  # {connection_key: block_number}
+        self.block_callbacks = defaultdict(list)  # Callbacks for newHeads events
         
     async def connect(self, dex_name: str, chain: str):
         """
@@ -101,6 +109,20 @@ class WebSocketManager:
                     try:
                         data = json.loads(message)
                         
+                        # Check if this is a block update (newHeads event)
+                        if self._is_block_update(data):
+                            block_number = self._extract_block_number(data)
+                            if block_number:
+                                self.current_block_numbers[connection_key] = block_number
+                                logger.debug(f"📦 Block update for {connection_key}: {block_number}")
+                                
+                                # Call block-specific callbacks
+                                for callback in self.block_callbacks.get(connection_key, []):
+                                    try:
+                                        callback(block_number, data)
+                                    except Exception as e:
+                                        logger.error(f"Error in block callback for {connection_key}: {e}")
+                        
                         # Call registered callbacks
                         for callback in self.callbacks.get(connection_key, []):
                             try:
@@ -132,6 +154,40 @@ class WebSocketManager:
         if reconnect_attempts >= self.max_reconnect_attempts:
             logger.error(f"Max reconnection attempts reached for {connection_key}")
             self.connection_health[connection_key] = "failed"
+    
+    def _is_block_update(self, data: Dict) -> bool:
+        """Check if message is a block update (newHeads event)"""
+        # Ethereum JSON-RPC format
+        if data.get("method") == "eth_subscription":
+            params = data.get("params", {})
+            if params.get("result", {}).get("number"):
+                return True
+        
+        # GraphQL subscription format
+        if "data" in data and "newHeads" in data["data"]:
+            return True
+        
+        return False
+    
+    def _extract_block_number(self, data: Dict) -> Optional[int]:
+        """Extract block number from newHeads event"""
+        try:
+            # Ethereum JSON-RPC format
+            if data.get("method") == "eth_subscription":
+                params = data.get("params", {})
+                result = params.get("result", {})
+                block_hex = result.get("number")
+                if block_hex:
+                    return int(block_hex, 16)
+            
+            # GraphQL format
+            if "data" in data and "newHeads" in data["data"]:
+                return data["data"]["newHeads"].get("number")
+            
+        except Exception as e:
+            logger.error(f"Error extracting block number: {e}")
+        
+        return None
     
     def subscribe_pool_updates(self, connection_key: str, pool_addresses: List[str]):
         """
@@ -188,6 +244,29 @@ class WebSocketManager:
         self.callbacks[connection_key].append(callback)
         logger.info(f"Registered callback for {connection_key}")
     
+    def register_block_callback(self, connection_key: str, callback: Callable[[int, Dict], None]):
+        """
+        Register a callback for block updates (newHeads events)
+        
+        Args:
+            connection_key: Connection identifier (dex:chain)
+            callback: Function to call with (block_number, data)
+        """
+        self.block_callbacks[connection_key].append(callback)
+        logger.info(f"Registered block callback for {connection_key}")
+    
+    def get_current_block(self, connection_key: str) -> Optional[int]:
+        """
+        Get the current block number for a connection
+        
+        Args:
+            connection_key: Connection identifier (dex:chain)
+            
+        Returns:
+            Current block number or None if not available
+        """
+        return self.current_block_numbers.get(connection_key)
+    
     async def start(self):
         """Start the WebSocket manager"""
         self.running = True
@@ -212,14 +291,16 @@ class WebSocketManager:
         Get status of all connections
         
         Returns:
-            Dictionary with connection health information
+            Dictionary with connection health information including block numbers
         """
         status = {}
         for connection_key, health in self.connection_health.items():
             last_msg = self.last_message_time.get(connection_key)
+            block_num = self.current_block_numbers.get(connection_key)
             status[connection_key] = {
                 'health': health,
                 'last_message': last_msg.isoformat() if last_msg else None,
-                'seconds_since_last_message': (datetime.now() - last_msg).total_seconds() if last_msg else None
+                'seconds_since_last_message': (datetime.now() - last_msg).total_seconds() if last_msg else None,
+                'current_block': block_num
             }
         return status

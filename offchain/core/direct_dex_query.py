@@ -201,11 +201,11 @@ class DirectDEXQuery:
             return {
                 'pool_address': pool_address,
                 'pool_type': 'uniswap_v2',
-                'reserve_in': reserve_in,
-                'reserve_out': reserve_out,
-                'price': float(price),
+                'reserve_in': str(reserve_in),  # Store as string for precision
+                'reserve_out': str(reserve_out),  # Store as string for precision
+                'price': str(price),  # Store as string for precision
                 'amount_out': amount_out,
-                'price_impact': float(price_impact),
+                'price_impact': str(price_impact),  # Store as string for precision
                 'fee': 0.003  # 0.3%
             }
             
@@ -263,11 +263,11 @@ class DirectDEXQuery:
             return {
                 'pool_address': pool_address,
                 'pool_type': 'uniswap_v3',
-                'sqrt_price_x96': sqrt_price_x96,
+                'sqrt_price_x96': str(sqrt_price_x96),  # Store as string for precision
                 'tick': current_tick,
-                'liquidity': liquidity,
+                'liquidity': str(liquidity),  # Store as string for precision
                 'fee': fee,
-                'price': float(price)
+                'price': str(price)  # Store as string for precision
             }
             
         except Exception as e:
@@ -339,12 +339,12 @@ class DirectDEXQuery:
             return {
                 'pool_address': pool_address,
                 'pool_type': 'curve',
-                'balance_in': balance_in,
-                'balance_out': balance_out,
+                'balance_in': str(balance_in),  # Store as string for precision
+                'balance_out': str(balance_out),  # Store as string for precision
                 'amp': amp,
-                'price': float(price),
+                'price': str(price),  # Store as string for precision
                 'amount_out': amount_out,
-                'price_impact': float(price_impact),
+                'price_impact': str(price_impact),  # Store as string for precision
                 'fee': 0.0004  # 0.04% typical
             }
             

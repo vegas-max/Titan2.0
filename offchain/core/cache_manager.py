@@ -72,13 +72,14 @@ class CacheManager:
             conn = self._get_conn()
             cursor = conn.cursor()
             
-            # Main cache table with TTL
+            # Main cache table with TTL and block number tracking
             cursor.execute("""
                 CREATE TABLE IF NOT EXISTS cache (
                     key TEXT PRIMARY KEY,
                     value TEXT NOT NULL,
                     expires_at REAL NOT NULL,
-                    created_at REAL NOT NULL
+                    created_at REAL NOT NULL,
+                    block_number INTEGER
                 )
             """)
             
@@ -101,9 +102,27 @@ class CacheManager:
                 )
             """)
             
+            # Pool state cache with block number for synchronization
+            cursor.execute("""
+                CREATE TABLE IF NOT EXISTS pool_state (
+                    pool_key TEXT PRIMARY KEY,
+                    chain_id INTEGER NOT NULL,
+                    block_number INTEGER NOT NULL,
+                    reserve0 TEXT NOT NULL,
+                    reserve1 TEXT NOT NULL,
+                    decimals0 INTEGER,
+                    decimals1 INTEGER,
+                    updated_at REAL NOT NULL,
+                    expires_at REAL NOT NULL
+                )
+            """)
+            
             # Create indices for performance
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_cache_expires ON cache(expires_at)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_cache_block ON cache(block_number)")
             cursor.execute("CREATE INDEX IF NOT EXISTS idx_gas_expires ON gas_prices(expires_at)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pool_block ON pool_state(block_number)")
+            cursor.execute("CREATE INDEX IF NOT EXISTS idx_pool_chain ON pool_state(chain_id)")
             
             conn.commit()
             self._close_conn(conn)
@@ -345,6 +364,150 @@ class CacheManager:
         except Exception as e:
             logger.error(f"Get all metrics error: {e}")
             return {}
+    
+    def set_pool_state(
+        self,
+        chain_id: int,
+        pool_address: str,
+        block_number: int,
+        reserve0: str,
+        reserve1: str,
+        decimals0: int = 18,
+        decimals1: int = 18,
+        ttl: int = 12
+    ) -> bool:
+        """
+        Set pool state with block number for synchronization
+        
+        Args:
+            chain_id: Chain ID
+            pool_address: Pool contract address
+            block_number: Block number for this state
+            reserve0: Reserve0 as string (for precision)
+            reserve1: Reserve1 as string (for precision)
+            decimals0: Token0 decimals
+            decimals1: Token1 decimals
+            ttl: Time to live in seconds (default: 12 = 1 block on most chains)
+            
+        Returns:
+            bool: True if successful
+        """
+        try:
+            with self.lock:
+                conn = self._get_conn()
+                cursor = conn.cursor()
+                
+                now = time.time()
+                expires_at = now + ttl
+                pool_key = f"{chain_id}:{pool_address.lower()}"
+                
+                cursor.execute("""
+                    INSERT OR REPLACE INTO pool_state 
+                    (pool_key, chain_id, block_number, reserve0, reserve1, decimals0, decimals1, updated_at, expires_at)
+                    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, (pool_key, chain_id, block_number, reserve0, reserve1, decimals0, decimals1, now, expires_at))
+                
+                conn.commit()
+                self._close_conn(conn)
+                
+                logger.debug(f"Cached pool state: {pool_key} at block {block_number}")
+                return True
+        except Exception as e:
+            logger.error(f"Pool state cache error: {e}")
+            return False
+    
+    def get_pool_state(
+        self,
+        chain_id: int,
+        pool_address: str,
+        required_block: Optional[int] = None
+    ) -> Optional[Dict[str, Any]]:
+        """
+        Get pool state, optionally requiring specific block number
+        
+        Args:
+            chain_id: Chain ID
+            pool_address: Pool contract address
+            required_block: If set, only return data from this exact block
+            
+        Returns:
+            Dictionary with pool state or None if not found/expired
+        """
+        try:
+            with self.lock:
+                conn = self._get_conn()
+                cursor = conn.cursor()
+                
+                now = time.time()
+                pool_key = f"{chain_id}:{pool_address.lower()}"
+                
+                if required_block is not None:
+                    # Exact block match required for synchronization
+                    cursor.execute("""
+                        SELECT block_number, reserve0, reserve1, decimals0, decimals1
+                        FROM pool_state
+                        WHERE pool_key = ? AND block_number = ? AND expires_at > ?
+                    """, (pool_key, required_block, now))
+                else:
+                    # Return most recent non-expired data
+                    cursor.execute("""
+                        SELECT block_number, reserve0, reserve1, decimals0, decimals1
+                        FROM pool_state
+                        WHERE pool_key = ? AND expires_at > ?
+                        ORDER BY block_number DESC
+                        LIMIT 1
+                    """, (pool_key, now))
+                
+                row = cursor.fetchone()
+                self._close_conn(conn)
+                
+                if row:
+                    return {
+                        'block_number': row[0],
+                        'reserve0': row[1],
+                        'reserve1': row[2],
+                        'decimals0': row[3],
+                        'decimals1': row[4]
+                    }
+                
+                return None
+        except Exception as e:
+            logger.error(f"Pool state get error: {e}")
+            return None
+    
+    def invalidate_pools_before_block(self, chain_id: int, block_number: int) -> int:
+        """
+        Invalidate all pool states for blocks older than specified block
+        Used when a new block arrives to ensure fresh data
+        
+        Args:
+            chain_id: Chain ID
+            block_number: New block number
+            
+        Returns:
+            Number of entries invalidated
+        """
+        try:
+            with self.lock:
+                conn = self._get_conn()
+                cursor = conn.cursor()
+                
+                cursor.execute("""
+                    DELETE FROM pool_state
+                    WHERE chain_id = ? AND block_number < ?
+                """, (chain_id, block_number))
+                
+                deleted = cursor.rowcount
+                conn.commit()
+                self._close_conn(conn)
+                
+                if deleted > 0:
+                    logger.info(f"Invalidated {deleted} pool states for chain {chain_id} before block {block_number}")
+                
+                return deleted
+        except Exception as e:
+            logger.error(f"Pool invalidation error: {e}")
+            return 0
     
     def cleanup_expired(self) -> int:
         """
