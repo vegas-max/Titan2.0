@@ -102,6 +102,7 @@ Before switching to LIVE mode:
 | | Bridges | 15+ (Li.Fi) |
 | **Monitoring** | Dashboard | ✅ Enabled |
 | | Port | 8080 |
+| | Host | 127.0.0.1 (localhost) |
 | | Metrics | ✅ All enabled |
 | | Alerts | ✅ Enabled |
 
@@ -149,7 +150,7 @@ For detailed information, see:
 ✅ MONITORING_ENABLED = true
 ✅ DASHBOARD_ENABLED = true
 ✅ DASHBOARD_PORT = 8080
-✅ DASHBOARD_HOST = 0.0.0.0
+✅ DASHBOARD_HOST = 127.0.0.1
 ✅ METRICS_COLLECTION_ENABLED = true
 ✅ HEALTH_CHECK_INTERVAL = 60s
 ✅ TRACK_EXECUTION_METRICS = true

@@ -249,7 +249,7 @@ The system includes comprehensive real-time monitoring with dashboards, metrics 
 MONITORING_ENABLED=true                 # Enable comprehensive monitoring
 DASHBOARD_ENABLED=true                  # Enable web dashboard
 DASHBOARD_PORT=8080                     # Dashboard port
-DASHBOARD_HOST=0.0.0.0                  # Listen on all interfaces
+DASHBOARD_HOST=127.0.0.1                # Localhost only (secure default)
 HEALTH_CHECK_INTERVAL=60                # Health checks every 60 seconds
 ```
 
@@ -426,7 +426,7 @@ Expected output:
 - ✅ MONITORING_ENABLED = true
 - ✅ DASHBOARD_ENABLED = true
 - ✅ DASHBOARD_PORT = 8080
-- ✅ DASHBOARD_HOST = 0.0.0.0
+- ✅ DASHBOARD_HOST = 127.0.0.1
 - ✅ METRICS_COLLECTION_ENABLED = true
 - ✅ TRACK_EXECUTION_METRICS = true
 - ✅ TRACK_MEV_METRICS = true

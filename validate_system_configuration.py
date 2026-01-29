@@ -52,8 +52,8 @@ def print_info(text):
     """Print info message"""
     print(f"   {text}")
 
-def check_env_var(var_name, expected_value=None, optional=False):
-    """Check if environment variable is set and optionally validate its value"""
+def check_env_var(var_name, expected_value=None, optional=False, var_type=None):
+    """Check if environment variable is set and optionally validate its value and type"""
     value = os.getenv(var_name)
     
     if value is None:
@@ -62,6 +62,20 @@ def check_env_var(var_name, expected_value=None, optional=False):
             return None
         else:
             print_error(f"{var_name} is not set")
+            return None
+    
+    # Type validation
+    if var_type is not None:
+        try:
+            if var_type == 'int':
+                int(value)
+            elif var_type == 'float':
+                float(value)
+            elif var_type == 'bool':
+                if value.lower() not in ['true', 'false']:
+                    raise ValueError(f"Invalid boolean value: {value}")
+        except (ValueError, AttributeError) as e:
+            print_error(f"{var_name} = {value} (invalid {var_type}: {e})")
             return None
     
     if expected_value is not None:
@@ -121,13 +135,23 @@ def validate_transaction_execution():
     
     # Check transaction retry
     retry_attempts = os.getenv('TRANSACTION_RETRY_ATTEMPTS', '3')
-    print_success(f"TRANSACTION_RETRY_ATTEMPTS = {retry_attempts}")
-    passed += 1
+    try:
+        int(retry_attempts)
+        print_success(f"TRANSACTION_RETRY_ATTEMPTS = {retry_attempts}")
+        passed += 1
+    except ValueError:
+        print_error(f"TRANSACTION_RETRY_ATTEMPTS = {retry_attempts} (invalid integer)")
+        failed += 1
     
     # Check transaction timeout
     timeout = os.getenv('TRANSACTION_TIMEOUT', '180')
-    print_success(f"TRANSACTION_TIMEOUT = {timeout}s")
-    passed += 1
+    try:
+        int(timeout)
+        print_success(f"TRANSACTION_TIMEOUT = {timeout}s")
+        passed += 1
+    except ValueError:
+        print_error(f"TRANSACTION_TIMEOUT = {timeout} (invalid integer)")
+        failed += 1
     
     # Check simulation before execution
     sim_before = os.getenv('SIMULATION_BEFORE_EXECUTION', 'true').lower() == 'true'
@@ -183,8 +207,13 @@ def validate_advanced_routing():
         
         # Check max routing hops
         max_hops = os.getenv('MAX_ROUTING_HOPS', '3')
-        print_success(f"MAX_ROUTING_HOPS = {max_hops}")
-        passed += 1
+        try:
+            int(max_hops)
+            print_success(f"MAX_ROUTING_HOPS = {max_hops}")
+            passed += 1
+        except ValueError:
+            print_error(f"MAX_ROUTING_HOPS = {max_hops} (invalid integer)")
+            failed += 1
     else:
         print_warning("MULTI_AGGREGATOR_ROUTING = false (Feature not enabled)")
         warnings += 1
@@ -234,10 +263,22 @@ def validate_real_time_monitoring():
         
         # Check dashboard configuration
         port = os.getenv('DASHBOARD_PORT', '8080')
-        host = os.getenv('DASHBOARD_HOST', '0.0.0.0')
-        print_success(f"DASHBOARD_PORT = {port}")
-        print_success(f"DASHBOARD_HOST = {host}")
-        passed += 2
+        host = os.getenv('DASHBOARD_HOST', '127.0.0.1')
+        try:
+            int(port)
+            print_success(f"DASHBOARD_PORT = {port}")
+            passed += 1
+        except ValueError:
+            print_error(f"DASHBOARD_PORT = {port} (invalid integer)")
+            failed += 1
+        
+        # Validate host for security
+        if host == '0.0.0.0':
+            print_warning(f"DASHBOARD_HOST = {host} (WARNING: Exposed to all networks - use 127.0.0.1 for localhost only)")
+            warnings += 1
+        else:
+            print_success(f"DASHBOARD_HOST = {host}")
+            passed += 1
     else:
         print_warning("DASHBOARD_ENABLED = false (Feature not enabled)")
         warnings += 1
@@ -253,8 +294,13 @@ def validate_real_time_monitoring():
     
     # Check health check interval
     health_interval = os.getenv('HEALTH_CHECK_INTERVAL', '60')
-    print_success(f"HEALTH_CHECK_INTERVAL = {health_interval}s")
-    passed += 1
+    try:
+        int(health_interval)
+        print_success(f"HEALTH_CHECK_INTERVAL = {health_interval}s")
+        passed += 1
+    except ValueError:
+        print_error(f"HEALTH_CHECK_INTERVAL = {health_interval} (invalid integer)")
+        failed += 1
     
     # Check execution metrics tracking
     exec_metrics = os.getenv('TRACK_EXECUTION_METRICS', 'false').lower() == 'true'
@@ -369,10 +415,19 @@ def validate_config_json():
                 warnings += 1
         
     except json.JSONDecodeError as e:
-        print_error(f"config.json has invalid JSON: {e}")
+        print_error(f"config.json has invalid JSON syntax")
+        print_error(f"  Error: {str(e)}")
+        print_error(f"  Line {e.lineno}, Column {e.colno}")
+        failed += 1
+    except FileNotFoundError:
+        print_error("config.json file not found")
+        failed += 1
+    except PermissionError:
+        print_error("config.json permission denied")
         failed += 1
     except Exception as e:
-        print_error(f"Error reading config.json: {e}")
+        print_error(f"Unexpected error reading config.json: {type(e).__name__}")
+        print_error(f"  Details: {str(e)}")
         failed += 1
     
     return passed, failed, warnings
