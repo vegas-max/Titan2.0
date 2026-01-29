@@ -1,5 +1,17 @@
 # Arbitrage Engine - Off-Chain Decision Logic
 
+⚠️ **INTEGRATION STATUS: REFERENCE ARCHITECTURE ONLY - NOT ACTIVE IN bot.js**
+
+This module is **example code** demonstrating intelligent executor contract selection.
+It is **NOT currently integrated** into the active bot.js execution flow.
+
+**Current System:** Uses unified executor (EXECUTOR_ADDRESS) with Balancer/Aave flash loan selection
+**This Module:** Provides HFT vs Router contract selection logic (optional future enhancement)
+
+See `EXECUTOR_CONTRACTS_CLARIFICATION.md` for complete architecture details.
+
+---
+
 ## Overview
 
 This module implements a strict deterministic logic system for evaluating arbitrage opportunities and selecting the optimal execution path between two smart contracts:
