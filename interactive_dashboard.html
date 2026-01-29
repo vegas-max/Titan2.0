@@ -1257,8 +1257,8 @@
             if (window.location.protocol === 'file:') {
                 return 'http://localhost:8080';
             }
-            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
-            const port = window.location.port || (protocol === 'https:' ? '443' : '80');
+            const protocol = window.location.protocol;
+            const port = window.location.port || '8080';
             return `${protocol}//${window.location.hostname}:${port}`;
         }
 
