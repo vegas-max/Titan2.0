@@ -1250,10 +1250,29 @@
         let metrics = {};
         let mlMetrics = {};
 
+        // Get the API base URL based on current location
+        function getApiBaseUrl() {
+            // If page is served from file://, default to localhost:8080
+            // Otherwise use the same host and port as the current page
+            if (window.location.protocol === 'file:') {
+                return 'http://localhost:8080';
+            }
+            const protocol = window.location.protocol === 'https:' ? 'https:' : 'http:';
+            const port = window.location.port || (protocol === 'https:' ? '443' : '80');
+            return `${protocol}//${window.location.hostname}:${port}`;
+        }
+
         // Connect to WebSocket
         function connectWebSocket() {
-            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-            const wsUrl = `${protocol}//${window.location.hostname}:${window.location.port || 8080}/ws`;
+            // If page is served from file://, connect to localhost:8080
+            // Otherwise use the same host and port as the current page
+            let wsUrl;
+            if (window.location.protocol === 'file:') {
+                wsUrl = 'ws://localhost:8080/ws';
+            } else {
+                const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+                wsUrl = `${protocol}//${window.location.hostname}:${window.location.port || 8080}/ws`;
+            }
             
             ws = new WebSocket(wsUrl);
 
@@ -1832,14 +1851,15 @@
         // Load deployment configuration
         async function loadDeploymentConfig() {
             try {
-                const response = await fetch('/api/deployment-config');
+                const apiUrl = `${getApiBaseUrl()}/api/deployment-config`;
+                const response = await fetch(apiUrl);
                 if (!response.ok) throw new Error('Failed to load deployment config');
                 
                 deploymentConfig = await response.json();
                 updateDeploymentUI();
             } catch (error) {
                 console.error('Error loading deployment config:', error);
-                showDeploymentError('Failed to load configuration. Please check if the server is running.');
+                showDeploymentError('Failed to load configuration. Please ensure the dashboard server is running on port 8080. Run: ./launch_interactive_dashboard.sh');
             }
         }
 
@@ -1911,7 +1931,8 @@
             const execMode = document.getElementById('deployModeSelect').value;
 
             try {
-                const response = await fetch('/api/generate-deployment-script', {
+                const apiUrl = `${getApiBaseUrl()}/api/generate-deployment-script`;
+                const response = await fetch(apiUrl, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -1943,7 +1964,7 @@
                 }
             } catch (error) {
                 console.error('Error generating script:', error);
-                alert('Failed to generate deployment script: ' + error.message);
+                alert('Failed to generate deployment script: ' + error.message + '\n\nPlease ensure the dashboard server is running. Run: ./launch_interactive_dashboard.sh');
             }
         }
 
