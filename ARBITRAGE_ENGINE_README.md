@@ -1,5 +1,9 @@
 # Arbitrage Engine - Off-Chain Decision Logic
 
+⚠️ **IMPORTANT:** This is an OPTIONAL specialized module for advanced deployments.
+Most users should use the unified FlashArbExecutor approach with bot.js.
+See **EXECUTOR_CONTRACTS_GUIDE.md** for a complete comparison of deployment approaches.
+
 ## Overview
 
 This module implements a strict deterministic logic system for evaluating arbitrage opportunities and selecting the optimal execution path between two smart contracts:
@@ -7,8 +11,13 @@ This module implements a strict deterministic logic system for evaluating arbitr
 - **HFT Executor (0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2)**: Optimized for direct pair swaps on Uniswap V2 forks, bypasses routers for flash loans
 - **Router Executor (0x4442782681b668365334C3D2A6F004F0760DA393)**: Supports complex multi-hop paths and various DEX types, uses routers for flash loans
 
+**Note:** The main Titan bot (`offchain/execution/bot.js`) does NOT use this module. 
+It uses a unified FlashArbExecutor contract (configured via `EXECUTOR_ADDRESS`) that handles all scenarios with a single contract.
+
+This ArbitrageEngine is only needed if you deploy separate HFT and Router contracts for gas optimization.
+
 Both are executors chosen for specific reasons:
-- HFT provides gas efficiency on simple V2-compatible swaps
+- HFT provides gas efficiency on simple V2-compatible swaps (saves 30-50k gas)
 - Router handles complex multi-hop paths and non-V2 exchanges
 
 ## Architecture
