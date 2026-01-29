@@ -54,6 +54,55 @@
       "bypass_aggregators": false,
       "query_batch_size": 10,
       "description": "Query pool state directly without aggregators"
+    },
+    "cross_chain_routing": {
+      "enabled": true,
+      "use_lifi_aggregator": true,
+      "prefer_intent_based_bridges": true,
+      "min_profit_usd": 50,
+      "max_bridge_time_seconds": 1800,
+      "supported_bridges": [
+        "stargate",
+        "across",
+        "hop",
+        "connext",
+        "celer"
+      ],
+      "description": "Cross-chain arbitrage via bridge aggregators (Li.Fi)"
+    },
+    "multi_aggregator_routing": {
+      "enabled": true,
+      "aggregators": [
+        "1inch",
+        "paraswap",
+        "odos",
+        "lifi",
+        "kyberswap"
+      ],
+      "max_hops": 3,
+      "compare_quotes": true,
+      "description": "Compare routes across multiple DEX aggregators"
+    },
+    "real_time_monitoring": {
+      "enabled": true,
+      "dashboard_port": 8080,
+      "metrics_collection": true,
+      "health_checks": true,
+      "alert_on_errors": true,
+      "alert_on_opportunities": true,
+      "track_execution_metrics": true,
+      "track_mev_metrics": true,
+      "description": "Comprehensive real-time system monitoring and alerting"
+    },
+    "transaction_execution": {
+      "enabled": true,
+      "auto_retry": true,
+      "max_retry_attempts": 3,
+      "simulation_required": true,
+      "nonce_management": "auto",
+      "gas_price_multiplier": 1.1,
+      "transaction_timeout_seconds": 180,
+      "description": "Advanced transaction execution with retry and simulation"
     }
   },
   "networks": {
@@ -393,11 +442,33 @@
     "emergency_withdrawal_threshold": 10
   },
   "monitoring": {
+    "enabled": true,
     "health_check_interval": 60,
     "profit_report_interval": 3600,
     "balance_alert_threshold": 100,
     "error_rate_threshold": 0.1,
-    "latency_threshold_ms": 1000
+    "latency_threshold_ms": 1000,
+    "dashboard": {
+      "enabled": true,
+      "port": 8080,
+      "host": "127.0.0.1",
+      "update_interval": 5,
+      "_security_note": "Host set to localhost (127.0.0.1) for security. Change to 0.0.0.0 only in trusted networks."
+    },
+    "metrics": {
+      "execution_metrics": true,
+      "mev_metrics": true,
+      "performance_stats": true,
+      "network_latency": true
+    },
+    "alerts": {
+      "enabled": true,
+      "on_errors": true,
+      "on_high_value_opportunities": true,
+      "profit_threshold": 100,
+      "telegram_enabled": false,
+      "email_enabled": false
+    }
   },
   "performance": {
     "concurrent_scans": 10,
