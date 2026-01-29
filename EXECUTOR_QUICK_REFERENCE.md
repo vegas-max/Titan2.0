@@ -85,7 +85,7 @@ ROUTER_CONTRACT_ADDRESS=0x4442...   # Reference architecture only
 ### Q: Are HFT and Router contracts used?
 **A:** NO. They are reference architecture. bot.js uses EXECUTOR_ADDRESS only.
 
-### Q: Can I use both flashloan approaches?
+### Q: Can I use both flash loan approaches?
 **A:** NO. Environment supports ONE approach: unified executor with Balancer/Aave choice
 
 ### Q: How do I switch to HFT/Router architecture?

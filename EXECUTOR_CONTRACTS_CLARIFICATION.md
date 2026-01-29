@@ -2,7 +2,7 @@
 
 ## Executive Summary
 
-This document clarifies the **difference between flash loan providers and executor contracts** in the Titan arbitrage system. The environment does not support both flashloan approaches simultaneously - it uses ONE unified executor model.
+This document clarifies the **difference between flash loan providers and executor contracts** in the Titan arbitrage system. The environment does not support both flash loan approaches simultaneously - it uses ONE unified executor model.
 
 ---
 
@@ -206,7 +206,7 @@ ROUTER_CONTRACT_ADDRESS=0x4442782681b668365334C3D2A6F004F0760DA393
 ✅ **CORRECT:** FLASH_LOAN_PROVIDER selects Balancer (1) or Aave (2)
 ✅ **CORRECT:** HFT/Router would be selected by ArbitrageEngine (if integrated)
 
-### ❌ WRONG: "Environment has room for both flashloan approaches"
+### ❌ WRONG: "Environment has room for both flash loan approaches"
 ✅ **CORRECT:** Only ONE approach is active: Unified executor with Balancer/Aave choice
 ✅ **CORRECT:** HFT/Router dual-executor is reference architecture (inactive)
 
@@ -316,7 +316,7 @@ const contract = new ethers.Contract(
 
 ### ⚠️ CRITICAL FINDING: Only ONE Flash Loan Approach
 
-**The environment does NOT have room for both flashloan approaches because:**
+**The environment does NOT have room for both flash loan approaches because:**
 
 1. **Current Implementation:** Uses `EXECUTOR_ADDRESS` with `FLASH_LOAN_PROVIDER` parameter
    - Single contract handles all trades
@@ -400,7 +400,7 @@ const contract = new ethers.Contract(
 
 ## Conclusion
 
-**The environment does NOT have room for both flashloan approaches** because the system architecture supports either:
+**The environment does NOT have room for both flash loan approaches** because the system architecture supports either:
 
 1. **Unified Executor Model (Current)**: One contract, selectable flash provider
 2. **Dual Executor Model (Future)**: Two contracts, fixed flash providers
