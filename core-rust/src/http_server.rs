@@ -104,6 +104,128 @@ pub struct LoanOptimizeResponse {
     pub error: Option<String>,
 }
 
+/// Root endpoint with welcome message and API documentation
+async fn root() -> impl IntoResponse {
+    let html = r#"
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Titan Rust HTTP Server</title>
+    <style>
+        body { font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px; }
+        h1 { color: #4CAF50; }
+        .endpoint { background: #f4f4f4; padding: 10px; margin: 10px 0; border-left: 4px solid #4CAF50; }
+        code { background: #e8e8e8; padding: 2px 6px; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <h1>🚀 Titan Rust HTTP Server</h1>
+    <p>Welcome to the Titan Arbitrage Engine API</p>
+    
+    <h2>Available Endpoints:</h2>
+    
+    <div class="endpoint">
+        <strong>GET /health</strong><br>
+        Health check endpoint - returns server status and version
+    </div>
+    
+    <div class="endpoint">
+        <strong>GET /api</strong><br>
+        API information and documentation
+    </div>
+    
+    <div class="endpoint">
+        <strong>POST /api/pool</strong><br>
+        Query pool data for a specific DEX<br>
+        Body: <code>{"chain_id": 1, "pool_address": "0x...", "dex_type": "UNISWAP_V3"}</code>
+    </div>
+    
+    <div class="endpoint">
+        <strong>GET /api/metrics</strong><br>
+        Performance metrics and statistics
+    </div>
+    
+    <div class="endpoint">
+        <strong>GET /api/tvl</strong><br>
+        Query Total Value Locked for a token<br>
+        Query params: <code>?chain_id=1&token_address=0x...</code>
+    </div>
+    
+    <div class="endpoint">
+        <strong>POST /api/optimize_loan</strong><br>
+        Optimize loan size based on liquidity<br>
+        Body: <code>{"chain_id": 1, "token_address": "0x...", "target_amount": "1000000", "decimals": 6}</code>
+    </div>
+    
+    <p style="margin-top: 30px; color: #666;">
+        Server Version: "#.to_string() + env!("CARGO_PKG_VERSION") + r#"<br>
+        Status: ✅ Running
+    </p>
+</body>
+</html>
+"#;
+    
+    (StatusCode::OK, [("content-type", "text/html")], html)
+}
+
+/// API information endpoint
+async fn api_info() -> impl IntoResponse {
+    #[derive(Serialize)]
+    struct ApiInfo {
+        name: String,
+        version: String,
+        description: String,
+        endpoints: Vec<EndpointInfo>,
+    }
+    
+    #[derive(Serialize)]
+    struct EndpointInfo {
+        method: String,
+        path: String,
+        description: String,
+    }
+    
+    let info = ApiInfo {
+        name: "Titan Rust HTTP Server".to_string(),
+        version: env!("CARGO_PKG_VERSION").to_string(),
+        description: "High-performance arbitrage engine API".to_string(),
+        endpoints: vec![
+            EndpointInfo {
+                method: "GET".to_string(),
+                path: "/health".to_string(),
+                description: "Health check endpoint".to_string(),
+            },
+            EndpointInfo {
+                method: "GET".to_string(),
+                path: "/api".to_string(),
+                description: "API information".to_string(),
+            },
+            EndpointInfo {
+                method: "POST".to_string(),
+                path: "/api/pool".to_string(),
+                description: "Query pool data".to_string(),
+            },
+            EndpointInfo {
+                method: "GET".to_string(),
+                path: "/api/metrics".to_string(),
+                description: "Performance metrics".to_string(),
+            },
+            EndpointInfo {
+                method: "GET".to_string(),
+                path: "/api/tvl".to_string(),
+                description: "Query Total Value Locked".to_string(),
+            },
+            EndpointInfo {
+                method: "POST".to_string(),
+                path: "/api/optimize_loan".to_string(),
+                description: "Optimize loan size".to_string(),
+            },
+        ],
+    };
+    
+    Json(info)
+}
+
 /// Health check endpoint
 async fn health_check() -> impl IntoResponse {
     let response = HealthResponse {
@@ -353,7 +475,9 @@ async fn optimize_loan(
 /// Build and configure the HTTP server router
 pub fn create_router(state: AppState) -> Router {
     Router::new()
+        .route("/", get(root))
         .route("/health", get(health_check))
+        .route("/api", get(api_info))
         .route("/api/pool", post(query_pool))
         .route("/api/metrics", get(metrics))
         .route("/api/tvl", get(query_tvl))
