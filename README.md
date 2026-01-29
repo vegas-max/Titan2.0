@@ -93,6 +93,7 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 
 ### Smart Contract & Configuration
 - ✅ **FlashArbExecutor Contract**: Production-ready Solidity 0.8.24 contract with Balancer & Aave flash loans
+  - See [EXECUTOR_CONTRACTS_GUIDE.md](EXECUTOR_CONTRACTS_GUIDE.md) for deployment options
 - ✅ **Comprehensive Config**: Complete `config.json` with DEX endpoints, bridges, and token lists for all major chains
 - ✅ **Multi-DEX Support**: QuickSwap, SushiSwap, Uniswap V3 integration with automated routing
 - ✅ **Enhanced Security**: Custom errors, reentrancy guards, and profit verification
@@ -314,6 +315,8 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
 ### 🏗️ Architecture & Development
+- **[EXECUTOR_CONTRACTS_GUIDE.md](EXECUTOR_CONTRACTS_GUIDE.md)** - 🎯 **Executor contract architecture (FlashArbExecutor vs HFT/Router)**
+- **[ARBITRAGE_ENGINE_README.md](ARBITRAGE_ENGINE_README.md)** - ⚙️ Advanced multi-contract selector
 - **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
 - **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
