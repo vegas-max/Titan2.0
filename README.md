@@ -314,6 +314,9 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 - **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
 ### 🏗️ Architecture & Development
+- **[EXECUTOR_CONTRACTS_CLARIFICATION.md](EXECUTOR_CONTRACTS_CLARIFICATION.md)** - 🔄 **Flash loan vs executor contracts explained**
+- **[EXECUTOR_QUICK_REFERENCE.md](EXECUTOR_QUICK_REFERENCE.md)** - ⚡ **Quick reference: HFT vs Router vs Flash providers**
+- **[ARBITRAGE_ENGINE_README.md](ARBITRAGE_ENGINE_README.md)** - 🎯 Executor selection logic (reference)
 - **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
 - **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
@@ -2392,6 +2395,17 @@ redis-cli ping
 ---
 
 ## ⚙️ Configuration
+
+**IMPORTANT: Executor Contract Configuration**
+
+⚠️ **Before configuring:** Read [EXECUTOR_CONTRACTS_CLARIFICATION.md](EXECUTOR_CONTRACTS_CLARIFICATION.md) to understand the difference between:
+- **Flash loan providers** (Balancer vs Aave) - WHERE to borrow flash loans
+- **Executor contracts** (HFT vs Router) - HOW to execute trades (reference architecture only)
+
+**Quick Reference:** [EXECUTOR_QUICK_REFERENCE.md](EXECUTOR_QUICK_REFERENCE.md)
+**Validation Tool:** Run `node validate_executor_config.js` to check your configuration
+
+---
 
 ### Environment Setup
 
