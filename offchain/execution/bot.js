@@ -44,9 +44,23 @@ const PRIVATE_KEY = process.env.PRIVATE_KEY;
 // TITAN_EXECUTION_MODE takes precedence (set by orchestrator), fallback to EXECUTION_MODE (.env)
 const EXECUTION_MODE = (process.env.TITAN_EXECUTION_MODE || process.env.EXECUTION_MODE || 'PAPER').toUpperCase();
 
-// CRITICAL: Flash loan configuration - ensures 100% flash-funded execution
+// ============================================================================
+// FLASH LOAN PROVIDER CONFIGURATION
+// ============================================================================
+// FLASH_LOAN_PROVIDER determines WHERE to borrow flash loan capital
+// This is NOT about which executor contract to use (see above)
+//
+// Values:
+// - 1 = Balancer V3 (default, lower fees, good liquidity)
+// - 2 = Aave V3 (higher liquidity for large trades)
+//
+// This value is passed to EXECUTOR_ADDR.execute(flashSource, ...) which then
+// requests flash loans from the selected protocol (Balancer or Aave)
+//
+// CRITICAL: Flash loan configuration ensures 100% flash-funded execution
 // This system is designed to operate with ZERO capital requirements (only gas fees)
 // All arbitrage trades MUST use flash loans to maintain capital efficiency
+// ============================================================================
 const FLASH_LOAN_ENABLED = process.env.FLASH_LOAN_ENABLED === 'true' || process.env.FLASH_LOAN_ENABLED === undefined; // Default: true if not set
 const FLASH_LOAN_PROVIDER = parseInt(process.env.FLASH_LOAN_PROVIDER || '1'); // 1=Balancer, 2=Aave
 
@@ -132,25 +146,44 @@ class TitanBot {
         }
         console.log("");
         
+        // ========================================================================
+        // FLASH LOAN VALIDATION
+        // ========================================================================
+        // Validate that flash loans are properly configured
+        // FLASH_LOAN_PROVIDER selects the liquidity source (Balancer vs Aave)
+        // This is NOT about selecting HFT vs Router contracts
+        // ========================================================================
+        
         // CRITICAL: Validate flash loan configuration
         if (!FLASH_LOAN_ENABLED) {
             console.error('❌ CRITICAL: Flash loans are DISABLED');
             console.error('   This system requires 100% flash-funded execution!');
             console.error('   Set FLASH_LOAN_ENABLED=true in .env file');
+            console.error('');
+            console.error('   NOTE: FLASH_LOAN_ENABLED controls whether flash loans are used,');
+            console.error('         NOT which executor contract to use (HFT vs Router).');
+            console.error('   See EXECUTOR_CONTRACTS_CLARIFICATION.md for details.');
             process.exit(1);
         }
         
         if (FLASH_LOAN_PROVIDER !== 1 && FLASH_LOAN_PROVIDER !== 2) {
             console.error('❌ CRITICAL: Invalid flash loan provider');
             console.error(`   FLASH_LOAN_PROVIDER=${FLASH_LOAN_PROVIDER} is not valid`);
-            console.error('   Must be 1 (Balancer) or 2 (Aave)');
+            console.error('   Must be 1 (Balancer V3) or 2 (Aave V3)');
+            console.error('');
+            console.error('   NOTE: FLASH_LOAN_PROVIDER selects WHERE to borrow flash loans,');
+            console.error('         NOT which executor contract to use.');
+            console.error('   This value is passed to EXECUTOR_ADDRESS.execute(flashSource, ...)');
+            console.error('   See EXECUTOR_CONTRACTS_CLARIFICATION.md for details.');
             process.exit(1);
         }
         
         console.log("⚡ Flash Loan Configuration:");
         console.log(`   • Flash loans: ENABLED (mandatory for zero-capital operation)`);
         console.log(`   • Provider: ${FLASH_LOAN_PROVIDER === 1 ? 'Balancer V3' : 'Aave V3'}`);
+        console.log(`   • Executor: ${EXECUTOR_ADDR || 'Not configured'} (unified OmniArbExecutor)`);
         console.log(`   • Capital requirement: ZERO (only gas fees needed)`);
+        console.log(`   • Note: Flash provider ≠ executor contract (see docs for details)`);
         console.log("");
         
         // Validate configuration (only required for LIVE mode)
@@ -463,8 +496,24 @@ class TitanBot {
             // 2. Build TX with validation
             let txRequest;
             try {
-                // CRITICAL: Always use flash loans for zero-capital execution
-                // This ensures 100% flash-funded operation (no wallet capital needed)
+                // ========================================================================
+                // EXECUTOR CONTRACT CALL
+                // ========================================================================
+                // This calls the unified executor contract (EXECUTOR_ADDR)
+                // Function signature: execute(uint8 flashSource, address token, uint256 amount, bytes routeData)
+                //
+                // flashSource parameter (1 or 2):
+                // - 1 = Borrow flash loan from Balancer V3
+                // - 2 = Borrow flash loan from Aave V3
+                //
+                // NOTE: This is NOT selecting HFT vs Router contracts
+                // - EXECUTOR_ADDR is ONE unified contract (OmniArbExecutor)
+                // - It handles flash loans from either Balancer or Aave
+                // - Then executes the arbitrage route internally
+                //
+                // See EXECUTOR_CONTRACTS_CLARIFICATION.md for architecture details
+                // ========================================================================
+                
                 const contract = new ethers.Contract(EXECUTOR_ADDR, ["function execute(uint8,address,uint256,bytes) external"], wallet);
                 
                 // Validate flash loan is enabled (double-check at execution time)
@@ -487,13 +536,22 @@ class TitanBot {
                     return;
                 }
                 
+                // ========================================================================
+                // BUILD TRANSACTION WITH FLASH LOAN PROVIDER
+                // ========================================================================
                 // Build transaction using configured flash loan provider
-                // flashSource: 1=Balancer, 2=Aave (from FLASH_LOAN_PROVIDER env var)
+                // The flashSource parameter tells the executor WHERE to borrow flash loans:
+                // - flashSource=1: Borrow from Balancer V3 vault
+                // - flashSource=2: Borrow from Aave V3 pool
+                //
+                // This is passed to: EXECUTOR_ADDR.execute(flashSource, token, amount, routeData)
+                // ========================================================================
                 txRequest = await contract.execute.populateTransaction(
                     FLASH_LOAN_PROVIDER, signal.token, signal.amount, routeData, { ...fees }
                 );
                 
                 console.log(`   Flash Loan Provider: ${FLASH_LOAN_PROVIDER === 1 ? 'Balancer V3' : 'Aave V3'}`);
+                console.log(`   Executor Contract: ${EXECUTOR_ADDR}`);
                 
                 // Create route info object for intelligent gas estimation
                 const routeInfo = {

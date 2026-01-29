@@ -2396,6 +2396,17 @@ redis-cli ping
 
 ## ⚙️ Configuration
 
+**IMPORTANT: Executor Contract Configuration**
+
+⚠️ **Before configuring:** Read [EXECUTOR_CONTRACTS_CLARIFICATION.md](EXECUTOR_CONTRACTS_CLARIFICATION.md) to understand the difference between:
+- **Flash loan providers** (Balancer vs Aave) - WHERE to borrow flash loans
+- **Executor contracts** (HFT vs Router) - HOW to execute trades (reference architecture only)
+
+**Quick Reference:** [EXECUTOR_QUICK_REFERENCE.md](EXECUTOR_QUICK_REFERENCE.md)  
+**Validation Tool:** Run `node validate_executor_config.js` to check your configuration
+
+---
+
 ### Environment Setup
 
 1. **Copy the environment template:**
