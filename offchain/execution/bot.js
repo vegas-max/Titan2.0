@@ -1,3 +1,25 @@
+/**
+ * Titan Bot - Main Execution Engine
+ * 
+ * EXECUTOR CONTRACT ARCHITECTURE:
+ * ================================
+ * This bot uses a UNIFIED FlashArbExecutor contract (EXECUTOR_ADDRESS) that handles
+ * ALL flash loan arbitrage with a single execute() function supporting both:
+ * - Simple direct swaps (2-hop)
+ * - Complex multi-hop paths (3+ hops)
+ * - Multiple DEX protocols (V2, V3, Curve, Balancer, etc.)
+ * 
+ * NOTE: The ArbitrageEngine (HFT/Router contract selector) is a SEPARATE specialized
+ * module for environments with multiple deployed executor contracts. This bot does NOT
+ * use that approach - it uses ONE unified executor contract for all operations.
+ * 
+ * FLASH LOAN EXECUTION:
+ * ====================
+ * ALL arbitrage is 100% flash-funded (zero capital required, only gas fees).
+ * The FlashArbExecutor contract integrates with Balancer V3 or Aave V3 flash loans
+ * to borrow capital, execute swaps, and repay within a single atomic transaction.
+ */
+
 require('dotenv').config();
 const { ethers } = require('ethers');
 const fs = require('fs');
@@ -15,19 +37,8 @@ const { TradeDatabase } = require('./trade_database');
 const SIGNALS_DIR = path.join(__dirname, '..', 'signals', 'outgoing');
 const PROCESSED_DIR = path.join(__dirname, '..', 'signals', 'processed');
 
-// ============================================================================
-// EXECUTOR CONTRACT CONFIGURATION
-// ============================================================================
-// EXECUTOR_ADDR: The unified executor contract that handles ALL arbitrage trades
-// This is the single entry point for flash loan execution (OmniArbExecutor)
-// 
-// NOTE: This is NOT the same as HFT_CONTRACT or ROUTER_CONTRACT
-// - EXECUTOR_ADDRESS = Active unified executor (used by this bot.js)
-// - HFT_CONTRACT = Reference architecture for simple V2 swaps (not used here)
-// - ROUTER_CONTRACT = Reference architecture for complex paths (not used here)
-//
-// See EXECUTOR_CONTRACTS_CLARIFICATION.md for complete architecture details
-// ============================================================================
+// EXECUTOR_ADDRESS: The unified FlashArbExecutor contract that handles all flash loan arbitrage
+// This is the PRIMARY contract used by this bot for ALL trades (simple and complex)
 const EXECUTOR_ADDR = process.env.EXECUTOR_ADDRESS;
 const PRIVATE_KEY = process.env.PRIVATE_KEY;
 // TITAN_EXECUTION_MODE takes precedence (set by orchestrator), fallback to EXECUTION_MODE (.env)

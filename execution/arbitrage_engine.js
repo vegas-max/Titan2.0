@@ -1,8 +1,37 @@
 /**
- * Arbitrage Engine - Strict Deterministic Logic for Arbitrage Opportunities
+ * Arbitrage Engine - Specialized Multi-Contract Selector (OPTIONAL MODULE)
+ * 
+ * ⚠️ IMPORTANT: This is a SPECIALIZED module for environments with MULTIPLE executor contracts.
+ * The main Titan bot (offchain/execution/bot.js) does NOT use this module.
+ * 
+ * PURPOSE:
+ * ========
+ * This module is designed for advanced deployments where you have TWO separate
+ * executor contracts deployed:
+ * 
+ * 1. HFT Contract (0xAF54D81835F811F1D4aB35c5856DDAE8834cdDA2):
+ *    - Optimized for direct pair swaps on V2 forks
+ *    - Bypasses router abstraction for lower gas costs
+ *    - Function: startArbitrage(poolA, poolB, amount)
+ *    - Flash Loans: Direct integration (no router overhead)
+ * 
+ * 2. Router Contract (0x4442782681b668365334C3D2A6F004F0760DA393):
+ *    - Supports multi-hop paths and all DEX types
+ *    - Uses router contracts for swap execution
+ *    - Function: startArbitrage(path[], routers[], amount)
+ *    - Flash Loans: Routed through DEX routers
  * 
  * This module implements a rigid decision matrix to evaluate arbitrage opportunities
- * and select the optimal execution path between HFT and Router contracts.
+ * and select the optimal execution path (HFT vs Router) based on:
+ * - Path topology (2-hop vs multi-hop)
+ * - DEX compatibility (V2 vs V3/Curve/etc)
+ * - Gas efficiency (simulated costs)
+ * 
+ * DEFAULT DEPLOYMENT:
+ * ===================
+ * Most users should use the UNIFIED FlashArbExecutor contract approach (bot.js)
+ * which handles all scenarios with a single contract. Only use this module if you
+ * have deployed separate HFT and Router contracts for gas optimization.
  */
 
 const { ethers } = require('ethers');
