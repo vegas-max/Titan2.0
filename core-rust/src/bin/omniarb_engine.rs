@@ -15,6 +15,9 @@ fn find_matrix_file() -> Result<PathBuf, String> {
         let path = PathBuf::from(&env_path);
         if path.exists() {
             return Ok(path);
+        } else {
+            eprintln!("⚠️  Warning: OMNIARB_MATRIX_PATH is set to '{}' but file does not exist", env_path);
+            eprintln!("    Falling back to default search locations...");
         }
     }
     
@@ -25,7 +28,7 @@ fn find_matrix_file() -> Result<PathBuf, String> {
         "data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md",
         // For running from core-rust directory
         "../data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md",
-        // For running from target/release directory (go up 3 levels: release -> target -> core-rust -> repo root)
+        // For running from target/release directory (3 levels up: release -> target -> core-rust)
         "../../../data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md",
         // For running from target directory
         "../../data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md",
@@ -74,7 +77,15 @@ fn main() {
     
     println!("📂 Loading matrix from: {}", matrix_path.display());
     
-    let token_matrix = match load_token_matrix(matrix_path.to_str().unwrap()) {
+    let matrix_path_str = match matrix_path.to_str() {
+        Some(s) => s,
+        None => {
+            eprintln!("❌ Matrix file path contains invalid UTF-8 characters: {:?}", matrix_path);
+            std::process::exit(1);
+        }
+    };
+    
+    let token_matrix = match load_token_matrix(matrix_path_str) {
         Ok(matrix) => matrix,
         Err(e) => {
             eprintln!("❌ Matrix load failed: {}", e);
