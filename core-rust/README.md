@@ -89,6 +89,68 @@ Binaries will be in `target/release/`.
 
 ## Running
 
+### Titan HTTP Server
+
+The Titan HTTP Server provides a REST API for core functionality:
+
+```bash
+# Option 1: Use the helper script (recommended)
+./start_rust_server.sh
+
+# Option 2: Run directly from repository root
+./core-rust/target/release/titan_server
+
+# Option 3: Set custom port
+export RUST_SERVER_PORT=8080
+./core-rust/target/release/titan_server
+```
+
+**Default port:** 3000
+
+**Available endpoints:**
+- `GET /` - Welcome page with API documentation
+- `GET /health` - Health check and server status
+- `GET /api` - API information (JSON)
+- `POST /api/pool` - Query pool data
+- `GET /api/metrics` - Performance metrics
+- `GET /api/tvl` - Query Total Value Locked
+- `POST /api/optimize_loan` - Optimize loan size
+
+**Testing the server:**
+```bash
+# View welcome page in browser
+http://localhost:3000/
+
+# Or test with curl
+curl http://localhost:3000/health
+curl http://localhost:3000/api
+```
+
+### OmniArb Engine
+
+The OmniArb Dual Turbo Rust Engine analyzes token matrices and calculates arbitrage opportunities:
+
+```bash
+# Option 1: Use the helper script (recommended)
+./run_omniarb_engine.sh
+
+# Option 2: Run directly from repository root
+./core-rust/target/release/omniarb_engine
+
+# Option 3: Set custom matrix path
+export OMNIARB_MATRIX_PATH=/path/to/matrix.md
+./core-rust/target/release/omniarb_engine
+```
+
+**Matrix file location:**
+The engine automatically searches for the matrix file in multiple locations:
+- `./data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md`
+- `data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md`
+- `../data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md` (from core-rust)
+- `../../../data/omniarb_full_matrix_encoder_decoder_a_j_build_sheet.md` (from target/release)
+
+If the matrix file is not found, set the `OMNIARB_MATRIX_PATH` environment variable to its full path.
+
 ### Python Integration
 
 ```python
@@ -101,22 +163,6 @@ vault = config.get_balancer_vault()
 # Chain enumeration
 chain_id = titan_core.PyChainId.polygon()
 print(f"Chain ID: {chain_id}")
-```
-
-### Standalone HTTP Server
-
-```bash
-# Start the HTTP server
-./target/release/titan_server
-
-# Server will listen on http://localhost:8080
-```
-
-### OmniArb Engine
-
-```bash
-# Run the OmniArb engine
-./target/release/omniarb_engine
 ```
 
 ## Performance Metrics
