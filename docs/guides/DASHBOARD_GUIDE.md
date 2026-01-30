@@ -70,7 +70,7 @@ npm run dashboard:web
 
 ```bash
 # Interactive launcher
-./launch_dashboard.sh
+../../scripts/linux/launch_dashboard.sh
 
 # Select option 3 to run both simultaneously
 ```

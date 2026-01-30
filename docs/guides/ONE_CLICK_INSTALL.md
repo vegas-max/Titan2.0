@@ -46,7 +46,7 @@ git clone https://github.com/MavenSource/Titan.git
 cd Titan
 
 # Run the one-click script (it will guide you through configuration)
-./run_titan.sh
+../../scripts/linux/run_titan.sh
 ```
 
 ### Option 4: Batch File - Yarn (Windows)

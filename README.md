@@ -492,7 +492,7 @@ Install everything and launch the complete system with command-line arguments:
 git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Run full-scale installation and launch
-./install_and_run_titan.sh \
+./scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY \
   --mode paper \
   --network polygon

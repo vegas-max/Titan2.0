@@ -4,7 +4,7 @@ Complete guide for installing, configuring, and running the Titan arbitrage syst
 
 ## Overview
 
-The full-scale installation script (`install_and_run_titan.sh` for Linux/macOS, `install_and_run_titan.bat` for Windows) automates the entire setup process:
+The full-scale installation script (`../../scripts/linux/install_and_run_titan.sh` for Linux/macOS, `install_and_run_titan.bat` for Windows) automates the entire setup process:
 
 1. ✅ Installs all dependencies (Node.js, Python, Redis)
 2. ✅ Builds Rust components (rustworkx library for graph algorithms)
@@ -20,10 +20,10 @@ The full-scale installation script (`install_and_run_titan.sh` for Linux/macOS, 
 
 ```bash
 # Make script executable
-chmod +x install_and_run_titan.sh
+chmod +x ../../scripts/linux/install_and_run_titan.sh
 
 # Run with your wallet credentials
-./install_and_run_titan.sh \
+./../../scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY_HERE \
   --wallet-address 0xYOUR_WALLET_ADDRESS \
   --mode paper \
@@ -70,7 +70,7 @@ Before running the script, prepare:
 ### Command Line Options
 
 ```bash
-./install_and_run_titan.sh [OPTIONS]
+./../../scripts/linux/install_and_run_titan.sh [OPTIONS]
 ```
 
 #### Available Options
@@ -134,7 +134,7 @@ Deploy to any of these networks:
 ### Example 1: Basic Setup (Paper Mode)
 
 ```bash
-./install_and_run_titan.sh \
+./../../scripts/linux/install_and_run_titan.sh \
   --wallet-key 0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef \
   --mode paper \
   --network polygon
@@ -149,7 +149,7 @@ This will:
 ### Example 2: Full Setup with API Keys
 
 ```bash
-./install_and_run_titan.sh \
+./../../scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY \
   --mode paper \
   --network arbitrum \
@@ -168,7 +168,7 @@ This provides:
 ⚠️ **WARNING: This uses real funds!**
 
 ```bash
-./install_and_run_titan.sh \
+./../../scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY \
   --mode live \
   --network polygon \
@@ -186,7 +186,7 @@ Prerequisites for live mode:
 ### Example 4: Skip Redis (Minimal Setup)
 
 ```bash
-./install_and_run_titan.sh \
+./../../scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY \
   --mode paper \
   --skip-redis
@@ -466,7 +466,7 @@ sudo systemctl start redis-server  # Linux
 brew services start redis          # macOS
 
 # Or skip Redis
-./install_and_run_titan.sh --skip-redis
+./../../scripts/linux/install_and_run_titan.sh --skip-redis
 ```
 
 ### Issue: "Contract deployment failed"
@@ -514,10 +514,10 @@ pip3 install rustworkx --force-reinstall
 **Solution:**
 ```bash
 # Make script executable
-chmod +x install_and_run_titan.sh
+chmod +x ../../scripts/linux/install_and_run_titan.sh
 
 # Or run with bash
-bash install_and_run_titan.sh
+bash ../../scripts/linux/install_and_run_titan.sh
 ```
 
 ### Issue: "Dependency conflicts during npm install"
@@ -578,7 +578,7 @@ git clone https://github.com/MavenSource/Titan.git /path/to/titan
 cd /path/to/titan
 
 # Run installation
-./install_and_run_titan.sh
+./../../scripts/linux/install_and_run_titan.sh
 ```
 
 ## Performance Optimization
