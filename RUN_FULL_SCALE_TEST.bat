@@ -2,6 +2,9 @@
 title TITAN FULL-SCALE TEST SUITE
 color 0E
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ========================================================================
 echo   APEX-OMEGA TITAN: FULL-SCALE SYSTEM TEST

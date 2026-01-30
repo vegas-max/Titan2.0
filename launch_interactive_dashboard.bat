@@ -1,6 +1,9 @@
 @echo off
 REM TITAN Interactive Dashboard Launcher for Windows
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo ===============================================================
 echo    TITAN Multi-Page Interactive Dashboard Launcher
 echo ===============================================================

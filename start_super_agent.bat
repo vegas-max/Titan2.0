@@ -2,6 +2,9 @@
 REM APEX-OMEGA TITAN: Super Agent Startup Script (Windows)
 REM ========================================================
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo ================================
 echo 🤖 TITAN SUPER AGENT SYSTEM
 echo ================================

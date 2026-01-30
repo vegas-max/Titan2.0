@@ -2,6 +2,9 @@
 TITLE Apex-Omega Titan (Full Scale)
 color 0B
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo ==================================================
 echo    APEX-OMEGA TITAN: 10-CHAIN SYSTEM BOOT
 echo ==================================================

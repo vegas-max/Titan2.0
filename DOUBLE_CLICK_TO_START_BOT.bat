@@ -2,6 +2,9 @@
 title TITAN BOT - SIGNAL EXECUTOR
 color 0B
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ========================================================================
 echo   APEX-OMEGA TITAN: BOT STARTING

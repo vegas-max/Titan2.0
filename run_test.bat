@@ -1,4 +1,5 @@
 @echo off
-cd /d "C:\Users\The Urban Genius\Documents\Arbitrage\Titan"
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
 python mainnet_orchestrator.py
 pause

@@ -2,6 +2,9 @@
 title TITAN BRAIN - LIVE MAINNET SCANNING
 color 0A
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ========================================================================
 echo   APEX-OMEGA TITAN: BRAIN STARTING

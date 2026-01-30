@@ -7,6 +7,9 @@ REM   run_simulation.bat live         - Quick 7-day test in LIVE mode
 REM   run_simulation.bat full         - Full 90-day simulation in LIVE mode
 REM   run_simulation.bat full paper   - Full 90-day simulation in PAPER mode
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 setlocal
 
 echo ===============================================================

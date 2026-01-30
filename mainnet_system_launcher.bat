@@ -13,6 +13,9 @@ REM   mainnet_system_launcher.bat paper  - Start in paper mode (simulated execut
 REM   mainnet_system_launcher.bat live   - Start in live mode (real execution)
 REM   mainnet_system_launcher.bat        - Use mode from .env (default: paper)
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 setlocal enabledelayedexpansion
 
 REM Parse mode argument
