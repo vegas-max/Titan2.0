@@ -4,6 +4,9 @@ REM APEX-OMEGA TITAN: FULL SYSTEM LAUNCHER
 REM ==============================================================================
 REM Starts both Brain and Bot in separate windows that stay open
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ===================================================
 echo    APEX-OMEGA TITAN: STARTING FULL SYSTEM

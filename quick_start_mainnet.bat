@@ -4,6 +4,9 @@ REM APEX-OMEGA TITAN: QUICK START MAINNET (Windows)
 REM ==============================================================================
 REM One-command launcher for mainnet operations with full system checks
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ===================================================
 echo    APEX-OMEGA TITAN: QUICK START MAINNET

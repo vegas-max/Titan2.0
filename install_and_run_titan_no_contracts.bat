@@ -5,6 +5,9 @@ REM ============================================================================
 REM This version skips smart contract compilation and deployment
 REM ==============================================================================
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 setlocal enabledelayedexpansion
 
 REM Configuration

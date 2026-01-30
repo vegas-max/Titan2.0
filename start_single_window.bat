@@ -1,6 +1,9 @@
 @echo off
 REM Single window version - shows both Brain and Bot output in one console
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 echo.
 echo ===================================================
 echo    APEX-OMEGA TITAN: SINGLE WINDOW MODE

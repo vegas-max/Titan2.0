@@ -7,6 +7,9 @@ REM Prerequisites: Node.js, Python, Git must be installed
 REM Configuration: Edit .env file before running
 REM ==============================================================================
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 setlocal enabledelayedexpansion
 
 REM Set title and colors

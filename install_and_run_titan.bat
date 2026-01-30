@@ -14,6 +14,9 @@ REM
 REM Usage: install_and_run_titan.bat
 REM ==============================================================================
 
+REM Change to script directory to ensure correct working directory
+cd /d "%~dp0"
+
 setlocal enabledelayedexpansion
 
 REM Configuration
