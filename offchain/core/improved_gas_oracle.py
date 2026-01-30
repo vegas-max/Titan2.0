@@ -31,7 +31,8 @@ class GasPrice:
     chain_id: int
     
     def is_valid(self) -> bool:
-        """Check if gas price data is valid (not zero)"""
+        """Check if gas price data is valid (at least one value > 0)"""
+        # At least one gas price should be valid (not all zeros)
         return self.safe > 0 or self.propose > 0 or self.fast > 0
 
 

@@ -97,22 +97,19 @@ class LRUCache:
     
     def set(self, key: str, data: Any, ttl: int = 60, volatility: float = 1.0):
         """Set value in cache with TTL"""
-        # Evict oldest entry if at capacity
+        # Evict oldest entry if at capacity (and key is new)
         if key not in self.cache and len(self.cache) >= self.max_size:
             self.cache.popitem(last=False)  # Remove oldest (FIFO from front)
             self.stats["evictions"] += 1
         
-        # Add/update entry
+        # Add/update entry and move to end (most recently used)
         self.cache[key] = CachedData(
             data=data,
             timestamp=time.time(),
             ttl=ttl,
             volatility=volatility
         )
-        
-        # Move to end if updating
-        if key in self.cache:
-            self.cache.move_to_end(key)
+        self.cache.move_to_end(key)
     
     def get_stats(self) -> Dict[str, Any]:
         """Get cache statistics"""
@@ -155,15 +152,24 @@ class RequestDeduplicator:
         Returns:
             Fetched data
         """
+        # Check if request is already in flight
         async with self.lock:
-            # Check if request is already in flight
             if key in self.in_flight:
                 self.stats["deduplicated"] += 1
                 logger.debug(f"Deduplicating request: {key}")
-                # Wait for existing request
+                future = self.in_flight[key]
+        
+        # If found in-flight, wait for it (outside lock)
+        if key in self.in_flight:
+            return await future
+        
+        # Create new future for this request
+        async with self.lock:
+            # Double-check after acquiring lock again
+            if key in self.in_flight:
+                self.stats["deduplicated"] += 1
                 return await self.in_flight[key]
             
-            # Create new future for this request
             future = asyncio.create_task(self._execute_fetch(key, fetch_func, *args, **kwargs))
             self.in_flight[key] = future
             self.stats["unique_requests"] += 1
@@ -334,31 +340,38 @@ class UnifiedPriceFetcher:
         )
         
         # Create tasks for all providers
-        tasks = []
+        tasks = {}
         for provider_name, fetch_func in sorted_providers:
             task = asyncio.create_task(
                 self._fetch_with_timeout(provider_name, fetch_func, timeout)
             )
-            tasks.append((provider_name, task))
+            tasks[task] = provider_name
         
-        # Wait for first successful result
-        for provider_name, task in tasks:
-            try:
-                result = await task
-                if result is not None:
-                    # Cancel remaining tasks
-                    for other_name, other_task in tasks:
-                        if other_name != provider_name and not other_task.done():
-                            other_task.cancel()
-                    
-                    logger.info(f"✅ Fetched from provider: {provider_name}")
-                    return result, provider_name
-            except asyncio.TimeoutError:
-                logger.warning(f"⏱️ Provider {provider_name} timed out")
-                continue
-            except Exception as e:
-                logger.warning(f"❌ Provider {provider_name} failed: {e}")
-                continue
+        # Wait for first successful result using wait with FIRST_COMPLETED for true parallelism
+        pending = set(tasks.keys())
+        while pending:
+            done, pending = await asyncio.wait(pending, return_when=asyncio.FIRST_COMPLETED)
+            
+            for completed_task in done:
+                try:
+                    result = await completed_task
+                    if result is not None:
+                        provider_name = tasks[completed_task]
+                        
+                        # Cancel remaining tasks
+                        for task in pending:
+                            task.cancel()
+                        
+                        logger.info(f"✅ Fetched from provider: {provider_name}")
+                        return result, provider_name
+                except asyncio.TimeoutError:
+                    provider_name = tasks[completed_task]
+                    logger.warning(f"⏱️ Provider {provider_name} timed out")
+                    continue
+                except Exception as e:
+                    provider_name = tasks[completed_task]
+                    logger.warning(f"❌ Provider {provider_name} failed: {e}")
+                    continue
         
         logger.error("❌ All providers failed")
         return None, None

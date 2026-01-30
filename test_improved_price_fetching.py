@@ -54,7 +54,8 @@ async def test_request_deduplication():
     
     await oracle.close()
     
-    return elapsed < 5.0  # Should complete quickly due to deduplication
+    # Should complete very quickly due to deduplication (much faster than 10 sequential requests)
+    return elapsed < 2.0
 
 
 async def test_lru_cache():
@@ -98,9 +99,9 @@ async def test_lru_cache():
     print(f"   Misses: {cache_stats.get('misses', 0)}")
     print(f"   Hit rate: {cache_stats.get('hit_rate', '0%')}")
     
-    # Verify hit rate is good (>90% for second access)
+    # Verify hit rate is reasonable (10 hits out of 110 total = ~9%)
     hit_rate = float(cache_stats.get('hit_rate', '0%').rstrip('%'))
-    return hit_rate > 5.0  # At least some cache hits
+    return hit_rate > 7.0  # At least 7% cache hits (accounting for 10/110 = 9%)
 
 
 async def test_parallel_provider_queries():
@@ -143,8 +144,8 @@ async def test_parallel_provider_queries():
     
     await oracle.close()
     
-    # Should complete quickly due to parallel queries
-    return elapsed < 10.0 and gas_price is not None
+    # Should complete quickly due to parallel queries (< 3s for network requests)
+    return elapsed < 3.0 and gas_price is not None
 
 
 async def test_aggregator_filtering():
@@ -219,8 +220,8 @@ async def test_cache_performance():
     
     await oracle.close()
     
-    # Cached requests should be at least 10x faster
-    return speedup > 10.0
+    # Cached requests should be significantly faster (at least 100x)
+    return speedup > 100.0
 
 
 async def run_all_tests():

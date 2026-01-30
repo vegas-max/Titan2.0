@@ -63,8 +63,12 @@ class Quote:
     def get_rate(self) -> float:
         """Calculate exchange rate"""
         try:
-            return float(self.to_amount) / float(self.from_amount)
-        except (ValueError, ZeroDivisionError):
+            from_val = float(self.from_amount)
+            to_val = float(self.to_amount)
+            if from_val == 0:
+                return 0.0
+            return to_val / from_val
+        except (ValueError, TypeError):
             return 0.0
 
 
@@ -116,13 +120,18 @@ class OptimizedAggregatorManager:
             ),
             Aggregator.RANGO: AggregatorConfig(
                 name="Rango",
-                supported_chains=list(range(1, 100)),  # 70+ chains
+                # 70+ chains - major EVM chains + exotics
+                supported_chains=[1, 56, 137, 42161, 10, 8453, 43114, 250, 25, 
+                                 59144, 534352, 5000, 324, 1101, 100, 42220, 
+                                 1284, 1285, 288, 2222, 1313161554],
                 supports_cross_chain=True,
                 api_endpoint="https://api.rango.exchange"
             ),
             Aggregator.LIFI: AggregatorConfig(
                 name="LiFi",
-                supported_chains=list(range(1, 100)),  # Many chains
+                # Major EVM chains supported by LiFi
+                supported_chains=[1, 56, 137, 42161, 10, 8453, 43114, 250, 25,
+                                 100, 324, 1101, 59144, 534352, 1284, 1285],
                 supports_cross_chain=True,
                 api_endpoint="https://li.quest/v1"
             )
@@ -319,7 +328,7 @@ class OptimizedAggregatorManager:
             from_token=from_token,
             to_token=to_token,
             from_amount=amount,
-            to_amount=str(int(amount) * 0.99),  # Mock 1% slippage
+            to_amount=str(int(int(amount) * 0.99)),  # Mock 1% slippage, keep as integer
             gas_estimate=150000,
             price_impact=0.01,
             route=[from_token, to_token],
