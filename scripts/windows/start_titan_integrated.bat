@@ -66,7 +66,7 @@ powershell -NoProfile -Command ^
      $nodeJob = Start-Job -ScriptBlock { cd '%cd%'; node offchain/execution/bot.js 2>&1 }; ^
      try { ^
          while ($true) { ^
-             Receive-Job -Job $pythonJob,nodeJob -ErrorAction SilentlyContinue; ^
+             Receive-Job -Job $pythonJob,$nodeJob -ErrorAction SilentlyContinue; ^
              Start-Sleep -Milliseconds 100; ^
              if ($pythonJob.State -eq 'Failed' -or $nodeJob.State -eq 'Failed') { break } ^
          } ^

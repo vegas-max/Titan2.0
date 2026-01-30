@@ -1,4 +1,4 @@
 @echo off
-cd /d "C:\Users\The Urban Genius\Documents\Arbitrage\Titan"
+cd /d "%~dp0..\.."
 python mainnet_orchestrator.py
 pause
