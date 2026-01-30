@@ -47,7 +47,7 @@ FLASH_ARB_EXECUTOR_POLYGON=0xYOUR_DEPLOYED_ADDRESS
 ### 3. Launch Monitoring
 
 ```bash
-./launch_dashboard.sh
+./scripts/linux/launch_dashboard.sh
 # Select option 3 for both dashboards
 ```
 
@@ -65,7 +65,7 @@ npm start
 |---------|---------|
 | `npm run dashboard` | Terminal dashboard (SSH-friendly) |
 | `npm run dashboard:web` | Web dashboard (browser) |
-| `./launch_dashboard.sh` | Interactive launcher (both) |
+| `./scripts/linux/launch_dashboard.sh` | Interactive launcher (both) |
 | `npm run monitor` | Alias for terminal dashboard |
 
 **Dashboard Access**:
@@ -99,7 +99,7 @@ npm start
 ### Monitoring
 - `live_operational_dashboard.py` - Terminal dashboard
 - `operational_dashboard.html` - Web dashboard
-- `launch_dashboard.sh` - Dashboard launcher
+- `scripts/linux/launch_dashboard.sh` - Dashboard launcher
 
 ### Documentation
 - `README.md` - Main documentation
@@ -196,9 +196,8 @@ MIN_PROFIT_BPS=10
 ## 📞 Support Resources
 
 - **Main Docs**: [README.md](README.md)
-- **Dashboard Guide**: [DASHBOARD_GUIDE.md](DASHBOARD_GUIDE.md)
-- **Deployment Guide**: [MAINNET_READINESS.md](MAINNET_READINESS.md)
-- **Operations**: [OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)
+- **Dashboard Guide**: [docs/guides/DASHBOARD_GUIDE.md](docs/guides/DASHBOARD_GUIDE.md)
+- **Operations**: [docs/guides/OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md)
 
 ---
 

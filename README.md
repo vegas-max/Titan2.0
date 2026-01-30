@@ -39,9 +39,7 @@ This guide helps you choose the best setup method for your needs:
 ### 📖 Quick Links for New Users:
 - **Step-by-step setup:** [SETUP.md](SETUP.md)
 - **15-minute quick start:** [QUICKSTART.md](QUICKSTART.md)
-- **Understand trading modes:** [MAINNET_MODES.md](MAINNET_MODES.md)
-- **Security essentials:** [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)
-- **Check system ready state:** [READY_STATE_DOCUMENTATION.md](READY_STATE_DOCUMENTATION.md)
+- **Security essentials:** [docs/audit/SECURITY_SUMMARY.md](docs/audit/SECURITY_SUMMARY.md)
 
 ---
 
@@ -93,7 +91,7 @@ This release introduces a battle-tested, gas-optimized FlashArbExecutor contract
 
 ### Smart Contract & Configuration
 - ✅ **FlashArbExecutor Contract**: Production-ready Solidity 0.8.24 contract with Balancer & Aave flash loans
-  - See [EXECUTOR_CONTRACTS_GUIDE.md](EXECUTOR_CONTRACTS_GUIDE.md) for deployment options
+  - See [docs/guides/EXECUTOR_CONTRACTS_GUIDE.md](docs/guides/EXECUTOR_CONTRACTS_GUIDE.md) for deployment options
 - ✅ **Comprehensive Config**: Complete `config.json` with DEX endpoints, bridges, and token lists for all major chains
 - ✅ **Multi-DEX Support**: QuickSwap, SushiSwap, Uniswap V3 integration with automated routing
 - ✅ **Enhanced Security**: Custom errors, reentrancy guards, and profit verification
@@ -140,8 +138,7 @@ make start
 ```
 
 **📖 Full Documentation:**
-- **[MILITARY_AUDIT_SYSTEM.md](MILITARY_AUDIT_SYSTEM.md)** - Complete audit system documentation
-- **[MILITARY_AUDIT_QUICKREF.md](MILITARY_AUDIT_QUICKREF.md)** - Quick reference guide
+- **[docs/guides/MILITARY_AUDIT_SYSTEM.md](docs/guides/MILITARY_AUDIT_SYSTEM.md)** - Complete audit system documentation
 
 **Validation Flow:**
 ```
@@ -190,7 +187,7 @@ Run the verification script to confirm:
 ./verify_rust_engine.sh
 ```
 
-**📖 Full Documentation**: [RUST_ENGINE_VERIFICATION.md](RUST_ENGINE_VERIFICATION.md) | [CORE_REBUILD_README.md](CORE_REBUILD_README.md)
+**📖 Full Documentation**: [docs/guides/RUST_ENGINE_VERIFICATION.md](docs/guides/RUST_ENGINE_VERIFICATION.md)
 
 ---
 
@@ -198,9 +195,8 @@ Run the verification script to confirm:
 
 **NEW!** Deploy Titan to Oracle Cloud's generous Always Free tier (4 CPUs, 24GB RAM):
 
-- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ⚡ Get running in 15 minutes
-- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 📖 Complete deployment guide
-- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ Step-by-step checklist
+- **[docs/deployment/ORACLE_QUICKSTART.md](docs/deployment/ORACLE_QUICKSTART.md)** - ⚡ Get running in 15 minutes
+- **[docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md](docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md)** - 📖 Complete deployment guide
 
 **Quick Deploy:**
 ```bash
@@ -246,7 +242,7 @@ cd Titan2.0
 - ✅ Detailed CSV, JSON, and Markdown reports
 - ✅ Progress tracking and logging
 
-**[📖 Full Simulation Documentation](ROBUST_SIMULATION_README.md)**
+**[📖 Full Simulation Documentation](docs/guides/ROBUST_SIMULATION_README.md)**
 
 ---
 
@@ -288,60 +284,50 @@ Titan 2.0 includes extensive documentation organized by use case and experience 
 
 ### 🚀 Quick Start (New Users)
 - **[.devcontainer/README.md](.devcontainer/README.md)** - 🆕 ☁️ **GitHub Codespaces setup (zero installation)**
-- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - 🆕 ⭐ **Detailed step-by-step Colab walkthrough**
-- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - ⚡ Run in browser (no installation)
-- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - 📋 **Quick reference card**
-- **[deployment_prerequisites_setup.sh](deployment_prerequisites_setup.sh)** - 🎯 **Interactive setup wizard**
+- **[docs/guides/GOOGLE_COLAB_GUIDE.md](docs/guides/GOOGLE_COLAB_GUIDE.md)** - ⚡ Run in browser (no installation)
+- **[scripts/linux/deployment_prerequisites_setup.sh](scripts/linux/deployment_prerequisites_setup.sh)** - 🎯 **Interactive setup wizard**
 - **[QUICKSTART.md](QUICKSTART.md)** - ⚡ 15-minute setup guide
-- **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - 🎯 Simplest installation method
-- **[DASHBOARD_QUICKSTART.md](DASHBOARD_QUICKSTART.md)** - 📊 Interactive dashboard in 5 minutes
-- **[MAINNET_QUICKSTART.md](MAINNET_QUICKSTART.md)** - 🚀 5-minute mainnet paper mode setup
+- **[docs/guides/ONE_CLICK_INSTALL.md](docs/guides/ONE_CLICK_INSTALL.md)** - 🎯 Simplest installation method
+- **[docs/guides/DASHBOARD_QUICKSTART.md](docs/guides/DASHBOARD_QUICKSTART.md)** - 📊 Interactive dashboard in 5 minutes
+- **[docs/deployment/MAINNET_QUICKSTART.md](docs/deployment/MAINNET_QUICKSTART.md)** - 🚀 5-minute mainnet paper mode setup
 
 ### 📦 Installation & Deployment
 - **[INSTALL.md](INSTALL.md)** - 📦 Platform-specific installation
-- **[FULL_INSTALLATION_GUIDE.md](FULL_INSTALLATION_GUIDE.md)** - 🛠️ Complete installation guide
-- **[ORACLE_QUICKSTART.md](ORACLE_QUICKSTART.md)** - ☁️ Oracle Cloud deployment (15 min)
-- **[ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud guide
-- **[ORACLE_DEPLOYMENT_CHECKLIST.md](ORACLE_DEPLOYMENT_CHECKLIST.md)** - ✅ Deployment checklist
-- **[ORACLE_SSH_KEY_SETUP_GUIDE.md](ORACLE_SSH_KEY_SETUP_GUIDE.md)** - 🔑 SSH key setup guide
-- **[ORACLE_SERVER_DETAILS_FAQ.md](ORACLE_SERVER_DETAILS_FAQ.md)** - ❓ FAQ: Server details & SSH keys
-- **[ORACLE_ENV_CONFIGURATION_GUIDE.md](ORACLE_ENV_CONFIGURATION_GUIDE.md)** - ⚙️ Environment configuration
+- **[docs/guides/FULL_INSTALLATION_GUIDE.md](docs/guides/FULL_INSTALLATION_GUIDE.md)** - 🛠️ Complete installation guide
+- **[docs/deployment/ORACLE_QUICKSTART.md](docs/deployment/ORACLE_QUICKSTART.md)** - ☁️ Oracle Cloud deployment (15 min)
+- **[docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md](docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md)** - 🌩️ Complete Oracle Cloud guide
 
 ### 📘 Operations & Management
-- **[OPERATIONS_GUIDE.md](OPERATIONS_GUIDE.md)** - 📘 Comprehensive operations manual
-- **[MAINNET_MODES.md](MAINNET_MODES.md)** - 🔄 Paper vs live trading modes
-- **[GO_LIVE_CHECKLIST.md](GO_LIVE_CHECKLIST.md)** - 🚀 Mainnet deployment validation
-- **[SUPER_AGENT_GUIDE.md](SUPER_AGENT_GUIDE.md)** - 🤖 Autonomous agent system
-- **[MONITORING_ALERTING.md](MONITORING_ALERTING.md)** - 🔔 Monitoring setup
+- **[docs/guides/OPERATIONS_GUIDE.md](docs/guides/OPERATIONS_GUIDE.md)** - 📘 Comprehensive operations manual
+- **[docs/guides/GO_LIVE_CHECKLIST.md](docs/guides/GO_LIVE_CHECKLIST.md)** - 🚀 Mainnet deployment validation
+- **[docs/guides/SUPER_AGENT_GUIDE.md](docs/guides/SUPER_AGENT_GUIDE.md)** - 🤖 Autonomous agent system
+- **[docs/guides/MONITORING_ALERTING.md](docs/guides/MONITORING_ALERTING.md)** - 🔔 Monitoring setup
 
 ### 🏗️ Architecture & Development
-- **[EXECUTOR_CONTRACTS_GUIDE.md](EXECUTOR_CONTRACTS_GUIDE.md)** - 🎯 **Executor contract architecture (FlashArbExecutor vs HFT/Router)**
+- **[docs/guides/EXECUTOR_CONTRACTS_GUIDE.md](docs/guides/EXECUTOR_CONTRACTS_GUIDE.md)** - 🎯 **Executor contract architecture (FlashArbExecutor vs HFT/Router)**
 - **[ARBITRAGE_ENGINE_README.md](ARBITRAGE_ENGINE_README.md)** - ⚙️ Advanced multi-contract selector
 - **[offchain/README.md](offchain/README.md)** - 🤖 Offchain components
 - **[CORE_REBUILD_README.md](CORE_REBUILD_README.md)** - 🦀 Rust & Go cores
 
 ### 🔒 Security & Validation
-- **[SECURITY_SUMMARY.md](SECURITY_SUMMARY.md)** - 🛡️ Security features
-- **[AUDIT_REPORT.md](AUDIT_REPORT.md)** - 📋 Security audit report
-- **[MAINNET_SAFETY_IMPROVEMENTS.md](MAINNET_SAFETY_IMPROVEMENTS.md)** - ✅ Safety enhancements
-- **[TESTING_CHECKLIST.md](TESTING_CHECKLIST.md)** - ✔️ Testing procedures
-- **[VALIDATION_CHECKLIST.md](VALIDATION_CHECKLIST.md)** - 🔍 Validation checklist
+- **[docs/audit/SECURITY_SUMMARY.md](docs/audit/SECURITY_SUMMARY.md)** - 🛡️ Security features
+- **[docs/guides/TESTING_CHECKLIST.md](docs/guides/TESTING_CHECKLIST.md)** - ✔️ Testing procedures
+- **[docs/guides/VALIDATION_CHECKLIST.md](docs/guides/VALIDATION_CHECKLIST.md)** - 🔍 Validation checklist
 - **[docs/TRANSACTION_SIMULATION.md](docs/TRANSACTION_SIMULATION.md)** - 🧪 Transaction simulation guide
 
 ### 📊 Dashboard & Monitoring
 - **[INTERACTIVE_DASHBOARD_README.md](INTERACTIVE_DASHBOARD_README.md)** - 🎨 Complete dashboard docs
-- **[DASHBOARD_GUIDE.md](DASHBOARD_GUIDE.md)** - 📈 Dashboard user guide
+- **[docs/guides/DASHBOARD_GUIDE.md](docs/guides/DASHBOARD_GUIDE.md)** - 📈 Dashboard user guide
 
 ### 🚀 Features & Integrations
-- **[LIFI_INTEGRATION_GUIDE.md](LIFI_INTEGRATION_GUIDE.md)** - 🌉 Li.Fi bridge integration
-- **[MULTI_AGGREGATOR_IMPLEMENTATION.md](MULTI_AGGREGATOR_IMPLEMENTATION.md)** - 🔄 Multi-aggregator support
-- **[MEV_PROTECTION_IMPLEMENTATION.md](MEV_PROTECTION_IMPLEMENTATION.md)** - 🛡️ MEV protection
-- **[ML_ENHANCEMENTS_GUIDE.md](ML_ENHANCEMENTS_GUIDE.md)** - 🧠 ML enhancements
+- **[docs/guides/LIFI_INTEGRATION_GUIDE.md](docs/guides/LIFI_INTEGRATION_GUIDE.md)** - 🌉 Li.Fi bridge integration
+- **[docs/guides/MULTI_AGGREGATOR_IMPLEMENTATION.md](docs/guides/MULTI_AGGREGATOR_IMPLEMENTATION.md)** - 🔄 Multi-aggregator support
+- **[docs/guides/ML_ENHANCEMENTS_GUIDE.md](docs/guides/ML_ENHANCEMENTS_GUIDE.md)** - 🧠 ML enhancements
 
 ### 📈 Performance & Optimization
-- **[ARM_OPTIMIZATION_GUIDE.md](ARM_OPTIMIZATION_GUIDE.md)** - 🚀 ARM optimizations
-- **[LIGHTWEIGHT_MODE_GUIDE.md](LIGHTWEIGHT_MODE_GUIDE.md)** - ⚡ Lightweight mode
-- **[MARKET_COVERAGE_ANALYSIS.md](MARKET_COVERAGE_ANALYSIS.md)** - 📊 Market coverage
+- **[docs/guides/ARM_OPTIMIZATION_GUIDE.md](docs/guides/ARM_OPTIMIZATION_GUIDE.md)** - 🚀 ARM optimizations
+- **[docs/guides/LIGHTWEIGHT_MODE_GUIDE.md](docs/guides/LIGHTWEIGHT_MODE_GUIDE.md)** - ⚡ Lightweight mode
+- **[docs/guides/MARKET_COVERAGE_ANALYSIS.md](docs/guides/MARKET_COVERAGE_ANALYSIS.md)** - 📊 Market coverage
 
 ### 📋 Quick References
 - **[QUICK_REFERENCE.md](QUICK_REFERENCE.md)** - 📋 One-page command reference
@@ -455,11 +441,8 @@ Or directly upload `Titan_Live_Execution_Colab.ipynb` to [Google Colab](https://
 - Advanced users ready for live execution
 
 **Documentation:**
-- **[LIVE_EXECUTION_GUIDE.md](LIVE_EXECUTION_GUIDE.md)** - ⭐ **Complete live execution guide (26KB)**
-- **[LIVE_EXECUTION_QUICKREF.md](LIVE_EXECUTION_QUICKREF.md)** - Quick reference card
-- **[GOOGLE_COLAB_STEP_BY_STEP.md](GOOGLE_COLAB_STEP_BY_STEP.md)** - Detailed step-by-step walkthrough
-- **[GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)** - Complete Colab guide
-- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - Quick reference
+- **[docs/guides/LIVE_EXECUTION_GUIDE.md](docs/guides/LIVE_EXECUTION_GUIDE.md)** - ⭐ **Complete live execution guide (26KB)**
+- **[docs/guides/GOOGLE_COLAB_GUIDE.md](docs/guides/GOOGLE_COLAB_GUIDE.md)** - Complete Colab guide
 
 ---
 
@@ -493,13 +476,12 @@ yarn install-and-run:yarn
 This installs dependencies, compiles contracts, and starts the system automatically!
 
 **See:**
-- **[deployment_prerequisites_setup.sh](deployment_prerequisites_setup.sh)** - Interactive setup wizard
-- **[DEPLOYMENT_PREREQUISITES_CHECKLIST.md](DEPLOYMENT_PREREQUISITES_CHECKLIST.md)** - Quick reference
-- **[ONE_CLICK_INSTALL.md](ONE_CLICK_INSTALL.md)** - Detailed one-click options
+- **[scripts/linux/deployment_prerequisites_setup.sh](scripts/linux/deployment_prerequisites_setup.sh)** - Interactive setup wizard
+- **[docs/guides/ONE_CLICK_INSTALL.md](docs/guides/ONE_CLICK_INSTALL.md)** - Detailed one-click options
 
 ### Option 2: Google Colab (No Installation)
 
-See **Option 0** above or [GOOGLE_COLAB_GUIDE.md](GOOGLE_COLAB_GUIDE.md)
+See **Option 0** above or [docs/guides/GOOGLE_COLAB_GUIDE.md](docs/guides/GOOGLE_COLAB_GUIDE.md)
 
 ### Option 3: Full-Scale Installation (With Arguments)
 
@@ -510,7 +492,7 @@ Install everything and launch the complete system with command-line arguments:
 git clone https://github.com/vegas-max/Titan2.0.git && cd Titan2.0
 
 # Run full-scale installation and launch
-./install_and_run_titan.sh \
+./scripts/linux/install_and_run_titan.sh \
   --wallet-key 0xYOUR_PRIVATE_KEY \
   --mode paper \
   --network polygon
@@ -1046,7 +1028,7 @@ Titan 2.0 follows a modular, event-driven architecture with clear separation bet
    - Private key encryption
    - Environment variable security
 
-For detailed security documentation, see [SECURITY_SUMMARY.md](SECURITY_SUMMARY.md) and [AUDIT_REPORT.md](AUDIT_REPORT.md).
+For detailed security documentation, see [docs/audit/SECURITY_SUMMARY.md](docs/audit/SECURITY_SUMMARY.md).
 
 ---
 
@@ -2283,7 +2265,7 @@ chmod +x deploy_oracle_cloud.sh
 - ✅ 24 GB RAM (free forever)
 - ✅ Perfect for Titan's multi-threaded operations
 
-**See [ORACLE_CLOUD_DEPLOYMENT.md](ORACLE_CLOUD_DEPLOYMENT.md) for complete guide including:**
+**See [docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md](docs/deployment/ORACLE_CLOUD_DEPLOYMENT.md) for complete guide including:**
 - Instance setup and configuration
 - Docker deployment option
 - Systemd service configuration
