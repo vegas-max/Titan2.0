@@ -30,6 +30,7 @@ from offchain.core.dynamic_price_oracle import DynamicPriceOracle
 from offchain.core.parallel_simulation_engine import ParallelSimulationEngine
 from offchain.core.mev_detector import MEVDetector
 from offchain.core.direct_dex_query import DirectDEXQuery
+from offchain.core.profit_engine import ProfitEngine
 
 # The Cortex (AI Layer)
 from offchain.ml.cortex.forecaster import MarketForecaster
@@ -91,37 +92,6 @@ def is_zero_address(address: str) -> bool:
     if not address:
         return True
     return address.lower() == ZERO_ADDRESS.lower()
-
-class ProfitEngine:
-    """
-    Implements the Titan Master Profit Equation.
-    Π_net = V_loan × [(P_A × (1 - S_A)) - (P_B × (1 + S_B))] - F_flat - (V_loan × F_rate)
-    """
-    def __init__(self, default_flash_fee=Decimal("0.0")):
-        self.flash_fee = default_flash_fee # Balancer V3 is 0%
-
-    def calculate_enhanced_profit(self, amount, amount_out, bridge_fee_usd, gas_cost_usd):
-        """
-        Calculates Net Profit based on REAL simulated output.
-        """
-        # 1. Gross Revenue (What we actually get out)
-        gross_revenue_usd = amount_out # Assuming normalized to USD for this calculation context
-
-        # 2. Cost Basis (What we borrowed + fees)
-        loan_cost_usd = amount
-        flash_fee_cost = amount * self.flash_fee
-        
-        total_operational_costs = bridge_fee_usd + gas_cost_usd + flash_fee_cost
-
-        # 3. Net Profit
-        net_profit = gross_revenue_usd - loan_cost_usd - total_operational_costs
-        
-        return {
-            "net_profit": net_profit,
-            "gross_spread": gross_revenue_usd - loan_cost_usd,
-            "total_fees": total_operational_costs,
-            "is_profitable": net_profit > 0
-        }
 
 class OmniBrain:
     def __init__(self):
