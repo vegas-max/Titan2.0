@@ -131,12 +131,14 @@ class TitanSimulationEngine:
         return {
             'min_profit_threshold_usd': 5.0,
             'max_gas_price_gwei': 500,
-            'flash_loan_fee_rate': 0.0,  # Balancer V3 = 0%
+            'flash_loan_fee_rate': 0.0,   # Balancer V3 = 0%, Aave V3 = 0.0005
+            'protocol_fee_rate': 0.003,   # DEX protocol fee per leg (0.3% Uniswap V2 default)
             'min_success_probability': 0.7,
-            'slippage_tolerance': 0.01,  # 1%
+            'slippage_tolerance': 0.01,   # 1% per leg
             'gas_buffer_multiplier': 1.2,
             'base_gas_units': 390000,
             'bridge_fee_avg_usd': 2.5,
+            'bribe_usd': 0.0,             # MEV relay / block-builder bribe
             'execution_mode': 'PAPER'
         }
     
@@ -232,6 +234,16 @@ class TitanSimulationEngine:
     ) -> Tuple[float, Dict]:
         """
         Simulate Titan's profit calculation engine.
+
+        Uses the mathematically correct multi-leg model:
+            leg_out = leg_in · (1 + spread_factor) · (1 − f_dex) · (1 − s)
+        applied once per swap leg (two legs for a 2-hop A→B→A arb).
+
+        Fee and slippage are applied **multiplicatively** per leg, not combined
+        additively, to accurately model each swap's independent cost structure.
+
+        Profit = A_out − A_in·(1 + f_flash) − gas − bridge − bribe
+        Execute only if: A_out > A_in·(1 + f_flash) + gas + bridge + bribe
         
         Args:
             opportunity: Opportunity data
@@ -243,48 +255,62 @@ class TitanSimulationEngine:
         """
         spread = opportunity['spread_pct'] / 100
         gas_price = opportunity['gas_price_gwei']
+
+        # Per-leg parameters (multiplicative, applied independently on each swap)
+        dex_fee      = self.config.get('protocol_fee_rate', 0.003)   # e.g. 0.3% per leg
+        slippage     = self.config['slippage_tolerance']              # e.g. 1.0% per leg
+        leg_factor   = (1 - dex_fee) * (1 - slippage)
+
+        # 1. Simulate swap output after both legs
+        #    Leg 1: A_in  → B     (buy on DEX1, get (1+spread) relative to leg 2)
+        #    Leg 2: B     → A_out (sell on DEX2)
+        #    Price advantage of (1+spread) is distributed across the round trip.
+        a_out = loan_amount * (1 + spread) * leg_factor * leg_factor
         
-        # 1. Calculate gross revenue
-        gross_revenue = loan_amount * (1 + spread)
-        
-        # 2. Calculate costs
-        # Gas cost (varies by chain)
+        # 2. Flash-loan repayment (principal + premium)
+        flash_repayment = loan_amount * (1 + self.config['flash_loan_fee_rate'])
+        flash_loan_fee  = flash_repayment - loan_amount
+
+        # 3. Gas cost (varies by chain)
         chain_gas_cost_map = {
-            1: 0.0005,    # Ethereum (expensive)
-            137: 0.00003, # Polygon (cheap)
-            42161: 0.0001,# Arbitrum
-            10: 0.00005,  # Optimism
+            1: 0.0005,     # Ethereum (expensive)
+            137: 0.00003,  # Polygon (cheap)
+            42161: 0.0001, # Arbitrum
+            10: 0.00005,   # Optimism
         }
         gas_cost_per_unit = chain_gas_cost_map.get(
             opportunity['chain_id'], 0.0001
         )
         gas_cost_usd = (
-            self.config['base_gas_units'] * 
-            gas_price * 
-            gas_cost_per_unit * 
+            self.config['base_gas_units'] *
+            gas_price *
+            gas_cost_per_unit *
             self.config['gas_buffer_multiplier']
         )
-        
-        # Flash loan fee
-        flash_loan_fee = loan_amount * self.config['flash_loan_fee_rate']
-        
-        # Bridge fee (if cross-chain)
+
+        # 4. Bridge fee (if cross-chain)
         bridge_fee = self.config['bridge_fee_avg_usd'] if spread > 0.03 else 0
-        
-        # Slippage impact
-        slippage_cost = loan_amount * self.config['slippage_tolerance']
-        
-        # 3. Net profit
-        total_costs = gas_cost_usd + flash_loan_fee + bridge_fee + slippage_cost
-        net_profit = gross_revenue - loan_amount - total_costs
-        
+
+        # 5. MEV relay / block-builder bribe (optional)
+        bribe_usd = self.config.get('bribe_usd', 0.0)
+
+        # 6. Net profit
+        #    Profit = A_out − flash_repayment − gas − bridge − bribe
+        total_costs = flash_loan_fee + gas_cost_usd + bridge_fee + bribe_usd
+        net_profit  = a_out - flash_repayment - gas_cost_usd - bridge_fee - bribe_usd
+
         fee_breakdown = {
-            'gross_revenue': gross_revenue,
-            'gas_cost': gas_cost_usd,
+            'a_out':          a_out,
+            'gross_revenue':  a_out,               # kept for backward compatibility
+            'dex_fee_leg1':   loan_amount * (1 + spread) * dex_fee,
+            'slippage_leg1':  loan_amount * (1 + spread) * (1 - dex_fee) * slippage,
+            'dex_fee_leg2':   loan_amount * (1 + spread) * (1 - dex_fee) * (1 - slippage) * dex_fee,
+            'slippage_leg2':  loan_amount * (1 + spread) * (1 - dex_fee) * (1 - slippage) * (1 - dex_fee) * slippage,
+            'gas_cost':       gas_cost_usd,
             'flash_loan_fee': flash_loan_fee,
-            'bridge_fee': bridge_fee,
-            'slippage_cost': slippage_cost,
-            'total_costs': total_costs
+            'bridge_fee':     bridge_fee,
+            'bribe_usd':      bribe_usd,
+            'total_costs':    total_costs,
         }
         
         return net_profit, fee_breakdown
