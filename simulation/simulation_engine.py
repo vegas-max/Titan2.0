@@ -305,7 +305,7 @@ class TitanSimulationEngine:
             'dex_fee_leg1':   loan_amount * (1 + spread) * dex_fee,
             'slippage_leg1':  loan_amount * (1 + spread) * (1 - dex_fee) * slippage,
             'dex_fee_leg2':   loan_amount * (1 + spread) * (1 - dex_fee) * (1 - slippage) * dex_fee,
-            'slippage_leg2':  a_out / (1 - slippage) * slippage if (1 - slippage) != 0 else 0,
+            'slippage_leg2':  loan_amount * (1 + spread) * (1 - dex_fee) * (1 - slippage) * (1 - dex_fee) * slippage,
             'gas_cost':       gas_cost_usd,
             'flash_loan_fee': flash_loan_fee,
             'bridge_fee':     bridge_fee,
