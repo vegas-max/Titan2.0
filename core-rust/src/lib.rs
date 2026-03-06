@@ -4,6 +4,7 @@ pub mod simulation_engine;
 pub mod commander;
 pub mod http_server;
 pub mod omniarb;
+pub mod utils;
 
 // Re-export main types
 pub use config::{Config, ChainConfig, BALANCER_V3_VAULT};
